@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Calendar</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar/main.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.2.0/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-calendar/latest/tui-calendar.css">
+<script src="https://uicdn.toast.com/tui-calendar/latest/tui-calendar.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.bundle.min.js"></script>
+
+
+</head>
+<body>
+    <menu-component></menu-component>
+    <div class="container py-5">
+        <div class="text-center mb-4">
+            <h1 class="title">Booking Calendar</h1>
+            <p class="subtitle">ดูและจัดการตารางการจอง</p>
+        </div>
+        <!-- Action Buttons -->
+        <div class="action-buttons text-center mb-4">
+            <a href="view.html" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-calendar2-check"></i> View Bookings
+            </a>
+            <button id="exportImageBtn" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-download"></i> Export as Image
+            </button>
+        </div>
+        <!-- Calendar -->
+        <calendar-component></calendar-component>
+
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar/main.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="js/calendar.js"></script>
+    <script type="module" src="component/menu.js"></script>
+    <script type="module" src="component/calendar.js"></script>
+
+</body>
+</html>

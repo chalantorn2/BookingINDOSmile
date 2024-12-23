@@ -1,0 +1,86 @@
+/* General Styling */
+body {
+    font-family: 'Prompt', sans-serif;
+    background-color: #f9f9f9;
+}
+
+/* Header Section */
+.header {
+    text-align: center;
+}
+
+.header .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.header .subtitle {
+    font-size: 1.2rem;
+    color: #555;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    font-size: 1rem;
+}
+
+.view-calendar {
+    text-decoration: none;
+    color: #555;
+}
+
+.view-calendar i {
+    font-size: 1.5rem;
+}
+
+.view-calendar span {
+    display: block;
+    font-size: 1rem;
+}
+
+/* Date Display */
+.date-display span {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.card-body {
+    padding: 20px;
+    background-color: #fff;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.card .list-group {
+    margin-top: 10px;
+}
+
+/* Tour and Transfer Sections */
+.card-header.bg-success {
+    background-color: #28a745 !important;
+}
+
+.card-header.bg-primary {
+    background-color: #007bff !important;
+}
+
+

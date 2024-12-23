@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INDO Smile Booking Form</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <menu-component></menu-component>
+
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="mb-3">INDO Smile Booking</h1>
+            <p class="lead">กรุณาเลือกฟอร์มที่ต้องการกรอก</p>
+            <a href="view.html" class="d-grid gap-2 col-3 mx-auto btn btn-secondary ">View Booking</a>
+        </div>
+
+        <!-- เลือกประเภทฟอร์ม -->
+        <div class="d-flex justify-content-center mb-4">
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="formType" id="formTour" value="tour" autocomplete="off">
+                <label class="btn btn-outline-primary" for="formTour">Tour</label>
+
+                <input type="radio" class="btn-check" name="formType" id="formTransfer" value="transfer"
+                    autocomplete="off">
+                <label class="btn btn-outline-primary" for="formTransfer">Transfer</label>
+            </div>
+        </div>
+
+        <!-- ฟอร์ม Tour -->
+        <div class="card shadow-sm d-none" id="tourCard">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Tour Booking Form</h5>
+            </div>
+            <div class="card-body">
+                <form id="tourForm">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="tourAgent" class="form-label">Agent</label>
+                            <input type="text" class="form-control" id="tourAgent" name="tourAgent"
+                                placeholder="ใส่ชื่อ Agent">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tourSendTo" class="form-label">ส่งใคร</label>
+                            <input type="text" class="form-control" id="tourSendTo" name="tourSendTo"
+                                placeholder="ส่งงานให้ใคร">
+                        </div>    
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="tourCustomerName" class="form-label">ชื่อลูกค้า</label>
+                            <input type="text" class="form-control" id="tourCustomerName" name="tourCustomerName"
+                                placeholder="ชื่อผู้จอง">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tourPax" class="form-label">จำนวน</label>
+                            <input type="text" class="form-control" id="tourPax" name="tourPax" placeholder="จำนวนคน">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tourType" class="form-label">ประเภท</label>
+                        <input type="text" class="form-control" id="tourType" name="tourType" placeholder="ประเภททัวร์">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tourDetail" class="form-label">รายละเอียด</label>
+                        <textarea class="form-control" id="tourDetail" name="tourDetail" rows="3"
+                            placeholder="รายละเอียดทัวร์"></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="tourFee" class="form-label">FEE</label>
+                            <input type="text" class="form-control" id="tourFee" name="tourFee" placeholder="ค่าทัวร์">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="tourMeal" class="form-label">MEAL</label>
+                            <input type="text" class="form-control" id="tourMeal" name="tourMeal"
+                                placeholder="อาหารที่รวม">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="tourDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="tourDate" name="tourDate">
+                        </div>
+                    </div>
+
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="tourHotel" class="form-label">โรงแรม</label>
+                            <input type="text" class="form-control" id="tourHotel" name="tourHotel"
+                                placeholder="ชื่อโรงแรมที่พัก">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tourRoomNo" class="form-label">หมายเลขห้องพัก</label>
+                            <input type="text" class="form-control" id="tourRoomNo" name="tourRoomNo"
+                                placeholder="หมายเลขห้องพัก">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="tourContactNo" class="form-label">Contact No.</label>
+                            <input type="text" class="form-control" id="tourContactNo" name="tourContactNo"
+                                placeholder="เบอร์ติดต่อ">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tourPickUpTime" class="form-label">เวลารับ</label>
+                            <input type="text" class="form-control" id="tourPickUpTime" name="tourPickUpTime"
+                                placeholder="HH:MM">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tourNote" class="form-label">หมายเหตุ</label>
+                        <textarea class="form-control" id="tourNote" name="tourNote" rows="3"
+                            placeholder="หมายเหตุเพิ่มเติม"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg mt-3">บันทึก</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ฟอร์ม Transfer -->
+        <div class="card shadow-sm d-none mt-4" id="transferCard">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Transfer Booking Form</h5>
+            </div>
+            <div class="card-body">
+                <form id="transferForm">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="transferAgent" class="form-label">Agent</label>
+                            <input type="text" class="form-control" id="transferAgent" name="transferAgent"
+                                placeholder="ใส่ชื่อ Agent">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="transferSendTo" class="form-label">ส่งใคร</label>
+                            <input type="text" class="form-control" id="transferSendTo" name="transferSendTo"
+                                placeholder="ส่งงานให้ใคร">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="transferName" class="form-label">ชื่อลูกค้า</label>
+                            <input type="text" class="form-control" id="transferName" name="transferName"
+                                placeholder="ชื่อผู้จอง">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="transferPax" class="form-label">จำนวน</label>
+                            <input type="text" class="form-control" id="transferPax" name="transferPax"
+                                placeholder="จำนวนคน">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transferType" class="form-label">ประเภท</label>
+                        <input type="text" class="form-control" id="transferType" name="transferType"
+                            placeholder="ประเภทการรับ-ส่ง">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transferDetail" class="form-label">รายละเอียด</label>
+                        <textarea class="form-control" id="transferDetail" name="transferDetail" rows="3"
+                            placeholder="รายละเอียดการรับ-ส่ง"></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="transferFlight" class="form-label">Flight</label>
+                            <input type="text" class="form-control" id="transferFlight" name="transferFlight"
+                                placeholder="เที่ยวบิน">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="transferTime" class="form-label">Flight Time</label>
+                            <input type="text" class="form-control" id="transferTime" name="transferTime"
+                                placeholder="HH:MM">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="transferDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="transferDate" name="transferDate">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transferPickUpTime" class="form-label">เวลารับ</label>
+                        <input type="text" class="form-control" id="transferPickUpTime" name="transferPickUpTime"
+                            placeholder="HH:MM">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transferPickupFrom" class="form-label">รับจาก</label>
+                        <input type="text" class="form-control" id="transferPickupFrom" name="transferPickupFrom"
+                            placeholder="สถานที่รับ">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transferDropTo" class="form-label">ไปส่งที่</label>
+                        <input type="text" class="form-control" id="transferDropTo" name="transferDropTo"
+                            placeholder="สถานที่ส่ง">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transferNote" class="form-label">หมายเหตุ</label>
+                        <textarea class="form-control" id="transferNote" name="transferNote" rows="3"
+                            placeholder="หมายเหตุเพิ่มเติม"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg mt-3">บันทึก</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase JS SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDijkIIuVzWQWk6VSkXmexrnR_Ldjro",
+            authDomain: "booking-database-86230.firebaseapp.com",
+            databaseURL: "https://booking-database-86230-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "booking-database-86230",
+            storageBucket: "booking-database-86230.appspot.com",
+            messagingSenderId: "891604763798",
+            appId: "1:891604763798:web:a27d3bf90c0e60563caeb7",
+            measurementId: "G-YVFPZ8RJGE"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const tourCard = document.getElementById('tourCard');
+            const transferCard = document.getElementById('transferCard');
+            const tourRadio = document.getElementById('formTour');
+            const transferRadio = document.getElementById('formTransfer');
+
+            tourRadio.checked = true; // เลือกปุ่ม Tour
+            tourCard.classList.remove('d-none'); // แสดงฟอร์ม Tour
+            transferCard.classList.add('d-none'); // ซ่อนฟอร์ม Transfer
+            const tourForm = document.getElementById('tourForm');
+            const transferForm = document.getElementById('transferForm');
+
+            // แสดงฟอร์มเมื่อเลือกประเภทฟอร์ม
+            tourRadio.addEventListener('change', function () {
+                if (this.checked) {
+                    tourCard.classList.remove('d-none');
+                    transferCard.classList.add('d-none');
+                }
+            });
+
+            transferRadio.addEventListener('change', function () {
+                if (this.checked) {
+                    transferCard.classList.remove('d-none');
+                    tourCard.classList.add('d-none');
+                }
+            });
+
+            // Submit ฟอร์ม Tour
+            tourForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = {
+                    agent: document.getElementById('tourAgent').value,
+                    type: document.getElementById('tourType').value,
+                    detail: document.getElementById('tourDetail').value,
+                    fee: document.getElementById('tourFee').value,
+                    meal: document.getElementById('tourMeal').value,
+                    date: document.getElementById('tourDate').value,
+                    customerName: document.getElementById('tourCustomerName').value,
+                    pax: document.getElementById('tourPax').value,
+                    hotel: document.getElementById('tourHotel').value,
+                    roomNo: document.getElementById('tourRoomNo').value,
+                    contactNo: document.getElementById('tourContactNo').value,
+                    pickUpTime: document.getElementById('tourPickUpTime').value,
+                    sendTo: document.getElementById('tourSendTo').value,
+                    note: document.getElementById('tourNote').value,
+                    status: "รอดำเนินการ", // เพิ่มสถานะเริ่มต้น
+                    timestamp: { ".sv": "timestamp" }
+                };
+
+
+                const tourRef = ref(database, 'tourBookings');
+                const newTourRef = push(tourRef);
+                set(newTourRef, formData).then(() => {
+                    alert('บันทึกข้อมูลทัวร์สำเร็จ');
+                    tourForm.reset();
+                    tourCard.classList.add('d-none');
+                }).catch((error) => {
+                    console.error('Error:', error);
+                });
+            });
+
+            // Submit ฟอร์ม Transfer
+            transferForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = {
+                    agent: document.getElementById('transferAgent').value,
+                    type: document.getElementById('transferType').value,
+                    detail: document.getElementById('transferDetail').value,
+                    flight: document.getElementById('transferFlight').value,
+                    time: document.getElementById('transferTime').value,
+                    date: document.getElementById('transferDate').value,
+                    name: document.getElementById('transferName').value,
+                    pax: document.getElementById('transferPax').value,
+                    pickUpTime: document.getElementById('transferPickUpTime').value,
+                    pickupFrom: document.getElementById('transferPickupFrom').value,
+                    dropTo: document.getElementById('transferDropTo').value,
+                    sendTo: document.getElementById('transferSendTo').value,
+                    note: document.getElementById('transferNote').value,
+                    status: "รอดำเนินการ", // เพิ่มสถานะเริ่มต้น
+                    timestamp: { ".sv": "timestamp" }
+                };
+
+                const transferRef = ref(database, 'transferBookings');
+                const newTransferRef = push(transferRef);
+                set(newTransferRef, formData).then(() => {
+                    alert('บันทึกข้อมูล Transfer สำเร็จ');
+                    transferForm.reset();
+                    transferCard.classList.add('d-none');
+                }).catch((error) => {
+                    console.error('Error:', error);
+                });
+            });
+
+        });
+    </script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="component/menu.js"></script>
+
+</body>
+
+</html>
