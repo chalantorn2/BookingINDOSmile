@@ -4,7 +4,8 @@ class CalendarComponent extends HTMLElement {
         <style>
             /* Calendar Styles */
             #calendar {
-                max-width: 900px;
+                width: 100%
+                max-width: 1400px;
                 margin: 0 auto;
                 background: #f8fafc;
                 padding: 20px;
@@ -49,7 +50,7 @@ class CalendarComponent extends HTMLElement {
                 border-radius: 5px;
                 color: #fff;
                 font-size: 0.85rem;
-                text-align: center;
+                text-align: left;
             }
             .fc-event-status-รอดำเนินการ {
                 background-color: #f0f0f0 !important;
@@ -92,6 +93,7 @@ class CalendarComponent extends HTMLElement {
         // Initialize FullCalendar
         const calendarEl = this.querySelector("#calendar");
         const calendar = new FullCalendar.Calendar(calendarEl, {
+            themeSystem: 'standard', // หรือ 'none' เพื่อปิดธีม
             initialView: "dayGridMonth",
             headerToolbar: {
                 left: "prev,next today",
@@ -110,7 +112,7 @@ class CalendarComponent extends HTMLElement {
                         tourSnapshot.forEach((booking) => {
                             const data = booking.val();
                             events.push({
-                                title: data.sendTo || "Tour",
+                                title: `${data.pickUpTime || "No time"} - ${data.sendTo || "Tour"}`,
                                 start: data.date,
                                 color: data.status === 'รอดำเนินการ' ? '#c4c4c4' :
                                     data.status === 'จองแล้ว' ? '#5ab4f7' :
@@ -128,7 +130,7 @@ class CalendarComponent extends HTMLElement {
                         transferSnapshot.forEach((booking) => {
                             const data = booking.val();
                             events.push({
-                                title: data.sendTo || "Transfer",
+                                title: `${data.pickUpTime || "No time"} - ${data.sendTo || "Transfer"}`,
                                 start: data.date,
                                 color: data.status === 'รอดำเนินการ' ? '#c4c4c4' :
                                     data.status === 'จองแล้ว' ? '#5ab4f7' :
@@ -152,7 +154,7 @@ class CalendarComponent extends HTMLElement {
                 const tooltipContent = `
                     <div>
                         <strong>ชื่อผู้จอง:</strong> ${info.event.title || "-"}<br>
-                        <strong>วันที่:</strong> ${info.event.start.toISOString().split('T')[0] || "-"}<br>
+                        <strong>วันที่:</strong> ${info.event.start.toLocaleDateString('th-TH') || "-"}<br>
                         <strong>รายละเอียด:</strong> ${info.event.extendedProps.description || "ไม่มีรายละเอียด"}<br>
                         <strong>สถานะ:</strong> ${info.event.extendedProps.status || "ไม่ระบุ"}
                     </div>
