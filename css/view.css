@@ -1,0 +1,25 @@
+.flatpickr-days {
+  display: grid !important; /* จัด layout แบบ grid */
+  grid-template-columns: repeat(7, 1fr); /* 7 คอลัมน์ */
+  gap: 5px; /* เพิ่มระยะห่างระหว่างวันที่ */
+}
+
+.flatpickr-day {
+  height: 30px; /* กำหนดความสูงของวันที่ */
+  line-height: 30px; /* จัดข้อความให้อยู่ตรงกลาง */
+  border-radius: 4px; /* มุมโค้ง */
+}
+
+.flatpickr-day.selected {
+  background-color: #007bff !important; /* สีพื้นหลังของวันที่เลือก */
+  color: #fff !important; /* สีข้อความของวันที่เลือก */
+}
+
+.flatpickr-months .flatpickr-month {
+  font-size: 16px; /* ขนาดตัวหนังสือของชื่อเดือน */
+}
+
+.flatpickr-weekday {
+  font-size: 12px; /* ลดขนาดตัวหนังสือของชื่อวัน */
+  color: #6c757d; /* สีตัวหนังสือ */
+}

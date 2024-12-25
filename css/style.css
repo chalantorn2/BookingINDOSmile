@@ -76,39 +76,17 @@ h1 {
   padding: 8px 10px; /* ลด Padding */
 }
 
-/* ปรับขนาด Flatpickr */
 .flatpickr-calendar {
-  width: 100% !important; /* บังคับให้กว้างเท่ากับ Container */
-  max-width: 240px !important; /* ปรับให้เท่ากับปุ่ม */
-  margin: 0 auto !important; /* จัดให้อยู่ตรงกลาง */
-  padding: 10px !important; /* เพิ่ม Padding ภายใน */
-  box-sizing: border-box; /* คำนวณขนาดรวม Border และ Padding */
+  /* width: auto; */
+  width: 100%; /* Adjust based on content */
+  max-width: 400px; /* Define a more flexible limit */
+  margin: 0 auto; /* Center the calendar */
+  /* padding: 10px; */
 }
-
-.flatpickr-days {
-  display: grid !important; /* จัด layout แบบ grid */
-  grid-template-columns: repeat(7, 1fr); /* 7 คอลัมน์ */
-  gap: 5px; /* เพิ่มระยะห่างระหว่างวันที่ */
-}
-
-.flatpickr-day {
-  height: 30px; /* กำหนดความสูงของวันที่ */
-  line-height: 30px; /* จัดข้อความให้อยู่ตรงกลาง */
-  border-radius: 4px; /* มุมโค้ง */
-}
-
-.flatpickr-day.selected {
-  background-color: #007bff !important; /* สีพื้นหลังของวันที่เลือก */
-  color: #fff !important; /* สีข้อความของวันที่เลือก */
-}
-
-.flatpickr-months .flatpickr-month {
-  font-size: 16px; /* ขนาดตัวหนังสือของชื่อเดือน */
-}
-
-.flatpickr-weekday {
-  font-size: 12px; /* ลดขนาดตัวหนังสือของชื่อวัน */
-  color: #6c757d; /* สีตัวหนังสือ */
+@media (max-width: 768px) {
+  .flatpickr-calendar {
+    width: auto; /* ให้ปรับขนาดอัตโนมัติบนจอเล็ก */
+  }
 }
 
 .col-md-3 {
@@ -120,7 +98,7 @@ h1 {
   padding-left: 15px; /* เพิ่มระยะห่างด้านซ้าย */
 }
 
-/* table_booking.html */
+/* table_booking.html
 .filter-section {
   display: flex;
   justify-content: space-between;
@@ -147,4 +125,4 @@ table th {
 .view-details-btn:disabled {
   pointer-events: none;
   opacity: 0.6;
-}
+} */
