@@ -1,125 +1,150 @@
 body {
-    background: linear-gradient(to bottom right, #e7f0fd, #ffffff);
-    font-family: "Prompt", sans-serif;
-    padding-top: 70px; /* ระยะห่างจาก Header */
+  background: linear-gradient(to bottom right, #e7f0fd, #ffffff);
+  font-family: "Prompt", sans-serif;
+  padding-top: 70px; /* ระยะห่างจาก Header */
 }
 
 h1 {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 .form-control {
-    border-radius: 0.375rem;
-    border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  border: 1px solid #ced4da;
 }
 
 .card {
-    border-radius: 0.5rem;
+  border-radius: 0.5rem;
 }
 
-.card-body, .card-header {
-    border-radius: 0.5rem;
+.card-body,
+.card-header {
+  border-radius: 0.5rem;
 }
 
 .card {
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 /* เพิ่มแอนิเมชัน */
 
-
 /* เมนู */
-
 
 /* สีพื้นหลังตามสถานะ */
 /* สีพื้นหลังตามสถานะ */
 .status-รอดำเนินการ {
-    background-color: #f0f0f0; /* สีเทาอ่อน */
-    border-left: 4px solid #c4c4c4; /* เส้นขอบเทา */
+  background-color: #f0f0f0; /* สีเทาอ่อน */
+  border-left: 4px solid #c4c4c4; /* เส้นขอบเทา */
 }
 
 .status-จองแล้ว {
-    background-color: #d0e7ff; /* ฟ้าอ่อน */
-    border-left: 4px solid #5ab4f7; /* เส้นขอบฟ้า */
+  background-color: #d0e7ff; /* ฟ้าอ่อน */
+  border-left: 4px solid #5ab4f7; /* เส้นขอบฟ้า */
 }
 
 .status-ดำเนินการอยู่ {
-    background-color: #ffe8a1; /* เหลืองสด */
-    border-left: 4px solid #ffc107; /* เส้นขอบเหลือง */
+  background-color: #ffe8a1; /* เหลืองสด */
+  border-left: 4px solid #ffc107; /* เส้นขอบเหลือง */
 }
 
 .status-เสร็จสมบูรณ์ {
-    background-color: #d4f7d4; /* เขียวสด */
-    border-left: 4px solid #28a745; /* เส้นขอบเขียว */
+  background-color: #d4f7d4; /* เขียวสด */
+  border-left: 4px solid #28a745; /* เส้นขอบเขียว */
 }
 .status-indicator {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    margin-right: 8px;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 8px;
 }
 
-
 #inlineCalendarWrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%; /* ให้ครอบคลุมพื้นที่ */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* ให้ครอบคลุมพื้นที่ */
 }
 
 #inlineCalendar {
-    width: 100%; /* ให้ปฏิทินพอดีกับกรอบ */
+  width: 100%; /* ให้ปฏิทินพอดีกับกรอบ */
 }
 
 .action-buttons a,
 .action-buttons button {
-    font-size: 0.9rem; /* ลดขนาดข้อความ */
-    padding: 8px 10px; /* ลด Padding */
+  font-size: 0.9rem; /* ลดขนาดข้อความ */
+  padding: 8px 10px; /* ลด Padding */
 }
 
 /* ปรับขนาด Flatpickr */
 .flatpickr-calendar {
-    width: 100% !important; /* บังคับให้กว้างเท่ากับ Container */
-    max-width: 240px !important; /* ปรับให้เท่ากับปุ่ม */
-    margin: 0 auto !important; /* จัดให้อยู่ตรงกลาง */
-    padding: 10px !important; /* เพิ่ม Padding ภายใน */
-    box-sizing: border-box; /* คำนวณขนาดรวม Border และ Padding */
+  width: 100% !important; /* บังคับให้กว้างเท่ากับ Container */
+  max-width: 240px !important; /* ปรับให้เท่ากับปุ่ม */
+  margin: 0 auto !important; /* จัดให้อยู่ตรงกลาง */
+  padding: 10px !important; /* เพิ่ม Padding ภายใน */
+  box-sizing: border-box; /* คำนวณขนาดรวม Border และ Padding */
 }
 
-
 .flatpickr-days {
-    display: grid !important; /* จัด layout แบบ grid */
-    grid-template-columns: repeat(7, 1fr); /* 7 คอลัมน์ */
-    gap: 5px; /* เพิ่มระยะห่างระหว่างวันที่ */
+  display: grid !important; /* จัด layout แบบ grid */
+  grid-template-columns: repeat(7, 1fr); /* 7 คอลัมน์ */
+  gap: 5px; /* เพิ่มระยะห่างระหว่างวันที่ */
 }
 
 .flatpickr-day {
-    height: 30px; /* กำหนดความสูงของวันที่ */
-    line-height: 30px; /* จัดข้อความให้อยู่ตรงกลาง */
-    border-radius: 4px; /* มุมโค้ง */
+  height: 30px; /* กำหนดความสูงของวันที่ */
+  line-height: 30px; /* จัดข้อความให้อยู่ตรงกลาง */
+  border-radius: 4px; /* มุมโค้ง */
 }
 
 .flatpickr-day.selected {
-    background-color: #007bff !important; /* สีพื้นหลังของวันที่เลือก */
-    color: #fff !important; /* สีข้อความของวันที่เลือก */
+  background-color: #007bff !important; /* สีพื้นหลังของวันที่เลือก */
+  color: #fff !important; /* สีข้อความของวันที่เลือก */
 }
 
 .flatpickr-months .flatpickr-month {
-    font-size: 16px; /* ขนาดตัวหนังสือของชื่อเดือน */
+  font-size: 16px; /* ขนาดตัวหนังสือของชื่อเดือน */
 }
 
 .flatpickr-weekday {
-    font-size: 12px; /* ลดขนาดตัวหนังสือของชื่อวัน */
-    color: #6c757d; /* สีตัวหนังสือ */
+  font-size: 12px; /* ลดขนาดตัวหนังสือของชื่อวัน */
+  color: #6c757d; /* สีตัวหนังสือ */
 }
 
-
 .col-md-3 {
-    border-right: 1px solid #ddd; /* เส้นแบ่งด้านขวา */
-    padding-right: 15px; /* เพิ่มระยะห่างภายใน */
+  border-right: 1px solid #ddd; /* เส้นแบ่งด้านขวา */
+  padding-right: 15px; /* เพิ่มระยะห่างภายใน */
 }
 
 .col-md-9 {
-    padding-left: 15px; /* เพิ่มระยะห่างด้านซ้าย */
+  padding-left: 15px; /* เพิ่มระยะห่างด้านซ้าย */
+}
+
+/* table_booking.html */
+.filter-section {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.table-container {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table th,
+table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+table th {
+  background-color: #007bff;
+  color: white;
+}
+
+.view-details-btn:disabled {
+  pointer-events: none;
+  opacity: 0.6;
 }

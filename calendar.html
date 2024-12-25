@@ -25,12 +25,12 @@
             <a href="view.html" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-calendar2-check"></i> View Bookings
             </a>
-            <button id="exportImageBtn" class="btn btn-outline-success btn-sm">
-                <i class="bi bi-download"></i> Export as Image
-            </button>
+            <export-image class="btn btn-sm" capture-area="#captureArea"></export-image>
+                <excel-export></excel-export>  
+            </button>    
         </div>
         <!-- Calendar -->
-        <calendar-component></calendar-component>
+        <calendar-component id="captureArea"></calendar-component>
 
         <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
@@ -38,6 +38,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
         <script type="module" src="component/menu.js"></script>
         <script type="module" src="component/calendar.js"></script>
-
+        <script type="module" src="component/excel_export.js"></script>
+        <script type="module" src="component/exportImage.js"></script>
 </body>
 </html>
