@@ -100,21 +100,26 @@ class CalendarComponent extends HTMLElement {
     color: #fff; /* สีตัวอักษร */
 }
 .fc-event-status-รอดำเนินการ {
-    background-color: #f0f0f0 !important;
-    border-left: 4px solid #c4c4c4;
+    background-color: #d6d6d6 !important;
+    border-left: 4px solid #a6a6a6;
+    color: #ffffff;
 }
 .fc-event-status-จองแล้ว {
-    background-color: #cfe8ff !important;
-    border-left: 4px solid #5ab4f7;
+    background-color: #99c9ff !important;
+    border-left: 4px solid #007bff;
+    color: #ffffff;
 }
 .fc-event-status-ดำเนินการอยู่ {
-    background-color: #fff4ce !important;
-    border-left: 4px solid #ffc107;
+    background-color: #ffe08a !important;
+    border-left: 4px solid #e0a800;
+    color: #ffffff;
 }
 .fc-event-status-เสร็จสมบูรณ์ {
-    background-color: #d1fae5 !important;
-    border-left: 4px solid #28a745;
+    background-color: #82e1aa !important;
+    border-left: 4px solid #218838;
+    color: #ffffff;
 }
+
 
 /* Tooltip Styles */
 .tooltip {
@@ -129,7 +134,6 @@ class CalendarComponent extends HTMLElement {
     z-index: 1000;
     display: none;
 }
-
         </style>
         <div>
             <div id="calendar"></div>
@@ -174,79 +178,156 @@ class CalendarComponent extends HTMLElement {
           ]);
 
           const events = [];
+
+          // ดึงข้อมูล Tour
           if (tourSnapshot.exists()) {
             tourSnapshot.forEach((booking) => {
               const data = booking.val();
               events.push({
-                title: `${data.customerName || "No name"} (Tour)`,
-                start: data.date,
+                title: `${
+                  (data.tourPickUpTime || data.pickUpTime || "-") +
+                  " - " +
+                  (data.tourFirstName || data.customerName || "No name")
+                } (T)`,
+                start: data.tourDate || data.date,
                 color: getColorByStatus(data.status),
                 extendedProps: {
-                  agent: data.agent,
-                  type: data.type,
-                  detail: data.detail,
-                  pax: data.pax,
-                  fee: data.fee,
-                  meal: data.meal,
-                  hotel: data.hotel,
-                  roomNo: data.roomNo,
-                  contactNo: data.contactNo,
-                  pickUpTime: data.pickUpTime,
-                  sendTo: data.sendTo,
-                  note: data.note,
+                  agent: data.tourAgent || data.agent,
+                  type: data.tourType || data.type,
+                  detail: data.tourDetail || data.detail,
+                  pax: data.tourPax || data.pax,
+                  fee: data.tourFee || data.fee,
+                  meal: data.tourMeal || data.meal,
+                  hotel: data.tourHotel || data.hotel,
+                  roomNo: data.tourRoomNo || data.roomNo,
+                  contactNo: data.tourContactNo || data.contactNo,
+                  pickUpTime: data.tourPickUpTime || data.pickUpTime,
+                  sendTo: data.tourSendTo || data.sendTo,
+                  note: data.tourNote || data.note,
+                  firstName: data.tourFirstName || "",
+                  lastName: data.tourLastName || "",
                   status: data.status,
                 },
               });
             });
           }
 
+          // ดึงข้อมูล Transfer
           if (transferSnapshot.exists()) {
             transferSnapshot.forEach((booking) => {
               const data = booking.val();
               events.push({
-                title: `${data.name || "No name"} (Transfer)`,
-                start: data.date,
+                title: `${
+                  (data.transferPickUpTime || data.pickUpTime || "-") +
+                  " - " +
+                  (data.transferFirstName || data.name || "No name")
+                } (Tr)`,
+                start: data.transferDate || data.date,
                 color: getColorByStatus(data.status),
                 extendedProps: {
-                  agent: data.agent,
-                  type: data.type,
-                  detail: data.detail,
-                  pax: data.pax,
-                  flight: data.flight,
-                  time: data.time,
-                  pickUpTime: data.pickUpTime,
-                  pickupFrom: data.pickupFrom,
-                  dropTo: data.dropTo,
-                  sendTo: data.sendTo,
-                  note: data.note,
+                  agent: data.transferAgent || data.agent,
+                  type: data.transferType || data.type,
+                  detail: data.transferDetail || data.detail,
+                  pax: data.transferPax || data.pax,
+                  flight: data.transferFlight || data.flight,
+                  time: data.transferTime || data.time,
+                  pickUpTime: data.transferPickUpTime || data.pickUpTime,
+                  pickupFrom: data.transferPickupFrom || data.pickupFrom,
+                  dropTo: data.transferDropTo || data.dropTo,
+                  sendTo: data.transferSendTo || data.sendTo,
+                  note: data.transferNote || data.note,
+                  firstName: data.transferFirstName || "",
+                  lastName: data.transferLastName || "",
                   status: data.status,
                 },
               });
             });
           }
 
+          // จัดเรียงเหตุการณ์ตาม pickUpTime
+          events.sort((a, b) => {
+            const timeA = a.extendedProps.pickUpTime || "00:00";
+            const timeB = b.extendedProps.pickUpTime || "00:00";
+            return timeA.localeCompare(timeB);
+          });
+
+          // ส่งข้อมูลกลับไปยัง FullCalendar
           successCallback(events);
         } catch (error) {
           console.error("Error fetching events:", error);
           failureCallback(error);
         }
       },
+
       eventDidMount: function (info) {
+        const isTransfer = info.event.title.includes("(Tr)"); // ตรวจสอบว่าเป็น Transfer หรือไม่
+        const firstName = info.event.extendedProps.firstName || "-";
+        const lastName = info.event.extendedProps.lastName || "-";
+
         const tooltipContent = `
-        <div>
-          <strong>Title:</strong> ${info.event.title || "-"}<br>
-          <strong>Date:</strong> ${
-            info.event.start.toLocaleDateString("th-TH") || "-"
-          }<br>
-          <strong>Agent:</strong> ${info.event.extendedProps.agent || "-"}<br>
-          <strong>Type:</strong> ${info.event.extendedProps.type || "-"}<br>
-          <strong>Details:</strong> ${
-            info.event.extendedProps.detail || "-"
-          }<br>
-          <strong>Pax:</strong> ${info.event.extendedProps.pax || "-"}<br>
-          <strong>Status:</strong> ${info.event.extendedProps.status || "-"}<br>
-          <strong>Note:</strong> ${info.event.extendedProps.note || "-"}<br>
-        </div>`;
+          <div style="display: flex; gap: 20px;">
+            <!-- คอลัมน์ซ้าย -->
+            <div style="flex: 1;">
+              <strong>ชื่อ:</strong> ${firstName}<br>
+              <strong>นามสกุล:</strong> ${lastName}<br>
+              <strong>ส่งใคร:</strong> ${
+                info.event.extendedProps.sendTo || "-"
+              }<br>
+              <strong>Agent:</strong> ${
+                info.event.extendedProps.agent || "-"
+              }<br>
+              <strong>จำนวน:</strong> ${info.event.extendedProps.pax || "-"}<br>
+              <strong>ประเภท:</strong> ${
+                info.event.extendedProps.type || "-"
+              }<br>
+              <strong>รายละเอียด:</strong> ${
+                info.event.extendedProps.detail || "-"
+              }<br>
+            </div>
+      
+            <!-- คอลัมน์ขวา -->
+            <div style="flex: 1;">
+              <strong>เวลารับ:</strong> ${
+                info.event.extendedProps.pickUpTime || "-"
+              }<br>
+              <strong>รับที่:</strong> ${
+                info.event.extendedProps.pickupFrom || "-"
+              }<br>
+              <strong>ส่งที่:</strong> ${
+                info.event.extendedProps.dropTo || "-"
+              }<br>
+              ${
+                isTransfer
+                  ? `
+                <strong>ไฟล์ต:</strong> ${
+                  info.event.extendedProps.flight || "-"
+                }<br>
+                <strong>เวลาลงเครื่อง:</strong> ${
+                  info.event.extendedProps.time || "-"
+                }<br>
+              `
+                  : `
+                <strong>Fee:</strong> ${info.event.extendedProps.fee || "-"}<br>
+                <strong>อาหาร:</strong> ${
+                  info.event.extendedProps.meal || "-"
+                }<br>
+                <strong>หมายเลขห้อง:</strong> ${
+                  info.event.extendedProps.roomNo || "-"
+                }<br>
+                <strong>ติดต่อ:</strong> ${
+                  info.event.extendedProps.contactNo || "-"
+                }<br>
+              `
+              }
+              <strong>หมายเหตุ:</strong> ${
+                info.event.extendedProps.note || "-"
+              }<br>
+              <strong>สถานะ:</strong> ${
+                info.event.extendedProps.status || "-"
+              }<br>
+            </div>
+          </div>
+        `;
 
         const tooltip = document.createElement("div");
         tooltip.innerHTML = tooltipContent;
@@ -263,10 +344,18 @@ class CalendarComponent extends HTMLElement {
 
         document.body.appendChild(tooltip);
 
+        // เพิ่มเอฟเฟกต์ hover
         info.el.addEventListener("mouseenter", (e) => {
           tooltip.style.left = `${e.pageX + 10}px`;
           tooltip.style.top = `${e.pageY + 10}px`;
           tooltip.style.display = "block";
+
+          // เพิ่มสไตล์ hover
+          info.el.style.transition =
+            "transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease";
+          info.el.style.transform = "scale(1.05)";
+          info.el.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
+          info.el.style.border = "2px solid black"; // เพิ่มกรอบสีดำ
         });
 
         info.el.addEventListener("mousemove", (e) => {
@@ -276,22 +365,26 @@ class CalendarComponent extends HTMLElement {
 
         info.el.addEventListener("mouseleave", () => {
           tooltip.style.display = "none";
+
+          // คืนค่าเดิมเมื่อเมาส์ออก
+          info.el.style.transform = "scale(1)";
+          info.el.style.boxShadow = "none";
+          info.el.style.border = "none"; // ลบกรอบสีดำ
         });
       },
     });
-
     const getColorByStatus = (status) => {
       switch (status) {
         case "รอดำเนินการ":
-          return "#c4c4c4";
+          return "#a6a6a6"; // สีเทาเข้มขึ้น
         case "จองแล้ว":
-          return "#5ab4f7";
+          return "#007bff"; // สีน้ำเงินเข้มขึ้น
         case "ดำเนินการอยู่":
-          return "#ffc107";
+          return "#e0a800"; // สีเหลืองเข้มขึ้น
         case "เสร็จสมบูรณ์":
-          return "#28a745";
+          return "#218838"; // สีเขียวเข้มขึ้น
         default:
-          return "#000000";
+          return "#000000"; // สีดำ (สำหรับสถานะที่ไม่รู้จัก)
       }
     };
 

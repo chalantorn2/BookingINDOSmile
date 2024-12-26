@@ -160,120 +160,192 @@
       async function fetchBookings(selectedDate) {
         const tourContainer = document.getElementById("tourBookings");
         const transferContainer = document.getElementById("transferBookings");
+
+        if (!selectedDate) {
+          tourContainer.innerHTML =
+            '<p class="text-center text-muted">กรุณาเลือกวันที่</p>';
+          transferContainer.innerHTML =
+            '<p class="text-center text-muted">กรุณาเลือกวันที่</p>';
+          return;
+        }
+
         tourContainer.innerHTML =
-          '<p class="text-center text-muted">Loading...</p>';
+          '<div class="spinner-border text-primary" role="status"></div>';
         transferContainer.innerHTML =
-          '<p class="text-center text-muted">Loading...</p>';
+          '<div class="spinner-border text-primary" role="status"></div>';
 
         try {
-          // Fetch Tour Bookings
-          const tourRef = query(
+          // Query สำหรับฟิลด์ Tour (date & tourDate)
+          const tourOldRef = query(
             ref(database, "tourBookings"),
             orderByChild("date"),
             equalTo(selectedDate)
           );
-          const tourSnapshot = await get(tourRef);
-          const tourData = [];
+          const tourNewRef = query(
+            ref(database, "tourBookings"),
+            orderByChild("tourDate"),
+            equalTo(selectedDate)
+          );
 
-          if (tourSnapshot.exists()) {
-            tourSnapshot.forEach((booking) => {
-              const data = booking.val();
-              data.id = booking.key; // เพิ่ม id ให้ data
-              tourData.push(data);
-            });
-          }
-
-          // Sort Tour Bookings by pickUpTime
-          tourData.sort((a, b) => a.pickUpTime.localeCompare(b.pickUpTime));
-          tourContainer.innerHTML = "";
-          tourData.forEach((data, index) => {
-            const listItem = document.createElement("div");
-            listItem.className = `list-group-item status-${data.status}`;
-
-            listItem.innerHTML = `
-                <div class="d-flex justify-content-between">
-                    <span><strong>${index + 1}.  ${
-              data.customerName || "-"
-            } </strong> | ${data.pax || "-"} คน</span>
-<button class="btn btn-sm btn-info view-details-btn" data-id="${
-              data.id
-            }" data-type="tour">
-    <i class="bi bi-eye"></i>
-</button>
-                </div>
-                <small>
-                    <span style="background-color: #198754; color: white; padding: 2px 5px; border-radius: 3px;">
-                        <i class="bi bi-clock"></i><strong> ${
-                          data.pickUpTime || "-"
-                        } </strong>
-                    </span> |
-                    <strong> ${data.sendTo || "-"} </strong> |
-                    <strong>รายละเอียด:</strong> ${data.detail || "-"}
-                </small>
-            `;
-            tourContainer.appendChild(listItem);
-          });
-
-          if (tourData.length === 0) {
-            tourContainer.innerHTML =
-              '<p class="text-center text-muted">ไม่พบข้อมูลการจองทัวร์</p>';
-          }
-
-          // Fetch Transfer Bookings
-          const transferRef = query(
+          // Query สำหรับฟิลด์ Transfer (date & transferDate)
+          const transferOldRef = query(
             ref(database, "transferBookings"),
             orderByChild("date"),
             equalTo(selectedDate)
           );
-          const transferSnapshot = await get(transferRef);
+          const transferNewRef = query(
+            ref(database, "transferBookings"),
+            orderByChild("transferDate"),
+            equalTo(selectedDate)
+          );
+
+          // ใช้ Promise.all เพื่อ Query ทั้งหมด
+          const [
+            tourOldSnapshot,
+            tourNewSnapshot,
+            transferOldSnapshot,
+            transferNewSnapshot,
+          ] = await Promise.all([
+            get(tourOldRef),
+            get(tourNewRef),
+            get(transferOldRef),
+            get(transferNewRef),
+          ]);
+
+          const tourData = [];
           const transferData = [];
 
-          if (transferSnapshot.exists()) {
-            transferSnapshot.forEach((booking) => {
+          // รวมข้อมูล Tour
+          if (tourOldSnapshot.exists()) {
+            tourOldSnapshot.forEach((booking) => {
               const data = booking.val();
-              data.id = booking.key; // เพิ่ม id ให้ data
+              data.id = booking.key;
+              tourData.push(data);
+            });
+          }
+
+          if (tourNewSnapshot.exists()) {
+            tourNewSnapshot.forEach((booking) => {
+              const data = booking.val();
+              data.id = booking.key;
+              tourData.push(data);
+            });
+          }
+
+          // รวมข้อมูล Transfer
+          if (transferOldSnapshot.exists()) {
+            transferOldSnapshot.forEach((booking) => {
+              const data = booking.val();
+              data.id = booking.key;
               transferData.push(data);
             });
           }
 
-          // Sort Transfer Bookings by pickUpTime
-          transferData.sort((a, b) => a.pickUpTime.localeCompare(b.pickUpTime));
-          transferContainer.innerHTML = "";
-          transferData.forEach((data, index) => {
-            const listItem = document.createElement("div");
-            listItem.className = `list-group-item status-${data.status}`;
+          if (transferNewSnapshot.exists()) {
+            transferNewSnapshot.forEach((booking) => {
+              const data = booking.val();
+              data.id = booking.key;
+              transferData.push(data);
+            });
+          }
 
-            listItem.innerHTML = `
-                <div class="d-flex justify-content-between">
-                    <span><strong>${index + 1}.  ${
-              data.name || "-"
-            } </strong>| ${data.pax || "-"} คน</span>
-<button class="btn btn-sm btn-info view-details-btn" data-id="${
+          console.log("Tour Data:", tourData); // Debug: ตรวจสอบข้อมูล Tour
+          console.log("Transfer Data:", transferData); // Debug: ตรวจสอบข้อมูล Transfer
+
+          // จัดเรียงข้อมูล Tour ตามเวลา
+          tourData.sort((a, b) =>
+            (a.tourPickUpTime || a.pickUpTime || "").localeCompare(
+              b.tourPickUpTime || b.pickUpTime || ""
+            )
+          );
+          tourContainer.innerHTML = "";
+
+          if (tourData.length > 0) {
+            tourData.forEach((data, index) => {
+              const customerName = `${
+                data.tourFirstName || data.customerName || "ไม่มีชื่อ"
+              } ${data.tourLastName || ""}`.trim();
+              const listItem = document.createElement("div");
+              listItem.className = `list-group-item status-${
+                data.status || "unknown"
+              }`;
+              listItem.innerHTML = `
+          <div class="d-flex justify-content-between">
+            <span><strong>${index + 1}. ${customerName}</strong> | ${
+                data.tourPax || data.pax || "-"
+              } คน</span>
+            <button class="btn btn-sm btn-info view-details-btn" data-id="${
               data.id
-            }" data-type="transfer">
-    <i class="bi bi-eye"></i>
-</button>
+            }" data-type="tour"><i class="bi bi-eye"></i></button>
+          </div>
+          <small>
+            <span style="background-color: #198754; color: white; padding: 2px 5px; border-radius: 3px;">
+              <i class="bi bi-clock"> </i><strong>${
+                data.tourPickUpTime || data.pickUpTime || "-"
+              }</strong>
+            </span> |
+            <strong>${data.tourSendTo || data.sendTo || "-"}</strong> |
+            <strong>รายละเอียด:</strong> ${
+              data.tourDetail || data.detail || "-"
+            }
+          </small>
+        `;
+              tourContainer.appendChild(listItem);
+            });
+          } else {
+            tourContainer.innerHTML =
+              '<p class="text-center text-muted">ไม่พบข้อมูลการจองทัวร์</p>';
+          }
 
-                </div>
-                <small>
-                    <span style="background-color: #0d6efd; color: white; padding: 2px 5px; border-radius: 3px;">
-                        <i class="bi bi-clock"></i><strong> ${
-                          data.pickUpTime || "-"
-                        } </strong>
-                    </span> |
-                    <strong> ${data.sendTo || "-"} </strong> |
-                    <strong>รับจาก:</strong> ${data.pickupFrom || "-"} |
-                    <strong>ไปส่งที่:</strong> ${data.dropTo || "-"}
-                </small>
-            `;
-            transferContainer.appendChild(listItem);
-          });
+          // จัดเรียงข้อมูล Transfer ตามเวลา
+          transferData.sort((a, b) =>
+            (a.transferPickUpTime || a.pickUpTime || "").localeCompare(
+              b.transferPickUpTime || b.pickUpTime || ""
+            )
+          );
+          transferContainer.innerHTML = "";
 
-          if (transferData.length === 0) {
+          if (transferData.length > 0) {
+            transferData.forEach((data, index) => {
+              const customerName = `${
+                data.transferFirstName || data.customerName || "ไม่มีชื่อ"
+              } ${data.transferLastName || ""}`.trim();
+              const listItem = document.createElement("div");
+              listItem.className = `list-group-item status-${
+                data.status || "unknown"
+              }`;
+              listItem.innerHTML = `
+          <div class="d-flex justify-content-between">
+            <span><strong>${index + 1}. ${customerName}</strong> | ${
+                data.transferPax || data.pax || "-"
+              } คน</span>
+            <button class="btn btn-sm btn-info view-details-btn" data-id="${
+              data.id
+            }" data-type="transfer"><i class="bi bi-eye"></i></button>
+          </div>
+          <small>
+            <span style="background-color: #0d6efd; color: white; padding: 2px 5px; border-radius: 3px;">
+              <i class="bi bi-clock"></i> <strong>${
+                data.transferPickUpTime || data.pickUpTime || "-"
+              }</strong>
+            </span> |
+            <strong>${data.transferSendTo || data.sendTo || "-"}</strong> |
+            <strong>รับจาก:</strong> ${
+              data.transferPickupFrom || data.pickupFrom || "-"
+            } |
+            <strong>ไปส่งที่:</strong> ${
+              data.transferDropTo || data.dropTo || "-"
+            }
+          </small>
+        `;
+              transferContainer.appendChild(listItem);
+            });
+          } else {
             transferContainer.innerHTML =
               '<p class="text-center text-muted">ไม่พบข้อมูลการจองการรับ-ส่ง</p>';
           }
         } catch (error) {
+          console.error("Error fetching data:", error);
           tourContainer.innerHTML =
             '<p class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูลการจองทัวร์</p>';
           transferContainer.innerHTML =
@@ -284,58 +356,70 @@
       function showPopup(data, type) {
         const fieldOrder = {
           tour: [
-            "customerName",
-            "sendTo",
-            "agent",
-            "type",
-            "detail",
-            "pax",
-            "fee",
-            "meal",
-            "date",
-            "hotel",
-            "roomNo",
-            "contactNo",
-            "pickUpTime",
-            "note",
+            "tourFirstName",
+            "tourLastName",
+            "tourSendTo",
+            "tourAgent",
+            "tourType",
+            "tourDetail",
+            "tourPax",
+            "tourFee",
+            "tourMeal",
+            "tourDate",
+            "tourHotel",
+            "tourRoomNo",
+            "tourContactNo",
+            "tourPickUpTime",
+            "tourNote",
           ],
           transfer: [
-            "name",
-            "sendTo",
-            "agent",
-            "type",
-            "detail",
-            "pax",
-            "flight",
-            "time",
-            "date",
-            "pickUpTime",
-            "pickupFrom",
-            "dropTo",
-            "note",
+            "transferFirstName",
+            "transferLastName",
+            "transferSendTo",
+            "transferAgent",
+            "transferType",
+            "transferDetail",
+            "transferPax",
+            "transferFlight",
+            "transferTime",
+            "transferDate",
+            "transferPickUpTime",
+            "transferPickupFrom",
+            "transferDropTo",
+            "transferNote",
           ],
         };
 
         const labelMap = {
-          customerName: "ชื่อลูกค้า",
-          name: "ชื่อลูกค้า",
-          sendTo: "ส่งใคร",
-          agent: "Agent",
-          type: "ประเภท",
-          detail: "รายละเอียด",
-          pax: "Pax",
-          fee: "FEE",
-          meal: "MEAL",
-          date: "Date",
-          hotel: "โรงแรม",
-          roomNo: "Room No.",
-          contactNo: "Contact No.",
-          pickUpTime: "Pick Up Time",
-          note: "หมายเหตุ",
-          flight: "Flight",
-          time: "Time",
-          pickupFrom: "รับจาก",
-          dropTo: "ส่งที่",
+          tourFirstName: "ชื่อ (ทัวร์)",
+          tourLastName: "นามสกุล (ทัวร์)",
+          tourSendTo: "ส่งใคร (ทัวร์)",
+          tourAgent: "Agent (ทัวร์)",
+          tourType: "ประเภท (ทัวร์)",
+          tourDetail: "รายละเอียด (ทัวร์)",
+          tourPax: "จำนวน (ทัวร์)",
+          tourFee: "ค่าทัวร์",
+          tourMeal: "อาหาร",
+          tourDate: "วันที่ (ทัวร์)",
+          tourHotel: "โรงแรม (ทัวร์)",
+          tourRoomNo: "หมายเลขห้อง (ทัวร์)",
+          tourContactNo: "เบอร์ติดต่อ (ทัวร์)",
+          tourPickUpTime: "เวลารับ (ทัวร์)",
+          tourNote: "หมายเหตุ (ทัวร์)",
+          transferFirstName: "ชื่อ (รับ-ส่ง)",
+          transferLastName: "นามสกุล (รับ-ส่ง)",
+          transferSendTo: "ส่งใคร (รับ-ส่ง)",
+          transferAgent: "Agent (รับ-ส่ง)",
+          transferType: "ประเภท (รับ-ส่ง)",
+          transferDetail: "รายละเอียด (รับ-ส่ง)",
+          transferPax: "จำนวน (รับ-ส่ง)",
+          transferFlight: "เที่ยวบิน",
+          transferTime: "เวลาเที่ยวบิน",
+          transferDate: "วันที่ (รับ-ส่ง)",
+          transferPickUpTime: "เวลารับ (รับ-ส่ง)",
+          transferPickupFrom: "สถานที่รับ",
+          transferDropTo: "สถานที่ส่ง",
+          transferNote: "หมายเหตุ (รับ-ส่ง)",
         };
 
         const fields = fieldOrder[type];
@@ -348,27 +432,27 @@
         const createFieldRow = (field1, field2) => {
           const fieldHtml1 = field1
             ? `
-            <div class="col-md-6">
-                <label for="field-${field1}" class="form-label font-weight-bold">${
+      <div class="col-md-6">
+          <label for="field-${field1}" class="form-label font-weight-bold">${
                 labelMap[field1]
               }</label>
-                <input type="text" class="form-control" id="field-${field1}" value="${
+          <input type="text" class="form-control" id="field-${field1}" value="${
                 data[field1] || ""
               }" />
-            </div>
-        `
+      </div>
+    `
             : "";
           const fieldHtml2 = field2
             ? `
-            <div class="col-md-6">
-                <label for="field-${field2}" class="form-label font-weight-bold">${
+      <div class="col-md-6">
+          <label for="field-${field2}" class="form-label font-weight-bold">${
                 labelMap[field2]
               }</label>
-                <input type="text" class="form-control" id="field-${field2}" value="${
+          <input type="text" class="form-control" id="field-${field2}" value="${
                 data[field2] || ""
               }" />
-            </div>
-        `
+      </div>
+    `
             : "";
           return `<div class="row g-3 mb-3">${fieldHtml1}${fieldHtml2}</div>`;
         };
@@ -382,48 +466,48 @@
         })();
 
         const statusOptions = `
-    <div class="row g-3 mb-3">
-        <div class="col-md-6">
-            <label for="field-status" class="form-label font-weight-bold">สถานะ</label>
-            <select id="field-status" class="form-select">
-                <option value="รอดำเนินการ">รอดำเนินการ</option>
-                <option value="จองแล้ว">จองแล้ว</option>
-                <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
-                <option value="เสร็จสมบูรณ์">เสร็จสมบูรณ์</option>
-            </select>
-        </div>
-    </div>`;
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label for="field-status" class="form-label font-weight-bold">สถานะ</label>
+        <select id="field-status" class="form-select">
+            <option value="รอดำเนินการ">รอดำเนินการ</option>
+            <option value="จองแล้ว">จองแล้ว</option>
+            <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
+            <option value="เสร็จสมบูรณ์">เสร็จสมบูรณ์</option>
+        </select>
+    </div>
+</div>`;
         const generateFieldsWithStatus = generateFields + statusOptions;
 
         let content = `
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content border-0 shadow-lg rounded-3">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>${
-                      type === "tour" ? "Tour Details" : "Transfer Details"
-                    }</h5>
-                    <button type="button" class="btn-close btn-light" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body px-4 py-5">
-                    <div class="container-fluid">
-                        <form id="editForm">
-                            ${generateFieldsWithStatus} <!-- ใช้ generateFieldsWithStatus -->
-                        </form>
-                        <div id="statusMessage" class="alert alert-success d-none text-center mt-4" role="alert"></div>
-                    </div>
-                </div>
-                <div class="modal-footer d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-danger delete-btn">
-                        <i class="bi bi-trash me-1"></i>ลบข้อมูล
-                    </button>
-                    <div>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x me-1"></i>ปิด</button>
-                        <button type="button" class="btn btn-primary save-btn"><i class="bi bi-save me-1"></i>บันทึกข้อมูล</button>
-                    </div>
-                </div>
+<div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content border-0 shadow-lg rounded-3">
+        <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>${
+              type === "tour" ? "Tour Details" : "Transfer Details"
+            }</h5>
+            <button type="button" class="btn-close btn-light" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body px-4 py-5">
+            <div class="container-fluid">
+                <form id="editForm">
+                    ${generateFieldsWithStatus} <!-- ใช้ generateFieldsWithStatus -->
+                </form>
+                <div id="statusMessage" class="alert alert-success d-none text-center mt-4" role="alert"></div>
             </div>
         </div>
-    `;
+        <div class="modal-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-outline-danger delete-btn">
+                <i class="bi bi-trash me-1"></i>ลบข้อมูล
+            </button>
+            <div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x me-1"></i>ปิด</button>
+                <button type="button" class="btn btn-primary save-btn"><i class="bi bi-save me-1"></i>บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+</div>
+`;
 
         popup.innerHTML = content;
         document.body.appendChild(popup);
@@ -432,10 +516,7 @@
 
         // กำหนดสถานะเริ่มต้นใน Popup
         const statusField = popup.querySelector("#field-status");
-        statusField.value = data.status || "รอดำเนินการ"; // กำหนดสถานะเริ่มต้น
-        if (data.status) {
-          statusField.value = data.status; // กำหนดค่าสถานะเริ่มต้น
-        }
+        statusField.value = data.status || "รอดำเนินการ";
 
         // แสดง Popup
         modal.show();
@@ -455,18 +536,27 @@
           const statusMessage = popup.querySelector("#statusMessage");
 
           try {
+            statusMessage.textContent = "กำลังบันทึกข้อมูล...";
+            statusMessage.classList.remove(
+              "d-none",
+              "alert-success",
+              "alert-danger"
+            );
+            statusMessage.classList.add("alert-info");
+
             await set(bookingRef, updatedData);
+
             statusMessage.textContent = "บันทึกข้อมูลสำเร็จ";
-            statusMessage.classList.remove("d-none", "alert-danger");
+            statusMessage.classList.remove("alert-info", "alert-danger");
             statusMessage.classList.add("alert-success");
 
             setTimeout(() => {
               modal.hide();
-              location.reload(); // รีเฟรชข้อมูลหลังจากบันทึก
+              location.reload();
             }, 2000);
           } catch (error) {
             statusMessage.textContent = "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
-            statusMessage.classList.remove("d-none", "alert-success");
+            statusMessage.classList.remove("alert-info", "alert-success");
             statusMessage.classList.add("alert-danger");
             console.error("Error saving data:", error);
           }
@@ -479,10 +569,10 @@
           const bookingRef = ref(database, `${refPath}/${data.id}`);
           if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
             try {
-              await set(bookingRef, null); // ลบข้อมูลใน Firebase
+              await set(bookingRef, null);
               alert("ลบข้อมูลสำเร็จ");
               modal.hide();
-              location.reload(); // รีเฟรชข้อมูลหลังจากลบ
+              location.reload();
             } catch (error) {
               alert("เกิดข้อผิดพลาดในการลบข้อมูล");
               console.error("Error deleting data:", error);
@@ -493,19 +583,6 @@
         popup.addEventListener("hidden.bs.modal", () => {
           document.body.removeChild(popup);
         });
-
-        // เพิ่ม Hover Style ให้ปุ่มลบ
-        const style = document.createElement("style");
-        style.textContent = `
-        .delete-btn {
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .delete-btn:hover {
-            background-color: #dc3545;
-            color: white;
-        }
-    `;
-        document.head.appendChild(style);
       }
 
       // เพิ่ม Event Listener ให้ครอบคลุมทั้ง Tour และ Transfer

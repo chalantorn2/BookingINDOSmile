@@ -1,6 +1,6 @@
 class MenuComponent extends HTMLElement {
-    connectedCallback() {
-        this.innerHTML = `
+  connectedCallback() {
+    this.innerHTML = `
         <style>
             /* Header Style */
             header {
@@ -129,13 +129,13 @@ class MenuComponent extends HTMLElement {
                 <!-- Menu Items -->
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="calendar.html">Calendar</a>
+                        <a class="nav-link" href="index.html">Add Booking</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="view.html">View Bookings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="calendar.html">Calendar</a>
                     </li>
                 </ul>
 
@@ -147,15 +147,15 @@ class MenuComponent extends HTMLElement {
         </header>
         `;
 
-        // JavaScript for Mobile Menu Toggle
-        const toggler = this.querySelector('#menu-toggler');
-        const menu = this.querySelector('.navbar-nav');
+    // JavaScript for Mobile Menu Toggle
+    const toggler = this.querySelector("#menu-toggler");
+    const menu = this.querySelector(".navbar-nav");
 
-        toggler.addEventListener('click', () => {
-            menu.classList.toggle('active');
-        });
-    }
+    toggler.addEventListener("click", () => {
+      menu.classList.toggle("active");
+    });
+  }
 }
 
 // Define the custom element
-customElements.define('menu-component', MenuComponent);
+customElements.define("menu-component", MenuComponent);
