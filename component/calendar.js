@@ -268,6 +268,7 @@ class CalendarComponent extends HTMLElement {
           <div style="display: flex; gap: 20px;">
             <!-- คอลัมน์ซ้าย -->
             <div style="flex: 1;">
+            <h5><strong>${isTransfer ? "Transfer" : "Tour"}</strong></h5>
               <strong>ชื่อ:</strong> ${firstName}<br>
               <strong>นามสกุล:</strong> ${lastName}<br>
               <strong>ส่งใคร:</strong> ${

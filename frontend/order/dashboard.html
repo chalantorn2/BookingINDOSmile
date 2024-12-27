@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Order Management</title>
+    <!-- Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+
+  <body>
+    <menu-component></menu-component>
+
+    <div class="container py-5">
+      <div class="header text-center mb-4">
+        <h1 class="title">Dashboard</h1>
+        <p class="subtitle">จัดการและตรวจสอบ Order และ Booking</p>
+      </div>
+
+      <!-- Add and View Buttons -->
+      <div class="d-flex justify-content-center mb-4">
+        <a href="addOrder.html" class="btn btn-primary me-2">Add Order</a>
+        <a href="viewOrder.html" class="btn btn-secondary">View Orders</a>
+      </div>
+
+      <!-- Table for Unassigned Bookings -->
+      <div class="mt-4">
+        <h2 class="text-center">Unassigned Bookings</h2>
+        <table class="table table-bordered mt-3">
+          <thead class="table-light">
+            <tr>
+              <th class="sortable" data-sort="agent">
+                Agent <i class="bi bi-arrow-down-up"></i>
+              </th>
+              <th class="sortable" data-sort="name">
+                Name <i class="bi bi-arrow-down-up"></i>
+              </th>
+              <th class="sortable" data-sort="date">
+                Date <i class="bi bi-arrow-down-up"></i>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="unassignedBookingsTable">
+            <tr>
+              <td colspan="3" class="text-center">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script type="module" src="/component/menu.js"></script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        query,
+        orderByChild,
+        equalTo,
+        get,
+      } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDijkIIuVzWQWk6VSkXmexrnR_Ldjro",
+        authDomain: "booking-database-86230.firebaseapp.com",
+        databaseURL:
+          "https://booking-database-86230-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "booking-database-86230",
+        storageBucket: "booking-database-86230.appspot.com",
+        messagingSenderId: "891604763798",
+        appId: "1:891604763798:web:a27d3bf90c0e60563caeb7",
+        measurementId: "G-YVFPZ8RJGE",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const tableBody = document.getElementById("unassignedBookingsTable");
+        let currentSortKey = null;
+        let currentSortDirection = "asc";
+
+        tableBody.innerHTML =
+          "<tr><td colspan='3' class='text-center'>Loading...</td></tr>";
+
+        function formatDate(date) {
+          const [year, month, day] = date.split("-");
+          return `${day}/${month}/${year}`;
+        }
+
+        function sortTable(data, key) {
+          const direction = currentSortDirection === "asc" ? 1 : -1;
+          return data.sort((a, b) => {
+            if (key === "date") {
+              const dateA = new Date(a[key].split("/").reverse().join("/"));
+              const dateB = new Date(b[key].split("/").reverse().join("/"));
+              return (dateA - dateB) * direction;
+            }
+            return a[key].localeCompare(b[key]) * direction;
+          });
+        }
+
+        function updateSortIcons() {
+          document.querySelectorAll(".sortable i").forEach((icon) => {
+            icon.className = "bi bi-arrow-down-up";
+          });
+          const activeHeader = document.querySelector(
+            `.sortable[data-sort="${currentSortKey}"] i`
+          );
+          if (activeHeader) {
+            activeHeader.className =
+              currentSortDirection === "asc"
+                ? "bi bi-arrow-up"
+                : "bi bi-arrow-down";
+          }
+        }
+
+        function renderTable(data) {
+          tableBody.innerHTML = "";
+          data.forEach((booking) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${booking.agent || "-"}</td>
+              <td>${booking.name || "-"}</td>
+              <td>${booking.date || "-"}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        }
+
+        try {
+          const toursQuery = query(
+            ref(database, "tourBookings"),
+            orderByChild("orderId"),
+            equalTo(null)
+          );
+          const transfersQuery = query(
+            ref(database, "transferBookings"),
+            orderByChild("orderId"),
+            equalTo(null)
+          );
+
+          const [toursSnapshot, transfersSnapshot] = await Promise.all([
+            get(toursQuery),
+            get(transfersQuery),
+          ]);
+
+          let unassignedBookings = [];
+
+          if (toursSnapshot.exists()) {
+            toursSnapshot.forEach((snap) => {
+              const data = snap.val();
+              unassignedBookings.push({
+                agent: data.tourAgent,
+                name: `${data.tourFirstName || ""} ${
+                  data.tourLastName || ""
+                }`.trim(),
+                date: formatDate(data.tourDate),
+              });
+            });
+          }
+
+          if (transfersSnapshot.exists()) {
+            transfersSnapshot.forEach((snap) => {
+              const data = snap.val();
+              unassignedBookings.push({
+                agent: data.transferAgent,
+                name: `${data.transferFirstName || ""} ${
+                  data.transferLastName || ""
+                }`.trim(),
+                date: formatDate(data.transferDate),
+              });
+            });
+          }
+
+          if (unassignedBookings.length === 0) {
+            tableBody.innerHTML =
+              "<tr><td colspan='3' class='text-center'>No unassigned bookings</td></tr>";
+          } else {
+            renderTable(unassignedBookings);
+          }
+
+          document.querySelectorAll(".sortable").forEach((header) => {
+            header.addEventListener("click", () => {
+              const sortKey = header.dataset.sort;
+              if (currentSortKey === sortKey) {
+                currentSortDirection =
+                  currentSortDirection === "asc" ? "desc" : "asc";
+              } else {
+                currentSortKey = sortKey;
+                currentSortDirection = "asc";
+              }
+              unassignedBookings = sortTable(unassignedBookings, sortKey);
+              updateSortIcons();
+              renderTable(unassignedBookings);
+            });
+          });
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          tableBody.innerHTML =
+            "<tr><td colspan='3' class='text-center text-danger'>Failed to load data</td></tr>";
+        }
+      });
+    </script>
+  </body>
+</html>

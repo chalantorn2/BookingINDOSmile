@@ -122,7 +122,7 @@ class MenuComponent extends HTMLElement {
         <header>
             <nav class="navbar">
                 <!-- Logo -->
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="/index.html">
                     Booking <span>INDO Smile</span>
                 </a>
 
@@ -132,10 +132,10 @@ class MenuComponent extends HTMLElement {
                         <a class="nav-link" href="index.html">Add Booking</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="view.html">View Bookings</a>
+                        <a class="nav-link" href="/frontend/main/view.html">View Bookings</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="calendar.html">Calendar</a>
+                        <a class="nav-link" href="/frontend/main/calendar.html">Calendar</a>
                     </li>
                 </ul>
 
