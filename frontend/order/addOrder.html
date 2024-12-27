@@ -34,10 +34,7 @@
 
       <!-- Add and View Buttons -->
       <div class="d-flex justify-content-center mb-4">
-        <a href="dashboard.html" class="btn btn-primary me-2"
-          >Dashboard Order</a
-        >
-        <a href="viewOrder.html" class="btn btn-secondary">View Orders</a>
+        <a href="viewOrder.html" class="btn btn-primary">View Orders</a>
       </div>
 
       <!-- Table for Selecting Bookings -->
@@ -50,6 +47,9 @@
               <th class="sortable" data-sort="agent">
                 Agent <i class="bi bi-arrow-down-up"></i>
               </th>
+              <th class="sortable" data-sort="type">
+                Type <i class="bi bi-arrow-down-up"></i>
+              </th>
               <th class="sortable" data-sort="name">
                 Name <i class="bi bi-arrow-down-up"></i>
               </th>
@@ -60,7 +60,7 @@
           </thead>
           <tbody id="availableBookingsTable">
             <tr>
-              <td colspan="4" class="text-center">Loading...</td>
+              <td colspan="5" class="text-center">Loading...</td>
             </tr>
           </tbody>
         </table>
@@ -87,20 +87,7 @@
         set,
       } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyDijkIIuVzWQWk6VSkXmexrnR_Ldjro",
-        authDomain: "booking-database-86230.firebaseapp.com",
-        databaseURL:
-          "https://booking-database-86230-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "booking-database-86230",
-        storageBucket: "booking-database-86230.appspot.com",
-        messagingSenderId: "891604763798",
-        appId: "1:891604763798:web:a27d3bf90c0e60563caeb7",
-        measurementId: "G-YVFPZ8RJGE",
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const database = getDatabase(app);
+      import { database } from "/js/firebase-config.js";
 
       document.addEventListener("DOMContentLoaded", async () => {
         const tableBody = document.getElementById("availableBookingsTable");
@@ -146,15 +133,17 @@
         function renderTable(data) {
           tableBody.innerHTML = "";
           data.forEach((booking) => {
+            const bookingType = booking.type || "-"; // Assuming the 'type' field differentiates between Tour and Transfer
             const row = document.createElement("tr");
             row.innerHTML = `
-        <td><input type="checkbox" class="booking-select" data-id="${
-          booking.id
-        }" /></td>
-        <td>${booking.agent || "-"}</td>
-        <td>${booking.name || "-"}</td>
-        <td>${booking.date || "-"}</td>
-      `;
+      <td><input type="checkbox" class="booking-select" data-id="${
+        booking.id
+      }" /></td>
+      <td>${booking.agent || "-"}</td>
+       <td>${bookingType}</td>
+      <td>${booking.name || "-"}</td>     
+      <td>${booking.date || "-"}</td>
+    `;
             tableBody.appendChild(row);
           });
 
@@ -203,6 +192,7 @@
                 name: `${data.tourFirstName || ""} ${
                   data.tourLastName || ""
                 }`.trim(),
+                type: "Tour", // เพิ่มประเภทเป็น Tour
                 date: formatDate(data.tourDate),
               });
             });
@@ -217,6 +207,7 @@
                 name: `${data.transferFirstName || ""} ${
                   data.transferLastName || ""
                 }`.trim(),
+                type: "Transfer", // เพิ่มประเภทเป็น Transfer
                 date: formatDate(data.transferDate),
               });
             });
@@ -224,7 +215,7 @@
 
           if (availableBookings.length === 0) {
             tableBody.innerHTML =
-              "<tr><td colspan='4' class='text-center'>No available bookings</td></tr>";
+              "<tr><td colspan='5' class='text-center'>No available bookings</td></tr>";
           } else {
             renderTable(availableBookings);
           }
@@ -269,8 +260,12 @@
             const updates = {};
 
             selectedBookings.forEach((bookingId) => {
-              updates[`/tourBookings/${bookingId}/orderId`] = orderId;
-              updates[`/transferBookings/${bookingId}/orderId`] = orderId;
+              const booking = availableBookings.find((b) => b.id === bookingId);
+              if (booking.type === "Tour") {
+                updates[`/tourBookings/${bookingId}/orderId`] = orderId;
+              } else if (booking.type === "Transfer") {
+                updates[`/transferBookings/${bookingId}/orderId`] = orderId;
+              }
             });
 
             const newOrderRef = push(ordersRef);

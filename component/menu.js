@@ -129,7 +129,7 @@ class MenuComponent extends HTMLElement {
                 <!-- Menu Items -->
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">Add Booking</a>
+                        <a class="nav-link" href="/index.html">Add Booking</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/frontend/main/view.html">View Bookings</a>

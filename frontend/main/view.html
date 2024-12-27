@@ -142,20 +142,7 @@
         set,
       } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyDijkIIuVzWQWk6VSkXmexrnR_Ldjro",
-        authDomain: "booking-database-86230.firebaseapp.com",
-        databaseURL:
-          "https://booking-database-86230-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "booking-database-86230",
-        storageBucket: "booking-database-86230.appspot.com",
-        messagingSenderId: "891604763798",
-        appId: "1:891604763798:web:a27d3bf90c0e60563caeb7",
-        measurementId: "G-YVFPZ8RJGE",
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const database = getDatabase(app);
+      import { database } from "/js/firebase-config.js";
 
       async function fetchBookings(selectedDate) {
         const tourContainer = document.getElementById("tourBookings");
@@ -336,6 +323,10 @@
             <strong>ไปส่งที่:</strong> ${
               data.transferDropTo || data.dropTo || "-"
             }
+              |
+            <strong>ไฟล์ต:</strong> ${data.transferFlight || "-"}
+              |
+            <strong>เวลา:</strong> ${data.transferTime || "-"}
           </small>
         `;
               transferContainer.appendChild(listItem);
@@ -394,7 +385,7 @@
           tourFirstName: "ชื่อ (ทัวร์)",
           tourLastName: "นามสกุล (ทัวร์)",
           tourSendTo: "ส่งใคร (ทัวร์)",
-          tourAgent: "Agent (ทัวร์)",
+          tourAgent: "Agent",
           tourType: "ประเภท (ทัวร์)",
           tourDetail: "รายละเอียด (ทัวร์)",
           tourPax: "จำนวน (ทัวร์)",
@@ -409,7 +400,7 @@
           transferFirstName: "ชื่อ (รับ-ส่ง)",
           transferLastName: "นามสกุล (รับ-ส่ง)",
           transferSendTo: "ส่งใคร (รับ-ส่ง)",
-          transferAgent: "Agent (รับ-ส่ง)",
+          transferAgent: "Agent",
           transferType: "ประเภท (รับ-ส่ง)",
           transferDetail: "รายละเอียด (รับ-ส่ง)",
           transferPax: "จำนวน (รับ-ส่ง)",
@@ -422,6 +413,28 @@
           transferNote: "หมายเหตุ (รับ-ส่ง)",
         };
 
+        // ฟังก์ชันช่วย format วันเป็น dd/mm/yyyy
+        const formatDate = (dateString) => {
+          if (!dateString) return "";
+          // พยายาม parse dateString เป็น Date
+          const parts = dateString.split("/");
+          // กรณีถ้า data เดิมเคยถูกเก็บในรูปแบบอื่น (เช่น yyyy-mm-dd) สามารถเพิ่มเงื่อนไข parse เพิ่มเติมได้
+          if (parts.length === 3) {
+            // ถ้าพบว่าเป็นรูปแบบ dd/mm/yyyy อยู่แล้ว ก็ return ไปเลย
+            return dateString;
+          } else {
+            // ถ้า data เป็นรูปแบบอื่น (เช่น ISO string, yyyy-mm-dd) ให้พยายาม parse
+            const dateObj = new Date(dateString);
+            if (isNaN(dateObj)) {
+              return dateString; // ถ้า parse ไม่ได้จริง ๆ ก็คืนค่าเดิม
+            }
+            const day = String(dateObj.getDate()).padStart(2, "0");
+            const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+            const year = dateObj.getFullYear();
+            return `${day}/${month}/${year}`;
+          }
+        };
+
         const fields = fieldOrder[type];
         const popup = document.createElement("div");
         popup.className = "modal fade";
@@ -429,34 +442,45 @@
         popup.tabIndex = "-1";
         popup.setAttribute("role", "dialog");
 
+        // ฟังก์ชันสร้าง row ของฟิลด์ (2 ฟิลด์ต่อ 1 row)
         const createFieldRow = (field1, field2) => {
-          const fieldHtml1 = field1
-            ? `
-      <div class="col-md-6">
-          <label for="field-${field1}" class="form-label font-weight-bold">${
-                labelMap[field1]
-              }</label>
-          <input type="text" class="form-control" id="field-${field1}" value="${
-                data[field1] || ""
-              }" />
-      </div>
-    `
-            : "";
-          const fieldHtml2 = field2
-            ? `
-      <div class="col-md-6">
-          <label for="field-${field2}" class="form-label font-weight-bold">${
-                labelMap[field2]
-              }</label>
-          <input type="text" class="form-control" id="field-${field2}" value="${
-                data[field2] || ""
-              }" />
-      </div>
-    `
-            : "";
+          const createFieldHtml = (fieldName) => {
+            if (!fieldName) return "";
+
+            let value = data[fieldName] || "";
+            let inputElement = "";
+
+            // หากเป็น date ให้แปลงเป็น dd/mm/yyyy
+            if (fieldName === "tourDate" || fieldName === "transferDate") {
+              value = formatDate(value);
+            }
+
+            // หากเป็น detail ให้ใช้ textarea
+            if (fieldName === "tourDetail" || fieldName === "transferDetail") {
+              inputElement = `
+          <textarea class="form-control" id="field-${fieldName}" rows="5">${value}</textarea>
+        `;
+            } else {
+              inputElement = `
+          <input type="text" class="form-control" id="field-${fieldName}" value="${value}" />
+        `;
+            }
+
+            return `
+        <div class="col-md-6">
+          <label for="field-${fieldName}" class="form-label font-weight-bold">${labelMap[fieldName]}</label>
+          ${inputElement}
+        </div>
+      `;
+          };
+
+          const fieldHtml1 = createFieldHtml(field1);
+          const fieldHtml2 = createFieldHtml(field2);
+
           return `<div class="row g-3 mb-3">${fieldHtml1}${fieldHtml2}</div>`;
         };
 
+        // สร้างฟิลด์ทั้งหมดของฟอร์ม
         const generateFields = (() => {
           const rows = [];
           for (let i = 0; i < fields.length; i += 2) {
@@ -465,49 +489,59 @@
           return rows.join("");
         })();
 
+        // เพิ่มฟิลด์สถานะ
         const statusOptions = `
-<div class="row g-3 mb-3">
-    <div class="col-md-6">
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
         <label for="field-status" class="form-label font-weight-bold">สถานะ</label>
         <select id="field-status" class="form-select">
-            <option value="รอดำเนินการ">รอดำเนินการ</option>
-            <option value="จองแล้ว">จองแล้ว</option>
-            <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
-            <option value="เสร็จสมบูรณ์">เสร็จสมบูรณ์</option>
+          <option value="รอดำเนินการ">รอดำเนินการ</option>
+          <option value="จองแล้ว">จองแล้ว</option>
+          <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
+          <option value="เสร็จสมบูรณ์">เสร็จสมบูรณ์</option>
         </select>
+      </div>
     </div>
-</div>`;
+  `;
+        // รวมฟิลด์ทั้งหมดกับสถานะ
         const generateFieldsWithStatus = generateFields + statusOptions;
 
+        // สร้างเนื้อหาใน Popup
         let content = `
-<div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content border-0 shadow-lg rounded-3">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content border-0 shadow-lg rounded-3">
         <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>${
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-pencil-square me-2"></i>${
               type === "tour" ? "Tour Details" : "Transfer Details"
-            }</h5>
-            <button type="button" class="btn-close btn-light" data-bs-dismiss="modal" aria-label="Close"></button>
+            }
+          </h5>
+          <button type="button" class="btn-close btn-light" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body px-4 py-5">
-            <div class="container-fluid">
-                <form id="editForm">
-                    ${generateFieldsWithStatus} <!-- ใช้ generateFieldsWithStatus -->
-                </form>
-                <div id="statusMessage" class="alert alert-success d-none text-center mt-4" role="alert"></div>
-            </div>
+          <div class="container-fluid">
+            <form id="editForm">
+              ${generateFieldsWithStatus}
+            </form>
+            <div id="statusMessage" class="alert alert-success d-none text-center mt-4" role="alert"></div>
+          </div>
         </div>
         <div class="modal-footer d-flex justify-content-between">
-            <button type="button" class="btn btn-outline-danger delete-btn">
-                <i class="bi bi-trash me-1"></i>ลบข้อมูล
+          <button type="button" class="btn btn-outline-danger delete-btn">
+            <i class="bi bi-trash me-1"></i>ลบข้อมูล
+          </button>
+          <div>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x me-1"></i>ปิด
             </button>
-            <div>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x me-1"></i>ปิด</button>
-                <button type="button" class="btn btn-primary save-btn"><i class="bi bi-save me-1"></i>บันทึกข้อมูล</button>
-            </div>
+            <button type="button" class="btn btn-primary save-btn">
+              <i class="bi bi-save me-1"></i>บันทึกข้อมูล
+            </button>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-`;
+  `;
 
         popup.innerHTML = content;
         document.body.appendChild(popup);
@@ -526,9 +560,18 @@
         saveBtn.addEventListener("click", async () => {
           const updatedData = {};
           updatedData["status"] = popup.querySelector("#field-status").value;
+
           fields.forEach((key) => {
             const input = popup.querySelector(`#field-${key}`);
-            updatedData[key] = input ? input.value : "";
+            let value = input ? input.value : "";
+
+            // ถ้าเป็น date เราจะเก็บเป็น dd/mm/yyyy ตามที่แก้ไข
+            if (key === "tourDate" || key === "transferDate") {
+              // สมมติในที่นี้เรายอมให้เก็บเป็น dd/mm/yyyy ตรงๆ
+              updatedData[key] = value;
+            } else {
+              updatedData[key] = value;
+            }
           });
 
           const refPath = type === "tour" ? "tourBookings" : "transferBookings";
@@ -580,6 +623,7 @@
           }
         });
 
+        // เมื่อ Popup ถูกปิด ให้ลบ element ทิ้ง
         popup.addEventListener("hidden.bs.modal", () => {
           document.body.removeChild(popup);
         });

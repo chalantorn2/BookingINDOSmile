@@ -20,7 +20,7 @@
       rel="stylesheet"
     />
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/order.css" />
   </head>
 
   <body>
@@ -35,7 +35,20 @@
       <!-- Add and Dashboard Buttons -->
       <div class="d-flex justify-content-center mb-4">
         <a href="addOrder.html" class="btn btn-primary me-2">Add Order</a>
-        <a href="dashboard.html" class="btn btn-secondary">Dashboard Order</a>
+        <!-- <a href="dashboard.html" class="btn btn-secondary">Dashboard Order</a> -->
+      </div>
+      <div class="d-flex justify-content-center align-items-center mb-4">
+        <input
+          type="text"
+          id="searchInput"
+          class="form-control w-50"
+          placeholder="Search by Order ID"
+        />
+        <select id="sortSelector" class="form-select w-25">
+          <option value="earliestDate">Earliest Date</option>
+          <option value="latestDate">Latest Date</option>
+          <option value="orderID">Order ID</option>
+        </select>
       </div>
 
       <!-- Orders List -->
@@ -55,21 +68,7 @@
         ref,
         get,
       } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyDijkIIuVzWQWk6VSkXmexrnR_Ldjro",
-        authDomain: "booking-database-86230.firebaseapp.com",
-        databaseURL:
-          "https://booking-database-86230-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "booking-database-86230",
-        storageBucket: "booking-database-86230.appspot.com",
-        messagingSenderId: "891604763798",
-        appId: "1:891604763798:web:a27d3bf90c0e60563caeb7",
-        measurementId: "G-YVFPZ8RJGE",
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const database = getDatabase(app);
+      import { database } from "/js/firebase-config.js";
 
       document.addEventListener("DOMContentLoaded", async () => {
         const ordersList = document.getElementById("ordersList");
@@ -97,60 +96,108 @@
 
             let agent = "Unknown Agent";
             let customerName = "Unknown Name";
-            let earliestDate = null;
-            let latestDate = null;
+            let bookingDetails = [];
 
             const bookingPromises = bookings.map(async (bookingId) => {
-              const bookingRef = ref(database, `tourBookings/${bookingId}`);
-              const snap = await get(bookingRef);
+              const tourRef = ref(database, `tourBookings/${bookingId}`);
+              const transferRef = ref(
+                database,
+                `transferBookings/${bookingId}`
+              );
 
-              if (snap.exists()) {
-                const booking = snap.val();
-                agent = booking.tourAgent || booking.transferAgent || agent;
-                customerName = `${
-                  booking.tourFirstName || booking.transferFirstName || ""
-                } ${
-                  booking.tourLastName || booking.transferLastName || ""
+              let bookingData = null;
+              const tourSnap = await get(tourRef);
+
+              if (tourSnap.exists()) {
+                bookingData = tourSnap.val();
+                agent = bookingData.tourAgent || agent;
+                customerName = `${bookingData.tourFirstName || ""} ${
+                  bookingData.tourLastName || ""
                 }`.trim();
-                const date = booking.tourDate || booking.transferDate;
 
-                if (date) {
-                  const currentDate = new Date(date);
-                  if (!earliestDate || currentDate < earliestDate) {
-                    earliestDate = currentDate;
-                  }
-                  if (!latestDate || currentDate > latestDate) {
-                    latestDate = currentDate;
-                  }
+                bookingDetails.push({
+                  date: bookingData.tourDate,
+                  time: bookingData.tourPickUpTime || "00:00",
+                  type: "Tour",
+                  sendTo: bookingData.tourSendTo || "-",
+                  id: bookingData.tourID || bookingId,
+                });
+              } else {
+                const transferSnap = await get(transferRef);
+                if (transferSnap.exists()) {
+                  bookingData = transferSnap.val();
+                  agent = bookingData.transferAgent || agent;
+                  customerName = `${bookingData.transferFirstName || ""} ${
+                    bookingData.transferLastName || ""
+                  }`.trim();
+
+                  bookingDetails.push({
+                    date: bookingData.transferDate,
+                    time: bookingData.transferPickUpTime || "00:00",
+                    type: "Transfer",
+                    sendTo: bookingData.transferSendTo || "-",
+                    id: bookingData.transferID || bookingId,
+                  });
                 }
               }
             });
 
             await Promise.all(bookingPromises);
 
+            // เรียงลำดับตามวันที่และเวลารับ
+            bookingDetails.sort((a, b) => {
+              const dateA = new Date(a.date);
+              const dateB = new Date(b.date);
+              if (dateA - dateB !== 0) return dateA - dateB;
+              return a.time.localeCompare(b.time);
+            });
+
+            // คำนวณช่วงวันที่
+            let earliestDate = null;
+            let latestDate = null;
+
+            bookingDetails.forEach((booking) => {
+              const currentDate = new Date(booking.date);
+              if (!earliestDate || currentDate < earliestDate) {
+                earliestDate = currentDate;
+              }
+              if (!latestDate || currentDate > latestDate) {
+                latestDate = currentDate;
+              }
+            });
+
             const formatDate = (date) => {
               if (!date) return "Unknown Date";
-              return date.toLocaleDateString("th-TH", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              });
+              const d = new Date(date);
+              const day = String(d.getDate()).padStart(2, "0");
+              const month = String(d.getMonth() + 1).padStart(2, "0");
+              const year = d.getFullYear();
+              return `${day}/${month}/${year}`;
             };
 
             const listItem = document.createElement("li");
             listItem.className = "list-group-item";
 
             listItem.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center">
-          <span><strong>Order:</strong> ${agent} | ${customerName} | ${formatDate(
-              earliestDate
-            )} - ${formatDate(latestDate)}</span>
-          <button class="btn btn-link toggle-details" data-order-id="${orderId}">
-            <i class="bi bi-caret-down"></i>
-          </button>
-        </div>
-        <ul class="list-group mt-3 d-none" id="details-${orderId}"></ul>
-      `;
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h6 class="mb-1"><strong>${order.id || "No ID"}</strong></h6>
+        <p class="mb-0 text-muted">${customerName} | 
+        <span class="badge bg-secondary">${formatDate(
+          earliestDate
+        )} - ${formatDate(latestDate)}</span></p>
+      </div>
+      <button class="btn btn-outline-primary btn-sm toggle-details" data-order-id="${orderId}">
+        <i class="bi bi-caret-down"></i> Details
+      </button>
+    </div>
+    
+  </div>
+  <ul class="list-group mt-3 d-none" id="details-${orderId}"></ul>
+</div>
+`;
 
             ordersList.appendChild(listItem);
 
@@ -160,19 +207,29 @@
             toggleButton.addEventListener("click", () => {
               if (detailsList.classList.contains("d-none")) {
                 if (detailsList.innerHTML === "") {
-                  if (bookings.length === 0) {
+                  if (bookingDetails.length === 0) {
                     detailsList.innerHTML =
                       '<li class="list-group-item">No bookings</li>';
                   } else {
-                    bookings.forEach((bookingId) => {
+                    bookingDetails.forEach((booking, index) => {
                       const bookingItem = document.createElement("li");
-                      bookingItem.className = "list-group-item";
-                      bookingItem.textContent = `Booking ID: ${bookingId}`;
+                      bookingItem.className =
+                        "list-group-item d-flex justify-content-between align-items-center";
+                      bookingItem.innerHTML = `
+<div>
+  <strong>${index + 1}. ${booking.type}</strong>
+  <small>
+    <span class="text-muted">Date:</span> ${formatDate(booking.date)} |
+    <span class="text-muted">Time:</span> ${booking.time} |
+    <span class="text-muted">Send To:</span> ${booking.sendTo}
+  </small>
+</div>
+<span class="badge bg-primary">${booking.id}</span>
+`;
                       detailsList.appendChild(bookingItem);
                     });
                   }
                 }
-
                 detailsList.classList.remove("d-none");
                 toggleButton.innerHTML = '<i class="bi bi-caret-up"></i>';
               } else {
@@ -187,6 +244,40 @@
             '<li class="list-group-item text-center text-danger">Failed to load orders</li>';
         }
       });
+
+      function formatToDDMMYYYY(dateString) {
+        if (!dateString || dateString === "-") return "-";
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+
+      let ordersData = []; // เก็บข้อมูลทั้งหมด
+
+      function renderOrders(filteredOrders) {
+        ordersList.innerHTML = "";
+        filteredOrders.forEach((order) => {
+          const listItem = document.createElement("li");
+          listItem.className = "list-group-item";
+          listItem.innerHTML = `
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h6 class="mb-1"><strong>${order.id || "No ID"}</strong></h6>
+        <p class="mb-0 text-muted">${order.customerName || "Unknown Name"} | 
+        <span class="badge bg-secondary">${formatDate(
+          order.earliestDate
+        )} - ${formatDate(order.latestDate)}</span></p>
+      </div>
+    </div>
+  </div>
+</div>`;
+          ordersList.appendChild(listItem);
+        });
+      }
     </script>
   </body>
 </html>

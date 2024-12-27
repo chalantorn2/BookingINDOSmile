@@ -26,8 +26,13 @@
         <p class="lead">กรุณาเลือกฟอร์มที่ต้องการกรอก</p>
         <a
           href="/frontend/main/view.html"
-          class="d-grid gap-2 col-3 mx-auto btn btn-secondary"
-          >View Booking</a
+          class="gap-2 col-3 mx-auto btn btn-secondary"
+          >View Bookings</a
+        >
+        <a
+          href="/frontend/order/viewOrder.html"
+          class="gap-2 col-3 mx-auto btn btn-secondary"
+          >View Order</a
         >
       </div>
 
@@ -97,7 +102,7 @@
                   class="form-control"
                   id="tourFirstNameCustomer"
                   name="tourFirstNameCustomer"
-                  placeholder="ชื่อผู้จอง"
+                  placeholder="ชื่อลูกค้า"
                 />
               </div>
               <div class="col-md-4">
@@ -109,7 +114,7 @@
                   class="form-control"
                   id="tourLastNameCustomer"
                   name="tourLastNameCustomer"
-                  placeholder="นามสกุลผู้จอง"
+                  placeholder="นามสกุลลูกค้า"
                 />
               </div>
               <div class="col-md-4">
@@ -285,7 +290,7 @@
                   class="form-control"
                   id="transferFirstNameCustomer"
                   name="transferFirstNameCustomer"
-                  placeholder="ชื่อผู้จอง"
+                  placeholder="ชื่อลูกค้า"
                 />
               </div>
               <div class="col-md-4">
@@ -297,7 +302,7 @@
                   class="form-control"
                   id="transferLastNameCustomer"
                   name="transferLastNameCustomer"
-                  placeholder="นามสกุลผู้จอง"
+                  placeholder="นามสกุลลูกค้า"
                 />
               </div>
               <div class="col-md-4">
@@ -430,21 +435,7 @@
       } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
       import { generateBookingID } from "/js/id.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyDijkIIuVzWQWk6VSkXmexrnR_Ldjro",
-        authDomain: "booking-database-86230.firebaseapp.com",
-        databaseURL:
-          "https://booking-database-86230-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "booking-database-86230",
-        storageBucket: "booking-database-86230.appspot.com",
-        messagingSenderId: "891604763798",
-        appId: "1:891604763798:web:a27d3bf90c0e60563caeb7",
-        measurementId: "G-YVFPZ8RJGE",
-      };
-
-      // Firebase Initialization
-      const app = initializeApp(firebaseConfig);
-      const database = getDatabase(app);
+      import { database } from "/js/firebase-config.js";
 
       document.addEventListener("DOMContentLoaded", function () {
         console.log("DOM Loaded Successfully");
@@ -501,7 +492,7 @@
             const bookingID = await generateBookingID("tour"); // ใช้ await
             console.log(`Generated Booking ID: ${bookingID}`);
             const formData = {
-              id: bookingID,
+              tourID: bookingID,
               tourAgent: document.getElementById("tourAgent").value,
               tourType: document.getElementById("tourType").value,
               tourDetail: document.getElementById("tourDetail").value,
@@ -542,7 +533,7 @@
             const bookingID = await generateBookingID("transfer"); // ใช้ await
             console.log(`Generated Booking ID: ${bookingID}`);
             const formData = {
-              id: bookingID,
+              transferID: bookingID,
               transferAgent: document.getElementById("transferAgent").value,
               transferType: document.getElementById("transferType").value,
               transferDetail: document.getElementById("transferDetail").value,

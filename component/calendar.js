@@ -80,7 +80,7 @@ class CalendarComponent extends HTMLElement {
     cursor: pointer;
 }
 .fc-daygrid-day.fc-day-today {
-    background-color:rgb(238, 238, 238) !important; /* น้ำเงินอ่อนสำหรับวันที่ปัจจุบัน */
+    background-color:rgb(209, 209, 209) !important; /* น้ำเงินอ่อนสำหรับวันที่ปัจจุบัน */
     font-weight: bold;
     // border: 2px solid #1d4ed8;
 }
