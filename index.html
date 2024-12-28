@@ -103,6 +103,7 @@
                   id="tourFirstNameCustomer"
                   name="tourFirstNameCustomer"
                   placeholder="ชื่อลูกค้า"
+                  required
                 />
               </div>
               <div class="col-md-4">
@@ -114,7 +115,8 @@
                   class="form-control"
                   id="tourLastNameCustomer"
                   name="tourLastNameCustomer"
-                  placeholder="นามสกุลลูกค้า"
+                  placeholder="นามสกุลลูกค้า หากไม่มีให้ใส่ - (ขีด)"
+                  required
                 />
               </div>
               <div class="col-md-4">
@@ -291,6 +293,7 @@
                   id="transferFirstNameCustomer"
                   name="transferFirstNameCustomer"
                   placeholder="ชื่อลูกค้า"
+                  required
                 />
               </div>
               <div class="col-md-4">
@@ -302,7 +305,8 @@
                   class="form-control"
                   id="transferLastNameCustomer"
                   name="transferLastNameCustomer"
-                  placeholder="นามสกุลลูกค้า"
+                  placeholder="นามสกุลลูกค้า หากไม่มีให้ใส่ - (ขีด)"
+                  required
                 />
               </div>
               <div class="col-md-4">
@@ -569,6 +573,16 @@
           }
         });
       });
+
+      // document.getElementById("userForm").addEventListener("submit", (e) => {
+      //   const firstname = document.getElementById("firstname").value.trim();
+      //   const lastname = document.getElementById("lastname").value.trim();
+
+      //   if (!firstname || !lastname) {
+      //     e.preventDefault(); // ป้องกันการส่งฟอร์ม
+      //     alert("กรุณากรอกข้อมูลทั้งชื่อและนามสกุลให้ครบถ้วน");
+      //   }
+      // });
     </script>
 
     <!-- Bootstrap JS -->

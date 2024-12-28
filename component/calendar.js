@@ -263,12 +263,18 @@ class CalendarComponent extends HTMLElement {
         const isTransfer = info.event.title.includes("(Tr)"); // ตรวจสอบว่าเป็น Transfer หรือไม่
         const firstName = info.event.extendedProps.firstName || "-";
         const lastName = info.event.extendedProps.lastName || "-";
+        const eventDate = info.event.start
+          ? `${String(info.event.start.getDate()).padStart(2, "0")}/${String(
+              info.event.start.getMonth() + 1
+            ).padStart(2, "0")}/${info.event.start.getFullYear()}`
+          : "-";
 
         const tooltipContent = `
           <div style="display: flex; gap: 20px;">
             <!-- คอลัมน์ซ้าย -->
             <div style="flex: 1;">
-            <h5><strong>${isTransfer ? "Transfer" : "Tour"}</strong></h5>
+           <h5><strong>${eventDate}</strong></h5>
+           <h6><strong>${isTransfer ? "Transfer" : "Tour"}</strong></h6>
               <strong>ชื่อ:</strong> ${firstName}<br>
               <strong>นามสกุล:</strong> ${lastName}<br>
               <strong>ส่งใคร:</strong> ${
