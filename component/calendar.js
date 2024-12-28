@@ -274,7 +274,9 @@ class CalendarComponent extends HTMLElement {
             <!-- คอลัมน์ซ้าย -->
             <div style="flex: 1;">
            <h5><strong>${eventDate}</strong></h5>
-           <h6><strong>${isTransfer ? "Transfer" : "Tour"}</strong></h6>
+           <h6><strong>เวลารับ:</strong> ${
+             info.event.extendedProps.pickUpTime || "-"
+           }</h6>
               <strong>ชื่อ:</strong> ${firstName}<br>
               <strong>นามสกุล:</strong> ${lastName}<br>
               <strong>ส่งใคร:</strong> ${
@@ -294,9 +296,7 @@ class CalendarComponent extends HTMLElement {
       
             <!-- คอลัมน์ขวา -->
             <div style="flex: 1;">
-              <strong>เวลารับ:</strong> ${
-                info.event.extendedProps.pickUpTime || "-"
-              }<br>
+              
               <strong>รับที่:</strong> ${
                 info.event.extendedProps.pickupFrom || "-"
               }<br>
@@ -329,9 +329,10 @@ class CalendarComponent extends HTMLElement {
               <strong>หมายเหตุ:</strong> ${
                 info.event.extendedProps.note || "-"
               }<br>
-              <strong>สถานะ:</strong> ${
-                info.event.extendedProps.status || "-"
-              }<br>
+              <strong>สถานะ:</strong> ${info.event.extendedProps.status || "-"}
+<h5 style="color:rgb(128, 128, 128);"><i><strong>${
+          isTransfer ? "*Transfer" : "*Tour"
+        }</strong></i></h5>
             </div>
           </div>
         `;
