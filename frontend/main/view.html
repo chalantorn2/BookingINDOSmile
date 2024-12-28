@@ -31,6 +31,7 @@
       <div class="header text-center mb-4">
         <h1 class="title">View Bookings</h1>
         <p class="subtitle">เลือกวันที่เพื่อดูรายการจอง</p>
+        <calendar-highlight></calendar-highlight>
       </div>
 
       <div class="row bg-white pt-2">
@@ -686,20 +687,33 @@
           .toString()
           .padStart(2, "0")}/${today.getFullYear()}`;
 
-        // กำหนด Flatpickr แบบ Inline
+        // แก้ไขฟังก์ชัน onChange ใน flatpickr
         const fp = flatpickr("#inlineCalendar", {
-          inline: true, // แสดงปฏิทินแบบฝัง
+          inline: true,
           dateFormat: "d/m/Y",
           defaultDate: today,
           onChange: (selectedDates, dateStr) => {
             if (selectedDates.length > 0) {
               const rawDate = selectedDates[0];
               const year = rawDate.getFullYear();
-              const month = String(rawDate.getMonth() + 1).padStart(2, "0");
-              const day = String(rawDate.getDate()).padStart(2, "0");
-              const finalString = `${year}-${month}-${day}`;
+              const month = rawDate.getMonth(); // Note: ไม่ต้อง +1 เพราะส่งข้อมูลดิบ
+              const day = rawDate.getDate();
+
+              // Dispatch event พร้อมข้อมูลวันที่
+              const calendarChangeEvent = new CustomEvent(
+                "calendar-date-change",
+                {
+                  detail: { year, month, day },
+                }
+              );
+              window.dispatchEvent(calendarChangeEvent);
+
               dateText.textContent = dateStr; // อัปเดตวันที่ที่แสดง
-              fetchBookings(finalString); // ดึงข้อมูลการจองตามวันที่
+              fetchBookings(
+                `${year}-${String(month + 1).padStart(2, "0")}-${String(
+                  day
+                ).padStart(2, "0")}`
+              );
             }
           },
         });
@@ -719,5 +733,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script type="module" src="/component/menu.js"></script>
     <script type="module" src="/component/exportImage.js"></script>
+    <script type="module" src="/component/calendarHighlight.js"></script>
   </body>
 </html>
