@@ -565,10 +565,10 @@
             const input = popup.querySelector(`#field-${key}`);
             let value = input ? input.value : "";
 
-            // ถ้าเป็น date เราจะเก็บเป็น dd/mm/yyyy ตามที่แก้ไข
+            // ถ้าเป็น date เราจะแปลงเป็น YYYY-MM-DD
             if (key === "tourDate" || key === "transferDate") {
-              // สมมติในที่นี้เรายอมให้เก็บเป็น dd/mm/yyyy ตรงๆ
-              updatedData[key] = value;
+              const [day, month, year] = value.split("/"); // แยกวันที่
+              updatedData[key] = `${year}-${month}-${day}`; // ประกอบใหม่เป็น YYYY-MM-DD
             } else {
               updatedData[key] = value;
             }

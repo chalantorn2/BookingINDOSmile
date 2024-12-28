@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auto-complete with Firebase</title>
+    <style>
+      .autocomplete-suggestions {
+        border: 1px solid #ccc;
+        max-height: 150px;
+        overflow-y: auto;
+        background-color: white;
+        position: absolute;
+        z-index: 1000;
+        width: calc(100% - 22px);
+        margin-top: 2px;
+      }
+      .autocomplete-suggestion {
+        padding: 8px;
+        cursor: pointer;
+      }
+      .autocomplete-suggestion:hover {
+        background-color: #f0f0f0;
+      }
+    </style>
+    <script type="module">
+      import { database } from "/js/firebase-config.js";
+      import {
+        ref,
+        get,
+        set,
+        push,
+        query,
+        orderByChild,
+        startAt,
+      } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const input = document.getElementById("agentInput");
+        const suggestionsBox = document.getElementById("suggestions");
+
+        input.addEventListener("input", async function () {
+          const queryText = this.value.toLowerCase();
+          suggestionsBox.innerHTML = "";
+
+          if (queryText) {
+            const combinedResults = [];
+
+            const fetchFieldSuggestions = async (path, child) => {
+              const fieldRef = query(
+                ref(database, path),
+                orderByChild(child),
+                startAt(queryText)
+              );
+              const snapshot = await get(fieldRef);
+
+              if (snapshot.exists()) {
+                Object.values(snapshot.val()).forEach((item) => {
+                  if (
+                    item[child] &&
+                    item[child].toLowerCase().includes(queryText)
+                  ) {
+                    combinedResults.push(item[child]);
+                  }
+                });
+              }
+            };
+
+            await Promise.all([
+              fetchFieldSuggestions("tourBookings", "name"),
+              fetchFieldSuggestions("transferBookings", "name"),
+            ]);
+
+            const uniqueResults = [...new Set(combinedResults)];
+
+            uniqueResults.forEach((match) => {
+              const suggestion = document.createElement("div");
+              suggestion.className = "autocomplete-suggestion";
+              suggestion.textContent = match;
+
+              suggestion.addEventListener("click", () => {
+                input.value = match;
+                suggestionsBox.innerHTML = "";
+              });
+
+              suggestionsBox.appendChild(suggestion);
+            });
+          }
+        });
+
+        input.addEventListener("blur", async () => {
+          const newAgent = input.value.trim();
+          if (newAgent) {
+            const agentsRef = ref(database, "tourBookings");
+            const snapshot = await get(agentsRef);
+            const existingAgents = snapshot.exists()
+              ? Object.values(snapshot.val())
+              : [];
+            const isDuplicate = existingAgents.some(
+              (agent) =>
+                agent.name &&
+                agent.name.toLowerCase() === newAgent.toLowerCase()
+            );
+
+            if (!isDuplicate) {
+              push(agentsRef, { name: newAgent });
+            }
+          }
+        });
+
+        document.addEventListener("click", (event) => {
+          if (
+            !input.contains(event.target) &&
+            !suggestionsBox.contains(event.target)
+          ) {
+            suggestionsBox.innerHTML = "";
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div style="position: relative; max-width: 300px; margin: 50px auto">
+      <label for="agentInput">Agent or SendTo:</label>
+      <input
+        type="text"
+        id="agentInput"
+        placeholder="Type agent or send-to name"
+        style="width: 100%; padding: 10px"
+      />
+      <div id="suggestions" class="autocomplete-suggestions"></div>
+    </div>
+  </body>
+</html>
