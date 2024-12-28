@@ -58,3 +58,15 @@ async function updateOldDataWithNewIDs() {
 
 // เรียกใช้ฟังก์ชัน
 updateOldDataWithNewIDs();
+
+// class Student {
+//   constructor(name, age) {
+//     this.name = name;
+//     this.age = age;
+//   }
+//   introduce() {
+//     console.log(`Hi, I'm ${this.name} and I'm ${this.age} year old.`);
+//   }
+// }
+// const std1 = new Student("John", "18");
+// console.log(Student.introduce);

@@ -679,6 +679,11 @@
       window.addEventListener("DOMContentLoaded", () => {
         const dateText = document.getElementById("dateDisplay");
 
+        if (!dateText) {
+          console.error("Error: #dateDisplay element not found!");
+          return;
+        }
+
         const today = new Date();
         const formattedToday = `${today
           .getDate()
@@ -687,7 +692,6 @@
           .toString()
           .padStart(2, "0")}/${today.getFullYear()}`;
 
-        // แก้ไขฟังก์ชัน onChange ใน flatpickr
         const fp = flatpickr("#inlineCalendar", {
           inline: true,
           dateFormat: "d/m/Y",
@@ -725,6 +729,26 @@
             .toString()
             .padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`
         );
+
+        window.addEventListener("day-selected", (event) => {
+          const { year, month, day } = event.detail;
+          const selectedDateStr = `${year}-${String(month + 1).padStart(
+            2,
+            "0"
+          )}-${String(day).padStart(2, "0")}`;
+
+          // อัปเดตข้อความวันที่ที่แสดง
+          dateText.textContent = `${String(day).padStart(2, "0")}/${String(
+            month + 1
+          ).padStart(2, "0")}/${year}`;
+
+          // อัปเดต inlineCalendar
+          const rawDate = new Date(year, month, day);
+          fp.setDate(rawDate, true); // true เพื่อ trigger onChange event ของ flatpickr
+
+          // เรียกฟังก์ชัน fetchBookings เพื่อโหลดข้อมูลตามวันที่ที่เลือก
+          fetchBookings(selectedDateStr);
+        });
       });
     </script>
 

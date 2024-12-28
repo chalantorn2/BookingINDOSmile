@@ -93,6 +93,28 @@ class CalendarHighlight extends HTMLElement {
       }
 
       dayElement.textContent = day;
+
+      // Add click event to day
+      dayElement.addEventListener("click", () => {
+        // Remove previous selected class
+        this.daysContainer.querySelectorAll(".day").forEach((el) => {
+          el.classList.remove("selected");
+        });
+
+        // Add selected class to clicked day
+        dayElement.classList.add("selected");
+
+        // Dispatch custom event with the selected date
+        const selectedEvent = new CustomEvent("day-selected", {
+          detail: {
+            year,
+            month,
+            day,
+          },
+        });
+        window.dispatchEvent(selectedEvent); // ส่งเหตุการณ์ไปยังระบบ
+      });
+
       this.daysContainer.appendChild(dayElement);
     }
   }
