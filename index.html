@@ -34,6 +34,7 @@
           class="gap-2 col-3 mx-auto btn btn-secondary"
           >View Order</a
         >
+        <excel-export class="col-3 btn"></excel-export>
       </div>
 
       <!-- เลือกประเภทฟอร์ม -->
@@ -515,7 +516,7 @@
               tourSendTo: document.getElementById("tourSendTo").value,
               tourNote: document.getElementById("tourNote").value,
               status: "รอดำเนินการ",
-              timestamp: { ".sv": "timestamp" },
+              timestamp: Date.now(),
             };
 
             const tourRef = ref(database, "tourBookings");
@@ -559,7 +560,7 @@
               transferSendTo: document.getElementById("transferSendTo").value,
               transferNote: document.getElementById("transferNote").value,
               status: "รอดำเนินการ",
-              timestamp: { ".sv": "timestamp" },
+              timestamp: Date.now(),
             };
 
             const transferRef = ref(database, "transferBookings");
@@ -589,5 +590,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="/component/menu.js"></script>
     <script type="module" src="/js/id.js"></script>
+    <script type="module" src="/component/excel_export.js"></script>
   </body>
 </html>

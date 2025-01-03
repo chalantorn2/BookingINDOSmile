@@ -1,12 +1,12 @@
 body {
   background: linear-gradient(to bottom right, #e7f0fd, #ffffff);
   font-family: "Prompt", sans-serif;
-  padding-top: 70px; /* ระยะห่างจาก Header */
+  padding-top: 70px;
 }
 
 .card {
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
 }
 .badge {
   font-size: 0.9rem;

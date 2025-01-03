@@ -1,292 +1,144 @@
-// ExcelExportComponent.js
 import {
   getDatabase,
   ref,
-  query,
-  orderByChild,
-  startAt,
-  endAt,
   get,
 } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
 class ExcelExportComponent extends HTMLElement {
+  constructor() {
+    super();
+  }
+
   connectedCallback() {
     this.innerHTML = `
-        <style>
-            .export-container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            .export-container button {
-                font-size: 1rem;
-                padding: 10px 15px;
-                width: 100%;
-                background: #00ac47;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: background 0.3s;
-            }
-
-            .export-container button:hover {
-                background-color: #00832d;
-            }
-
-            .modal {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                z-index: 1000;
-            }
-
-            .modal-content {
-                background: white;
-                margin: 10% auto;
-                padding: 20px;
-                border-radius: 10px;
-                width: 90%;
-                max-width: 600px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            }
-
-            .field-group {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 20px;
-            }
-
-            .field-selector {
-                flex: 1;
-                text-align: center;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                margin: 0 10px;
-                background: #f9f9f9;
-            }
-
-            .field-selector label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: bold;
-            }
-
-            .field-selector input {
-                margin-right: 5px;
-            }
-
-            .modal-footer {
-                display: flex;
-                justify-content: space-between;
-            }
-
-            .modal-footer button {
-                flex: 1;
-                margin: 0 10px;
-                padding: 10px;
-                border: none;
-                border-radius: 5px;
-                font-size: 1rem;
-            }
-
-            .btn-confirm {
-                background: #28a745;
-                color: white;
-            }
-
-            .btn-cancel {
-                background: #dc3545;
-                color: white;
-            }
-        </style>
-
-        <div class="export-container mt-2">
-            <button id="exportExcelBtn">Export as CSV</button>
+      <style>
+        .export-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+        }
+        .export-container button {
+          font-size: 1rem;
+          padding: 8px;
+          width: 100%;
+          background: #00ac47;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background 0.3s;
+        }
+        .export-container button:hover {
+          background-color: #00832d;
+        }
+        .modal {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          z-index: 1000;
+        }
+        .modal-content {
+          background: white;
+          margin: 10% auto;
+          padding: 20px;
+          border-radius: 10px;
+          width: 90%;
+          max-width: 600px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .field-group {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+        .field-selector {
+          flex: 1;
+          text-align: center;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          margin: 0 10px;
+          background: #f9f9f9;
+        }
+        .field-selector label {
+          display: block;
+          margin-bottom: 5px;
+          font-weight: bold;
+        }
+        .field-selector input {
+          margin-right: 5px;
+        }
+        .modal-footer {
+          display: flex;
+          justify-content: space-between;
+        }
+        .modal-footer button {
+          flex: 1;
+          margin: 0 10px;
+          padding: 10px;
+          border: none;
+          border-radius: 5px;
+          font-size: 1rem;
+        }
+        .btn-confirm {
+          background: #28a745;
+          color: white;
+        }
+        .btn-cancel {
+          background: #dc3545;
+          color: white;
+        }
+      </style>
+      <div class="export-container">
+        <button id="exportExcelBtn">Export as CSV</button>
+      </div>
+      <div id="exportModal" class="modal">
+        <div class="modal-content">
+          <h4 style="text-align:center; margin-bottom:20px;">Export Options</h4>
+          <label for="monthSelector" style="font-weight:bold;">Select Month:</label>
+          <select id="monthSelector" style="width:100%; margin-bottom:10px;">
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <label for="yearSelector" style="font-weight:bold;">Select Year:</label>
+          <select id="yearSelector" style="width:100%; margin-bottom:20px;"></select>
+          <div id="fieldSelectors" style="margin-bottom:20px;">
+          </div>
+          <div class="modal-footer">
+            <button id="confirmExport" class="btn-confirm">Export</button>
+            <button id="cancelExport" class="btn-cancel">Cancel</button>
+          </div>
         </div>
-
-        <!-- Modal -->
-        <div id="exportModal" class="modal">
-            <div class="modal-content">
-                <h4 style="text-align:center; margin-bottom:20px;">Export Options</h4>
-
-                <label for="monthSelector" style="font-weight:bold;">Select Month:</label>
-                <select id="monthSelector" style="width:100%; margin-bottom:10px;">
-                    <option value="01">January</option>
-                    <option value="02">February</option>
-                    <option value="03">March</option>
-                    <option value="04">April</option>
-                    <option value="05">May</option>
-                    <option value="06">June</option>
-                    <option value="07">July</option>
-                    <option value="08">August</option>
-                    <option value="09">September</option>
-                    <option value="10">October</option>
-                    <option value="11">November</option>
-                    <option value="12">December</option>
-                </select>
-
-                <label for="yearSelector" style="font-weight:bold;">Select Year:</label>
-                <select id="yearSelector" style="width:100%; margin-bottom:20px;"></select>
-
-                <div class="field-group">
-                    <div class="field-selector">
-                        <input type="checkbox" id="exportTour" checked />
-                        <label for="exportTour">Tour</label>
-                        <div id="tourFieldSelector" style="display:block;">
-                            <!-- Tour fields dynamically populate here -->
-                        </div>
-                    </div>
-                    <div class="field-selector">
-                        <input type="checkbox" id="exportTransfer" checked />
-                        <label for="exportTransfer">Transfer</label>
-                        <div id="transferFieldSelector" style="display:block;">
-                            <!-- Transfer fields dynamically populate here -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button id="confirmExport" class="btn-confirm">Export</button>
-                    <button id="cancelExport" class="btn-cancel">Cancel</button>
-                </div>
-            </div>
-        </div>
-        `;
-
-    this.querySelector("#exportExcelBtn").addEventListener(
+      </div>
+    `;
+    this.querySelector("#exportExcelBtn")?.addEventListener(
       "click",
       this.showExportModal.bind(this)
     );
-    this.populateYearDropdown();
-    this.querySelector("#confirmExport").addEventListener(
+    this.querySelector("#confirmExport")?.addEventListener(
       "click",
       this.exportCSV.bind(this)
     );
-    this.querySelector("#cancelExport").addEventListener("click", () => {
+    this.querySelector("#cancelExport")?.addEventListener("click", () => {
       document.getElementById("exportModal").style.display = "none";
     });
-  }
-
-  showExportModal() {
-    const modal = document.getElementById("exportModal");
-    const tourFields = [
-      "customerName",
-      "agent",
-      "type",
-      "detail",
-      "pax",
-      "fee",
-      "meal",
-      "date",
-      "hotel",
-      "roomNo",
-      "contactNo",
-      "pickUpTime",
-      "sendTo",
-      "note",
-      "status",
-      "timestamp",
-    ];
-    const transferFields = [
-      "name",
-      "agent",
-      "type",
-      "detail",
-      "pax",
-      "flight",
-      "time",
-      "date",
-      "pickUpTime",
-      "pickupFrom",
-      "dropTo",
-      "sendTo",
-      "note",
-      "status",
-      "timestamp",
-    ];
-
-    const tourFieldSelector = document.getElementById("tourFieldSelector");
-    const transferFieldSelector = document.getElementById(
-      "transferFieldSelector"
-    );
-
-    tourFieldSelector.innerHTML = "";
-    transferFieldSelector.innerHTML = "";
-
-    tourFields.forEach((field) => {
-      const labelMap = {
-        customerName: "ชื่อลูกค้า",
-        agent: "Agent",
-        type: "ประเภท",
-        detail: "รายละเอียด",
-        pax: "จำนวน",
-        fee: "ค่าทัวร์",
-        meal: "อาหารที่รวม",
-        date: "วันที่",
-        hotel: "โรงแรม",
-        roomNo: "หมายเลขห้อง",
-        contactNo: "เบอร์โทร",
-        pickUpTime: "เวลารับ",
-        sendTo: "ผู้รับ",
-        note: "หมายเหตุ",
-        status: "สถานะ",
-        timestamp: "เวลาเพิ่มข้อมูล",
-      };
-      const fieldHTML = `<div style='display:flex; align-items:center; margin-bottom:5px;'>
-                                <input type="checkbox" id="tour-field-${field}" value="${field}" checked style='margin-right:10px;' /> 
-                                <label for="tour-field-${field}" style='font-weight:bold;'>${labelMap[field]}</label>
-                              </div>`;
-      tourFieldSelector.innerHTML += fieldHTML;
-    });
-
-    transferFields.forEach((field) => {
-      const labelMap = {
-        name: "ชื่อลูกค้า",
-        agent: "Agent",
-        type: "ประเภท",
-        detail: "รายละเอียด",
-        pax: "จำนวน",
-        flight: "เที่ยวบิน",
-        time: "เวลาบิน",
-        date: "วันที่",
-        pickUpTime: "เวลารับ",
-        pickupFrom: "รับจาก",
-        dropTo: "ส่งที่",
-        sendTo: "ผู้รับ",
-        note: "หมายเหตุ",
-        status: "สถานะ",
-        timestamp: "เวลาเพิ่มข้อมูล",
-      };
-      const fieldHTML = `<div style='display:flex; align-items:center; margin-bottom:5px;'>
-                                <input type="checkbox" id="transfer-field-${field}" value="${field}" checked style='margin-right:10px;' /> 
-                                <label for="transfer-field-${field}" style='font-weight:bold;'>${labelMap[field]}</label>
-                              </div>`;
-      transferFieldSelector.innerHTML += fieldHTML;
-    });
-
-    document.getElementById("exportTour").addEventListener("change", (e) => {
-      tourFieldSelector.style.display = e.target.checked ? "block" : "none";
-    });
-
-    document
-      .getElementById("exportTransfer")
-      .addEventListener("change", (e) => {
-        transferFieldSelector.style.display = e.target.checked
-          ? "block"
-          : "none";
-      });
-
-    modal.style.display = "block";
+    this.populateYearDropdown();
   }
 
   populateYearDropdown() {
@@ -294,8 +146,8 @@ class ExcelExportComponent extends HTMLElement {
     const currentYear = new Date().getFullYear();
     for (let year = currentYear - 5; year <= currentYear + 5; year++) {
       const option = document.createElement("option");
-      option.value = year;
-      option.textContent = year;
+      option.value = String(year);
+      option.textContent = String(year);
       if (year === currentYear) {
         option.selected = true;
       }
@@ -303,107 +155,277 @@ class ExcelExportComponent extends HTMLElement {
     }
   }
 
+  showExportModal() {
+    const modal = document.getElementById("exportModal");
+    modal.style.display = "block";
+  }
+
   async exportCSV() {
-    const month = document.getElementById("monthSelector").value;
-    const exportTour = document.getElementById("exportTour").checked;
-    const exportTransfer = document.getElementById("exportTransfer").checked;
-    const selectedTourFields = Array.from(
-      document.querySelectorAll("#tourFieldSelector input:checked")
-    ).map((input) => input.value);
-    const selectedTransferFields = Array.from(
-      document.querySelectorAll("#transferFieldSelector input:checked")
-    ).map((input) => input.value);
+    const month = document.getElementById("monthSelector")?.value;
+    const year = document.getElementById("yearSelector")?.value;
+    const defaultFields = [
+      "OrderID",
+      "customerName",
+      "earliestDate",
+      "latestDate",
+      "tourID",
+      "tourAgent",
+      "tourType",
+      "tourDetail",
+      "tourFee",
+      "tourMeal",
+      "tourDate",
+      "tourFirstName",
+      "tourLastName",
+      "tourPax",
+      "tourHotel",
+      "tourRoomNo",
+      "tourContactNo",
+      "tourPickUpTime",
+      "tourSendTo",
+      "tourNote",
+      "transferID",
+      "transferAgent",
+      "transferType",
+      "transferDetail",
+      "transferFlight",
+      "transferTime",
+      "transferDate",
+      "transferFirstName",
+      "transferLastName",
+      "transferPax",
+      "transferPickUpTime",
+      "transferPickupFrom",
+      "transferDropTo",
+      "transferSendTo",
+      "transferNote",
+      "status",
+      "timestamp",
+    ];
 
-    if (!exportTour && !exportTransfer) {
-      alert("Please select at least one type to export.");
-      return;
-    }
-
-    const database = getDatabase();
-    const year = document.getElementById("yearSelector").value;
-    const start = `${year}-${month}-01`;
-    const end = `2024-${month}-31`;
-
+    const db = getDatabase();
+    const ordersRef = ref(db, "orders");
     try {
-      const tourQuery = exportTour
-        ? query(
-            ref(database, "tourBookings"),
-            orderByChild("date"),
-            startAt(start),
-            endAt(end)
-          )
-        : null;
-      const transferQuery = exportTransfer
-        ? query(
-            ref(database, "transferBookings"),
-            orderByChild("date"),
-            startAt(start),
-            endAt(end)
-          )
-        : null;
-
-      const [tourSnap, transferSnap] = await Promise.all([
-        tourQuery ? get(tourQuery) : Promise.resolve(null),
-        transferQuery ? get(transferQuery) : Promise.resolve(null),
-      ]);
-
-      const tourData =
-        tourSnap && tourSnap.exists() ? Object.values(tourSnap.val()) : [];
-      const transferData =
-        transferSnap && transferSnap.exists()
-          ? Object.values(transferSnap.val())
-          : [];
-
-      if (tourData.length === 0 && transferData.length === 0) {
-        throw new Error("No data available for the selected month.");
+      const ordersSnap = await get(ordersRef);
+      if (!ordersSnap.exists()) {
+        throw new Error("No orders found.");
       }
 
-      const generateCSVContent = (data, fields) => {
-        const headers = fields.map((field) => `"${field}"`).join(",");
-        let csvContent = `${headers}
-`;
+      const ordersData = ordersSnap.val();
+      const processedOrders = await this.processOrders(ordersData);
 
-        data.forEach((row) => {
-          const values = fields
-            .map((field) => `"${row[field] || "-"}"`)
-            .join(",");
-          csvContent += `${values}
-`;
-        });
+      const filtered = processedOrders.filter((o) => {
+        if (!o.earliestDate) return false;
+        const y = String(o.earliestDate.getFullYear());
+        const m = String(o.earliestDate.getMonth() + 1).padStart(2, "0");
+        return (!year || year === y) && (!month || month === m);
+      });
 
-        return csvContent;
-      };
-
-      const BOM = "﻿";
-      let finalCSV = BOM;
-
-      if (exportTour) {
-        finalCSV += `"--- TOUR BOOKINGS ---"
-${generateCSVContent(tourData, selectedTourFields)}
-`;
+      if (filtered.length === 0) {
+        throw new Error("No data available for the selected month/year.");
       }
 
-      if (exportTransfer) {
-        finalCSV += `"--- TRANSFER BOOKINGS ---"
-${generateCSVContent(transferData, selectedTransferFields)}
-`;
-      }
+      const csvContent = this.generateCSV(filtered, defaultFields);
+      const BOM = "\uFEFF";
+      const finalCSV = BOM + csvContent;
 
       const blob = new Blob([finalCSV], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Report_${month}.csv`);
+      link.setAttribute(
+        "download",
+        `Orders_${year || "All"}-${month || "All"}.csv`
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      // alert('Export successful!');
       document.getElementById("exportModal").style.display = "none";
-    } catch (error) {
-      console.error("Error exporting data:", error);
-      // alert(`Failed to export data: ${error.message}`);
+      alert("Export successful!");
+    } catch (err) {
+      console.error("Export error:", err);
+      alert(`Failed to export data: ${err.message}`);
     }
+  }
+
+  async processOrders(ordersObj) {
+    const db = getDatabase();
+    const result = [];
+    for (const orderKey of Object.keys(ordersObj)) {
+      const orderVal = ordersObj[orderKey];
+      const bookings = orderVal.bookings || [];
+      let bookingDetails = [];
+      let customerName = "";
+      const promises = bookings.map(async (bkId) => {
+        const tourSnap = await get(ref(db, `tourBookings/${bkId}`));
+        if (tourSnap.exists()) {
+          const b = tourSnap.val();
+          const cName = `${b.tourFirstName || ""} ${
+            b.tourLastName || ""
+          }`.trim();
+          if (cName) customerName = cName;
+          bookingDetails.push({
+            ...b,
+            isTour: true,
+          });
+        } else {
+          const transferSnap = await get(ref(db, `transferBookings/${bkId}`));
+          if (transferSnap.exists()) {
+            const b = transferSnap.val();
+            const cName = `${b.transferFirstName || ""} ${
+              b.transferLastName || ""
+            }`.trim();
+            if (cName) customerName = cName;
+            bookingDetails.push({
+              ...b,
+              isTour: false,
+            });
+          }
+        }
+      });
+      await Promise.all(promises);
+      bookingDetails.sort((a, b) => {
+        const dA = new Date(a.tourDate || a.transferDate);
+        const dB = new Date(b.tourDate || b.transferDate);
+        if (isNaN(dA.getTime()) && !isNaN(dB.getTime())) return 1;
+        if (!isNaN(dA.getTime()) && isNaN(dB.getTime())) return -1;
+        if (isNaN(dA.getTime()) && isNaN(dB.getTime())) return 0;
+        return dA - dB;
+      });
+      let earliestDate = null;
+      let latestDate = null;
+      bookingDetails.forEach((bk) => {
+        const dt = bk.tourDate || bk.transferDate;
+        const d = new Date(dt);
+        if (!isNaN(d.getTime())) {
+          if (!earliestDate || d < earliestDate) earliestDate = d;
+          if (!latestDate || d > latestDate) latestDate = d;
+        }
+      });
+      result.push({
+        orderID: orderVal.id || orderKey,
+        customerName: customerName || "Unknown",
+        earliestDate,
+        latestDate,
+        bookingDetails,
+      });
+    }
+    return result;
+  }
+
+  generateCSV(orders, fields) {
+    let csv = "";
+    const headerLine = fields.map((f) => `"${f}"`).join(",");
+    csv += headerLine + "\n";
+
+    orders.forEach((ord) => {
+      const rowBase = {};
+      rowBase.OrderID = ord.orderID;
+      rowBase.customerName = ord.customerName;
+      rowBase.earliestDate = ord.earliestDate
+        ? this.formatDate(ord.earliestDate)
+        : "-";
+      rowBase.latestDate = ord.latestDate
+        ? this.formatDate(ord.latestDate)
+        : "-";
+
+      if (ord.bookingDetails.length === 0) {
+        const arr = fields.map((f) =>
+          f === "timestamp"
+            ? this.escapeCSV(this.formatTimestamp(rowBase[f]))
+            : this.escapeCSV(rowBase[f] || "-")
+        );
+        csv += arr.map((a) => `"${a}"`).join(",") + "\n";
+      } else {
+        ord.bookingDetails.forEach((bk) => {
+          const rowData = { ...rowBase };
+
+          if (bk.isTour) {
+            rowData.tourID = bk.tourID || "-";
+            rowData.tourAgent = bk.tourAgent || "-";
+            rowData.tourType = bk.tourType || "-";
+            rowData.tourDetail = bk.tourDetail || "-";
+            rowData.tourFee = bk.tourFee || "-";
+            rowData.tourMeal = bk.tourMeal || "-";
+            rowData.tourDate = bk.tourDate
+              ? this.formatDateString(bk.tourDate)
+              : "-";
+            rowData.tourFirstName = bk.tourFirstName || "-";
+            rowData.tourLastName = bk.tourLastName || "-";
+            rowData.tourPax = bk.tourPax || "-";
+            rowData.tourHotel = bk.tourHotel || "-";
+            rowData.tourRoomNo = bk.tourRoomNo || "-";
+            rowData.tourContactNo = bk.tourContactNo || "-";
+            rowData.tourPickUpTime = bk.tourPickUpTime || "-";
+            rowData.tourSendTo = bk.tourSendTo || "-";
+            rowData.tourNote = bk.tourNote || "-";
+            rowData.status = bk.status || "-";
+            rowData.timestamp = this.formatTimestamp(bk.timestamp);
+          } else {
+            rowData.transferID = bk.transferID || "-";
+            rowData.transferAgent = bk.transferAgent || "-";
+            rowData.transferType = bk.transferType || "-";
+            rowData.transferDetail = bk.transferDetail || "-";
+            rowData.transferFlight = bk.transferFlight || "-";
+            rowData.transferTime = bk.transferTime || "-";
+            rowData.transferDate = bk.transferDate
+              ? this.formatDateString(bk.transferDate)
+              : "-";
+            rowData.transferFirstName = bk.transferFirstName || "-";
+            rowData.transferLastName = bk.transferLastName || "-";
+            rowData.transferPax = bk.transferPax || "-";
+            rowData.transferPickUpTime = bk.transferPickUpTime || "-";
+            rowData.transferPickupFrom = bk.transferPickupFrom || "-";
+            rowData.transferDropTo = bk.transferDropTo || "-";
+            rowData.transferSendTo = bk.transferSendTo || "-";
+            rowData.transferNote = bk.transferNote || "-";
+            rowData.status = bk.status || "-";
+            rowData.timestamp = this.formatTimestamp(bk.timestamp);
+          }
+
+          const arr = fields.map((f) =>
+            f === "timestamp"
+              ? this.escapeCSV(this.formatTimestamp(rowData[f]))
+              : this.escapeCSV(rowData[f] || "-")
+          );
+          csv += arr.map((a) => `"${a}"`).join(",") + "\n";
+        });
+      }
+    });
+
+    return csv;
+  }
+
+  formatDate(d) {
+    if (!(d instanceof Date)) return "-";
+    if (isNaN(d.getTime())) return "-";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = d.getFullYear();
+    return `${dd}/${mm}/${yy}`;
+  }
+
+  formatDateString(str) {
+    if (!str) return "-";
+    const parts = str.split("-");
+    if (parts.length !== 3) return str;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+  escapeCSV(str) {
+    return str.replace(/"/g, '""');
+  }
+  formatTimestamp(ts) {
+    if (!ts) return "-";
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "-";
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${day}/${month}/${year} ${hh}:${mm} น.`;
   }
 }
 
