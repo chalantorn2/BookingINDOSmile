@@ -12,6 +12,8 @@ class BookingTable extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    this.itemsPerPage = 10; // จำนวนรายการต่อหน้า
+    this.currentPage = 1; // หน้าเริ่มต้น
 
     // ---- (1) คอลัมน์ทั้งหมด (key, label) ----
     this.allColumns = [
@@ -199,6 +201,31 @@ class BookingTable extends HTMLElement {
       grid-template-columns: 1fr;
     }
   }
+    .pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination-container button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  border: none;
+  background: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.pagination-container button.active {
+  background: #0056b3;
+  font-weight: bold;
+}
+
+.pagination-container button:hover {
+  background: #0056b3;
+}
+
 </style>
 
 <div class="container">
@@ -263,6 +290,8 @@ class BookingTable extends HTMLElement {
       <tr><td colspan="99">Loading...</td></tr>
     </tbody>
   </table>
+  <div id="pagination" class="pagination-container"></div>
+
 </div>
 
     `;
@@ -372,6 +401,7 @@ class BookingTable extends HTMLElement {
     // จากนั้นเรียก sort + render
     this.sortBookings();
     this.renderTable();
+    this.renderPagination(); // เพิ่มการอัปเดต Pagination
   }
 
   // --- (5) จัดเรียง (sort) bookings ตาม sortKey และ sortDirection ---
@@ -421,34 +451,25 @@ class BookingTable extends HTMLElement {
     // Body
     tbody.innerHTML = "";
 
-    // ตอนนี้เราจะใช้ข้อมูลจาก this.filteredBookings ในการแสดง
-    if (this.filteredBookings.length === 0) {
+    const paginatedData = this.paginateData(); // ใช้ข้อมูลที่แบ่งหน้า
+    if (paginatedData.length === 0) {
       tbody.innerHTML = `<tr><td colspan="99">No bookings found</td></tr>`;
       return;
     }
 
-    // วนใน each booking ของ filtered
-    this.filteredBookings.forEach((bk) => {
+    paginatedData.forEach((bk) => {
       const tr = document.createElement("tr");
-
       this.selectedColumns.forEach((col) => {
         const td = document.createElement("td");
-
-        // ฟิลด์ date → แปลง "YYYY-MM-DD" => "dd/mm/yyyy"
         if (col.key === "date") {
           td.textContent = this.formatDate(bk.date);
-        }
-        // ฟิลด์ timestamp → แปลง milli => "dd/mm/yyyy HH:MM"
-        else if (col.key === "timestamp") {
+        } else if (col.key === "timestamp") {
           td.textContent = this.formatTimestamp(bk.rawTimestamp);
         } else {
-          // ฟิลด์อื่น ๆ
           td.textContent = bk[col.key] || "-";
         }
-
         tr.appendChild(td);
       });
-
       tbody.appendChild(tr);
     });
   }
@@ -472,6 +493,38 @@ class BookingTable extends HTMLElement {
     const [year, month, day] = dateStr.split("-");
     if (!year || !month || !day) return dateStr;
     return `${day}/${month}/${year}`;
+  }
+
+  paginateData() {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    return this.filteredBookings.slice(start, end);
+  }
+
+  changePage(newPage) {
+    const totalPages = Math.ceil(
+      this.filteredBookings.length / this.itemsPerPage
+    );
+    if (newPage < 1 || newPage > totalPages) return; // ไม่อนุญาตให้เกินหน้า
+    this.currentPage = newPage;
+    this.renderTable();
+    this.renderPagination();
+  }
+
+  renderPagination() {
+    const totalPages = Math.ceil(
+      this.filteredBookings.length / this.itemsPerPage
+    );
+    const paginationContainer = this.container.querySelector("#pagination");
+    paginationContainer.innerHTML = ""; // ล้างก่อนสร้างใหม่
+
+    for (let i = 1; i <= totalPages; i++) {
+      const button = document.createElement("button");
+      button.textContent = i;
+      button.className = i === this.currentPage ? "active" : "";
+      button.addEventListener("click", () => this.changePage(i));
+      paginationContainer.appendChild(button);
+    }
   }
 }
 

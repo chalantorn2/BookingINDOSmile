@@ -134,9 +134,13 @@ class MenuComponent extends HTMLElement {
                     <li class="nav-item">
                         <a class="nav-link" href="/frontend/main/view.html">View Bookings</a>
                     </li>
+                                                            <li class="nav-item">
+                        <a class="nav-link" href="/frontend/order/viewOrder.html">View Order</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/frontend/main/calendar.html">Calendar</a>
                     </li>
+
                 </ul>
 
                 <!-- Toggler Button for Mobile -->

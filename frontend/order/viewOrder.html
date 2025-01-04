@@ -375,41 +375,37 @@
             li.className = "list-group-item";
 
             li.innerHTML = `
-            <div class="card  mb-1">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="mb-1"><strong>${
-                      order.id || "No ID"
-                    }</strong></h6>
-                    <p class="mb-0 text-muted">
-                      ${customerName} | 
-                      <span class="badge bg-secondary">
-                        ${formatDate(earliestDate)} - ${formatDate(latestDate)}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <!-- ปุ่ม Add Booking เข้า Order -->
-                    <button 
-                      class="btn btn-success btn-sm me-2 add-booking-to-order"
-                      data-order-key="${orderId}"
-                    >
-                      <i class="bi bi-plus-circle"></i> Add Booking
-                    </button>
-                    <!-- ปุ่มสลับแสดง/ซ่อน Booking Details -->
-                    <button 
-                      class="btn btn-outline-primary btn-sm toggle-details" 
-                      data-order-id="${orderId}"
-                    >
-                      <i class="bi bi-caret-down"></i> 
-                    </button>
-                  </div>
-                </div>
+        <div class="card mb-1">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-1"><strong>${order.id || "No ID"}</strong></h6>
+                <p class="mb-0 text-muted">
+                  ${customerName} | 
+                  <span class="badge bg-secondary">
+                    ${formatDate(earliestDate)} - ${formatDate(latestDate)}
+                  </span>
+                </p>
               </div>
-              <ul class="list-group mt-3 d-none" id="details-${orderId}"></ul>
+              <div>
+                <button 
+                  class="btn btn-success btn-sm me-2 add-booking-to-order"
+                  data-order-key="${orderId}"
+                >
+                  <i class="bi bi-plus-circle"></i> Add Booking
+                </button>
+                <button 
+                  class="btn btn-outline-primary btn-sm toggle-details" 
+                  data-order-id="${orderId}"
+                >
+                  <i class="bi bi-caret-down"></i> 
+                </button>
+              </div>
             </div>
-          `;
+          </div>
+          <ul class="list-group mt-3 d-none" id="details-${orderId}"></ul>
+        </div>
+      `;
 
             ordersList.appendChild(li);
 
@@ -417,7 +413,7 @@
             const addBtn = li.querySelector(".add-booking-to-order");
             addBtn.addEventListener("click", () => {
               selectedOrderIdForAdd = orderId;
-              renderAvailableBookingsTable(); // เตรียมตาราง Booking
+              renderAvailableBookingsTable();
               addBookingModal.show();
             });
 
@@ -427,43 +423,63 @@
 
             toggleButton.addEventListener("click", () => {
               if (detailsList.classList.contains("d-none")) {
-                // ถ้ายังไม่มี innerHTML แสดงว่า ยังไม่ render bookingDetails
                 if (detailsList.innerHTML === "") {
                   if (bookingDetails.length === 0) {
-                    detailsList.innerHTML =
-                      '<li class="list-group-item">No bookings</li>';
+                    // แสดงข้อความ No bookings พร้อมปุ่ม Delete
+                    detailsList.innerHTML = `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>No bookings</span>
+                  <button class="btn btn-danger btn-sm delete-order" data-order-id="${orderId}">
+                    <i class="bi bi-trash"></i> Delete
+                  </button>
+                </li>
+              `;
+
+                    // ผูก Event ให้ปุ่ม Delete
+                    const deleteButton =
+                      detailsList.querySelector(".delete-order");
+                    deleteButton.addEventListener("click", async () => {
+                      if (
+                        confirm(
+                          `Are you sure you want to delete order ${orderId}?`
+                        )
+                      ) {
+                        await deleteOrder(orderId);
+                        li.remove(); // ลบ Order ออกจาก DOM
+                      }
+                    });
                   } else {
+                    // แสดง Booking Details
                     bookingDetails.forEach((bk, idx) => {
                       const item = document.createElement("li");
                       item.className =
                         "list-group-item d-flex justify-content-between align-items-center";
 
                       item.innerHTML = `
-                      <div>
-                        <strong>${idx + 1}. ${bk.type}</strong>
-                        <small>
-                          <span class="text-muted">Date:</span> ${formatDate(
-                            bk.date
-                          )} |
-                          <span class="text-muted">Time:</span> ${bk.time} |
-                          <span class="text-muted">Send To:</span> ${bk.sendTo}
-                        </small>
-                      </div>
-                      <div>
-                        <span class="badge bg-primary">${bk.id}</span>
-                        <!-- ปุ่ม Remove Booking -->
-                        <button 
-                          class="btn btn-sm btn-danger ms-3 remove-booking"
-                          data-booking-key="${bk.dbKey}"
-                          data-order-key="${orderId}"
-                          data-booking-type="${bk.type}"
-                        >
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </div>
-                    `;
+                  <div>
+                    <strong>${idx + 1}. ${bk.type}</strong>
+                    <small>
+                      <span class="text-muted">Date:</span> ${formatDate(
+                        bk.date
+                      )} |
+                      <span class="text-muted">Time:</span> ${bk.time} |
+                      <span class="text-muted">Send To:</span> ${bk.sendTo}
+                    </small>
+                  </div>
+                  <div>
+                    <span class="badge bg-primary">${bk.id}</span>
+                    <button 
+                      class="btn btn-sm btn-danger ms-3 remove-booking"
+                      data-booking-key="${bk.dbKey}"
+                      data-order-key="${orderId}"
+                      data-booking-type="${bk.type}"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                `;
 
-                      // ผูก event ปุ่ม Remove
+                      // ผูก Event ปุ่ม Remove Booking
                       item
                         .querySelector(".remove-booking")
                         .addEventListener("click", async (e) => {
@@ -489,6 +505,17 @@
             });
           }
         );
+      }
+
+      // ฟังก์ชันลบ Order จาก Firebase
+      async function deleteOrder(orderId) {
+        const orderRef = ref(database, `orders/${orderId}`);
+        try {
+          await set(orderRef, null);
+          console.log(`Order ${orderId} deleted successfully.`);
+        } catch (error) {
+          console.error(`Failed to delete order ${orderId}:`, error);
+        }
       }
 
       // ----- ฟังก์ชัน Filter Orders ตามปี/เดือน -----
