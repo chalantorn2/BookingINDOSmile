@@ -118,7 +118,7 @@ class BookingTable extends HTMLElement {
   }
 
   .container {
-    max-width: 1200px;
+    max-width: 1320px;
     margin: 0 auto;
     padding: 1.5rem;
   }

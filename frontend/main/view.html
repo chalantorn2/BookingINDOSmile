@@ -27,7 +27,7 @@
 
   <body>
     <menu-component></menu-component>
-    <div class="container py-5 p">
+    <div class="container py-5">
       <div class="header text-center mb-4">
         <h1 class="title">View Bookings</h1>
         <p class="subtitle">เลือกวันที่เพื่อดูรายการจอง</p>
@@ -259,26 +259,29 @@
                 data.status || "unknown"
               }`;
               listItem.innerHTML = `
-          <div class="d-flex justify-content-between">
-            <span><strong>${index + 1}. ${customerName}</strong> | ${
+              <div class="d-flex justify-content-between">
+                <span><strong>${index + 1}. ${customerName}</strong> | ${
                 data.tourPax || data.pax || "-"
               } คน</span>
-            <button class="btn btn-sm btn-info view-details-btn" data-id="${
-              data.id
-            }" data-type="tour"><i class="bi bi-eye"></i></button>
-          </div>
-          <small>
-            <span style="background-color: #198754; color: white; padding: 2px 5px; border-radius: 3px;">
-              <i class="bi bi-clock"> </i><strong>${
-                data.tourPickUpTime || data.pickUpTime || "-"
-              }</strong>
-            </span> |
-            <strong>${data.tourSendTo || data.sendTo || "-"}</strong> |
-            <strong>รายละเอียด:</strong> ${
-              data.tourDetail || data.detail || "-"
-            }
-          </small>
-        `;
+                <button class="btn btn-sm btn-info view-details-btn" data-id="${
+                  data.id
+                }" data-type="tour"><i class="bi bi-eye"></i></button>
+              </div>
+              <small>
+                <span style="background-color: #198754; color: white; padding: 2px 5px; border-radius: 3px;">
+                  <i class="bi bi-clock"> </i><strong>${
+                    data.tourPickUpTime || data.pickUpTime || "-"
+                  }</strong>
+                </span> |
+                <strong>${data.tourSendTo || data.sendTo || "-"}</strong> |
+                <strong>รายละเอียด:</strong> ${
+                  data.tourDetail || data.detail || "-"
+                }
+              </small><br>
+              <strong style="color: #686868;"><i>${
+                data.tourID || "-"
+              }</i></strong>
+            `;
               tourContainer.appendChild(listItem);
             });
           } else {
@@ -304,33 +307,36 @@
                 data.status || "unknown"
               }`;
               listItem.innerHTML = `
-          <div class="d-flex justify-content-between">
-            <span><strong>${index + 1}. ${customerName}</strong> | ${
+              <div class="d-flex justify-content-between">
+                <span><strong> ${index + 1}. ${customerName}</strong> | ${
                 data.transferPax || data.pax || "-"
               } คน</span>
-            <button class="btn btn-sm btn-info view-details-btn" data-id="${
-              data.id
-            }" data-type="transfer"><i class="bi bi-eye"></i></button>
-          </div>
-          <small>
-            <span style="background-color: #0d6efd; color: white; padding: 2px 5px; border-radius: 3px;">
-              <i class="bi bi-clock"></i> <strong>${
-                data.transferPickUpTime || data.pickUpTime || "-"
-              }</strong>
-            </span> |
-            <strong>${data.transferSendTo || data.sendTo || "-"}</strong> |
-            <strong>รับจาก:</strong> ${
-              data.transferPickupFrom || data.pickupFrom || "-"
-            } |
-            <strong>ไปส่งที่:</strong> ${
-              data.transferDropTo || data.dropTo || "-"
-            }
-              |
-            <strong>ไฟล์ต:</strong> ${data.transferFlight || "-"}
-              |
-            <strong>เวลา:</strong> ${data.transferTime || "-"}
-          </small>
-        `;
+                <button class="btn btn-sm btn-info view-details-btn" data-id="${
+                  data.id
+                }" data-type="transfer"><i class="bi bi-eye"></i></button>
+              </div>
+              <small>
+                <span style="background-color: #0d6efd; color: white; padding: 2px 5px; border-radius: 3px;">
+                  <i class="bi bi-clock"></i> <strong>${
+                    data.transferPickUpTime || data.pickUpTime || "-"
+                  }</strong>
+                </span> |
+                <strong>${data.transferSendTo || data.sendTo || "-"}</strong> |
+                <strong>รับจาก:</strong> ${
+                  data.transferPickupFrom || data.pickupFrom || "-"
+                } |
+                <strong>ไปส่งที่:</strong> ${
+                  data.transferDropTo || data.dropTo || "-"
+                }
+                  |
+                <strong>ไฟล์ต:</strong> ${data.transferFlight || "-"}
+                  |
+                <strong>เวลา:</strong> ${data.transferTime || "-"}
+              </small><br>
+              <strong style="color: #686868;"><i>${
+                data.transferID || "-"
+              }</i></strong>
+            `;
               transferContainer.appendChild(listItem);
             });
           } else {
@@ -349,6 +355,8 @@
       function showPopup(data, type) {
         const fieldOrder = {
           tour: [
+            "orderId",
+            "tourID",
             "tourFirstName",
             "tourLastName",
             "tourSendTo",
@@ -364,8 +372,11 @@
             "tourContactNo",
             "tourPickUpTime",
             "tourNote",
+            "timestamp",
           ],
           transfer: [
+            "orderId",
+            "transferID",
             "transferFirstName",
             "transferLastName",
             "transferSendTo",
@@ -380,10 +391,13 @@
             "transferPickupFrom",
             "transferDropTo",
             "transferNote",
+            "timestamp",
           ],
         };
 
         const labelMap = {
+          orderId: "รหัสออเดอร์",
+          tourID: "รหัสทัวร์",
           tourFirstName: "ชื่อ (ทัวร์)",
           tourLastName: "นามสกุล (ทัวร์)",
           tourSendTo: "ส่งใคร (ทัวร์)",
@@ -399,6 +413,7 @@
           tourContactNo: "เบอร์ติดต่อ (ทัวร์)",
           tourPickUpTime: "เวลารับ (ทัวร์)",
           tourNote: "หมายเหตุ (ทัวร์)",
+          transferID: "รหัสรับ-ส่ง",
           transferFirstName: "ชื่อ (รับ-ส่ง)",
           transferLastName: "นามสกุล (รับ-ส่ง)",
           transferSendTo: "ส่งใคร (รับ-ส่ง)",
@@ -413,6 +428,7 @@
           transferPickupFrom: "สถานที่รับ",
           transferDropTo: "สถานที่ส่ง",
           transferNote: "หมายเหตุ (รับ-ส่ง)",
+          timestamp: "ตราประทับ",
         };
 
         // ฟังก์ชันช่วย format วันเป็น dd/mm/yyyy
@@ -437,6 +453,22 @@
           }
         };
 
+        const formatTimestamp = (data) => {
+          if (!data || !data.timestamp) return "-";
+          const ts = data.timestamp;
+          const d = new Date(ts);
+
+          if (isNaN(d.getTime())) return "-";
+
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const year = d.getFullYear();
+          const hh = String(d.getHours()).padStart(2, "0");
+          const mm = String(d.getMinutes()).padStart(2, "0");
+
+          return `${day}/${month}/${year} ${hh}:${mm} น.`;
+        };
+
         const fields = fieldOrder[type];
         const popup = document.createElement("div");
         popup.className = "modal fade";
@@ -453,27 +485,34 @@
             let inputElement = "";
 
             // หากเป็น date ให้แปลงเป็น dd/mm/yyyy
-            if (fieldName === "tourDate" || fieldName === "transferDate") {
-              value = formatDate(value);
+            if (
+              fieldName === "tourDate" ||
+              fieldName === "transferDate" ||
+              fieldName === "timestamp"
+            ) {
+              value =
+                fieldName === "timestamp"
+                  ? formatTimestamp({ timestamp: value })
+                  : formatDate(value);
             }
 
             // หากเป็น detail ให้ใช้ textarea
             if (fieldName === "tourDetail" || fieldName === "transferDetail") {
               inputElement = `
-          <textarea class="form-control" id="field-${fieldName}" rows="5">${value}</textarea>
-        `;
+              <textarea class="form-control" id="field-${fieldName}" rows="5">${value}</textarea>
+            `;
             } else {
               inputElement = `
-          <input type="text" class="form-control" id="field-${fieldName}" value="${value}" />
-        `;
+              <input type="text" class="form-control" id="field-${fieldName}" value="${value}" />
+            `;
             }
 
             return `
-        <div class="col-md-6">
-          <label for="field-${fieldName}" class="form-label font-weight-bold">${labelMap[fieldName]}</label>
-          ${inputElement}
-        </div>
-      `;
+            <div class="col-md-6">
+              <label for="field-${fieldName}" class="form-label font-weight-bold">${labelMap[fieldName]}</label>
+              ${inputElement}
+            </div>
+          `;
           };
 
           const fieldHtml1 = createFieldHtml(field1);
@@ -493,57 +532,57 @@
 
         // เพิ่มฟิลด์สถานะ
         const statusOptions = `
-    <div class="row g-3 mb-3">
-      <div class="col-md-6">
-        <label for="field-status" class="form-label font-weight-bold">สถานะ</label>
-        <select id="field-status" class="form-select">
-          <option value="รอดำเนินการ">รอดำเนินการ</option>
-          <option value="จองแล้ว">จองแล้ว</option>
-          <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
-          <option value="เสร็จสมบูรณ์">เสร็จสมบูรณ์</option>
-        </select>
-      </div>
-    </div>
-  `;
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="field-status" class="form-label font-weight-bold">สถานะ</label>
+            <select id="field-status" class="form-select">
+              <option value="รอดำเนินการ">รอดำเนินการ</option>
+              <option value="จองแล้ว">จองแล้ว</option>
+              <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
+              <option value="เสร็จสมบูรณ์">เสร็จสมบูรณ์</option>
+            </select>
+          </div>
+        </div>
+      `;
         // รวมฟิลด์ทั้งหมดกับสถานะ
         const generateFieldsWithStatus = generateFields + statusOptions;
 
         // สร้างเนื้อหาใน Popup
         let content = `
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content border-0 shadow-lg rounded-3">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title fw-bold">
-            <i class="bi bi-pencil-square me-2"></i>${
-              type === "tour" ? "Tour Details" : "Transfer Details"
-            }
-          </h5>
-          <button type="button" class="btn-close btn-light" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body px-4 py-5">
-          <div class="container-fluid">
-            <form id="editForm">
-              ${generateFieldsWithStatus}
-            </form>
-            <div id="statusMessage" class="alert alert-success d-none text-center mt-4" role="alert"></div>
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title fw-bold">
+                <i class="bi bi-pencil-square me-2"></i>${
+                  type === "tour" ? "Tour Details" : "Transfer Details"
+                }
+              </h5>
+              <button type="button" class="btn-close btn-light" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-5">
+              <div class="container-fluid">
+                <form id="editForm">
+                  ${generateFieldsWithStatus}
+                </form>
+                <div id="statusMessage" class="alert alert-success d-none text-center mt-4" role="alert"></div>
+              </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+              <button type="button" class="btn btn-outline-danger delete-btn">
+                <i class="bi bi-trash me-1"></i>ลบข้อมูล
+              </button>
+              <div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  <i class="bi bi-x me-1"></i>ปิด
+                </button>
+                <button type="button" class="btn btn-primary save-btn">
+                  <i class="bi bi-save me-1"></i>บันทึกข้อมูล
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="modal-footer d-flex justify-content-between">
-          <button type="button" class="btn btn-outline-danger delete-btn">
-            <i class="bi bi-trash me-1"></i>ลบข้อมูล
-          </button>
-          <div>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="bi bi-x me-1"></i>ปิด
-            </button>
-            <button type="button" class="btn btn-primary save-btn">
-              <i class="bi bi-save me-1"></i>บันทึกข้อมูล
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+      `;
 
         popup.innerHTML = content;
         document.body.appendChild(popup);
@@ -567,12 +606,15 @@
             const input = popup.querySelector(`#field-${key}`);
             let value = input ? input.value : "";
 
-            // ถ้าเป็น date เราจะแปลงเป็น YYYY-MM-DD
             if (key === "tourDate" || key === "transferDate") {
+              // แปลงวันที่เป็น YYYY-MM-DD
               const [day, month, year] = value.split("/"); // แยกวันที่
               updatedData[key] = `${year}-${month}-${day}`; // ประกอบใหม่เป็น YYYY-MM-DD
+            } else if (key === "timestamp") {
+              // หากเป็น timestamp เก็บเป็น milliseconds (Unix timestamp)
+              updatedData[key] = Date.now(); // ใช้เวลาปัจจุบันใน millisecond
             } else {
-              updatedData[key] = value;
+              updatedData[key] = value; // ฟิลด์อื่น ๆ เก็บค่าตามปกติ
             }
           });
 
