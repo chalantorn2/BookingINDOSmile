@@ -192,6 +192,7 @@ class CalendarComponent extends HTMLElement {
                 start: data.tourDate || data.date,
                 color: getColorByStatus(data.status),
                 extendedProps: {
+                  id: data.tourID,
                   agent: data.tourAgent || data.agent,
                   type: data.tourType || data.type,
                   detail: data.tourDetail || data.detail,
@@ -225,6 +226,7 @@ class CalendarComponent extends HTMLElement {
                 start: data.transferDate || data.date,
                 color: getColorByStatus(data.status),
                 extendedProps: {
+                  id: data.transferID,
                   agent: data.transferAgent || data.agent,
                   type: data.transferType || data.type,
                   detail: data.transferDetail || data.detail,
@@ -292,6 +294,9 @@ class CalendarComponent extends HTMLElement {
               <strong>รายละเอียด:</strong> ${
                 info.event.extendedProps.detail || "-"
               }<br>
+              <strong>โรงแรม:</strong> ${
+                info.event.extendedProps.hotel || "-"
+              }<br>
             </div>
       
             <!-- คอลัมน์ขวา -->
@@ -331,8 +336,11 @@ class CalendarComponent extends HTMLElement {
               }<br>
               <strong>สถานะ:</strong> ${info.event.extendedProps.status || "-"}
 <h5 style="color:rgb(128, 128, 128);"><i><strong>${
-          isTransfer ? "*Transfer" : "*Tour"
+          isTransfer ? "Transfer" : "Tour"
         }</strong></i></h5>
+      <h6 style="color:rgb(128, 128, 128);"><i><strong>${
+        info.event.extendedProps.id || "-"
+      }</strong></i></h6>
             </div>
           </div>
         `;
