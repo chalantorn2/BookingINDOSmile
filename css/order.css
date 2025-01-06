@@ -19,6 +19,10 @@ body {
   animation: fadeIn 0.3s ease-in-out;
 }
 
+h1 {
+  font-weight: 600;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
