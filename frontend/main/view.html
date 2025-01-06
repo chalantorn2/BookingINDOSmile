@@ -544,8 +544,42 @@
           </div>
         </div>
       `;
+        const additionalTransferFields = `
+  <div id="additionalTransferFields" class="row g-3 mb-3 ${
+    ["จองแล้ว", "ดำเนินการอยู่", "เสร็จสมบูรณ์"].includes(data.status)
+      ? ""
+      : "d-none"
+  }">
+    <div class="col-md-6">
+      <label for="field-car_model" class="form-label font-weight-bold">รุ่นรถ</label>
+      <input type="text" class="form-control" id="field-car_model" value="${
+        data.car_model || ""
+      }" />
+    </div>
+    <div class="col-md-6">
+      <label for="field-license_plate" class="form-label font-weight-bold">ป้ายทะเบียน</label>
+      <input type="text" class="form-control" id="field-license_plate" value="${
+        data.license_plate || ""
+      }" />
+    </div>
+    <div class="col-md-6">
+      <label for="field-driver_name" class="form-label font-weight-bold">ชื่อคนขับ</label>
+      <input type="text" class="form-control" id="field-driver_name" value="${
+        data.driver_name || ""
+      }" />
+    </div>
+    <div class="col-md-6">
+      <label for="field-phone_number" class="form-label font-weight-bold">เบอร์โทร</label>
+      <input type="text" class="form-control" id="field-phone_number" value="${
+        data.phone_number || ""
+      }" />
+    </div>
+  </div>
+`;
+
         // รวมฟิลด์ทั้งหมดกับสถานะ
-        const generateFieldsWithStatus = generateFields + statusOptions;
+        const generateFieldsWithStatus =
+          generateFields + statusOptions + additionalTransferFields;
 
         // สร้างเนื้อหาใน Popup
         let content = `
@@ -596,6 +630,22 @@
         // แสดง Popup
         modal.show();
 
+        statusField.addEventListener("change", () => {
+          const additionalFields = popup.querySelector(
+            "#additionalTransferFields"
+          );
+          if (
+            ["จองแล้ว", "ดำเนินการอยู่", "เสร็จสมบูรณ์"].includes(
+              statusField.value
+            ) &&
+            type === "transfer"
+          ) {
+            additionalFields.classList.remove("d-none"); // แสดงฟิลด์เพิ่มเติม
+          } else {
+            additionalFields.classList.add("d-none"); // ซ่อนฟิลด์เพิ่มเติม
+          }
+        });
+
         // ฟังก์ชันบันทึกข้อมูล
         const saveBtn = popup.querySelector(".save-btn");
         saveBtn.addEventListener("click", async () => {
@@ -607,16 +657,24 @@
             let value = input ? input.value : "";
 
             if (key === "tourDate" || key === "transferDate") {
-              // แปลงวันที่เป็น YYYY-MM-DD
-              const [day, month, year] = value.split("/"); // แยกวันที่
-              updatedData[key] = `${year}-${month}-${day}`; // ประกอบใหม่เป็น YYYY-MM-DD
+              const [day, month, year] = value.split("/"); // แปลงวันที่เป็น YYYY-MM-DD
+              updatedData[key] = `${year}-${month}-${day}`;
             } else if (key === "timestamp") {
-              // หากเป็น timestamp เก็บเป็น milliseconds (Unix timestamp)
-              updatedData[key] = Date.now(); // ใช้เวลาปัจจุบันใน millisecond
+              // updatedData[key] = Date.now(); // เก็บ timestamp
             } else {
-              updatedData[key] = value; // ฟิลด์อื่น ๆ เก็บค่าตามปกติ
+              updatedData[key] = value; // เก็บข้อมูลปกติ
             }
           });
+
+          // เก็บข้อมูลฟิลด์เพิ่มเติมเสมอ
+          updatedData["car_model"] =
+            popup.querySelector("#field-car_model")?.value || "";
+          updatedData["license_plate"] =
+            popup.querySelector("#field-license_plate")?.value || "";
+          updatedData["driver_name"] =
+            popup.querySelector("#field-driver_name")?.value || "";
+          updatedData["phone_number"] =
+            popup.querySelector("#field-phone_number")?.value || "";
 
           const refPath = type === "tour" ? "tourBookings" : "transferBookings";
           const bookingRef = ref(database, `${refPath}/${data.id}`);

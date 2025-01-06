@@ -184,11 +184,11 @@ class CalendarComponent extends HTMLElement {
             tourSnapshot.forEach((booking) => {
               const data = booking.val();
               events.push({
-                title: `${
-                  (data.tourPickUpTime || data.pickUpTime || "-") +
-                  " - " +
+                title: `(T) ${
+                  data.tourPickUpTime +
+                  " " +
                   (data.tourFirstName || data.customerName || "No name")
-                } (T)`,
+                } `,
                 start: data.tourDate || data.date,
                 color: getColorByStatus(data.status),
                 extendedProps: {
@@ -218,11 +218,11 @@ class CalendarComponent extends HTMLElement {
             transferSnapshot.forEach((booking) => {
               const data = booking.val();
               events.push({
-                title: `${
-                  (data.transferPickUpTime || data.pickUpTime || "-") +
-                  " - " +
+                title: `(Tr) ${
+                  data.transferPickUpTime +
+                  " " +
                   (data.transferFirstName || data.name || "No name")
-                } (Tr)`,
+                } `,
                 start: data.transferDate || data.date,
                 color: getColorByStatus(data.status),
                 extendedProps: {
@@ -241,6 +241,10 @@ class CalendarComponent extends HTMLElement {
                   firstName: data.transferFirstName || "",
                   lastName: data.transferLastName || "",
                   status: data.status,
+                  carModel: data.car_model || "-",
+                  licensePlate: data.license_plate || "-",
+                  driverName: data.driver_name || "-",
+                  phoneNumber: data.phone_number || "-",
                 },
               });
             });
@@ -265,82 +269,82 @@ class CalendarComponent extends HTMLElement {
         const isTransfer = info.event.title.includes("(Tr)"); // ตรวจสอบว่าเป็น Transfer หรือไม่
         const firstName = info.event.extendedProps.firstName || "-";
         const lastName = info.event.extendedProps.lastName || "-";
-        const eventDate = info.event.start
-          ? `${String(info.event.start.getDate()).padStart(2, "0")}/${String(
-              info.event.start.getMonth() + 1
-            ).padStart(2, "0")}/${info.event.start.getFullYear()}`
-          : "-";
 
         const tooltipContent = `
           <div style="display: flex; gap: 20px;">
             <!-- คอลัมน์ซ้าย -->
             <div style="flex: 1;">
-           <h5><strong>${eventDate}</strong></h5>
-           <h6><strong>เวลารับ:</strong> ${
-             info.event.extendedProps.pickUpTime || "-"
-           }</h6>
+              <h5><strong>${
+                info.event.start
+                  ? `${String(info.event.start.getDate()).padStart(
+                      2,
+                      "0"
+                    )}/${String(info.event.start.getMonth() + 1).padStart(
+                      2,
+                      "0"
+                    )}/${info.event.start.getFullYear()}`
+                  : "-"
+              }</strong></h5>
+
+              <h6><strong>เวลารับ:</strong> ${
+                info.event.extendedProps.pickUpTime || "-"
+              }</h6>
               <strong>ชื่อ:</strong> ${firstName}<br>
               <strong>นามสกุล:</strong> ${lastName}<br>
+              <strong>จำนวน:</strong> ${info.event.extendedProps.pax || "-"}<br>
               <strong>ส่งใคร:</strong> ${
                 info.event.extendedProps.sendTo || "-"
               }<br>
               <strong>Agent:</strong> ${
                 info.event.extendedProps.agent || "-"
               }<br>
-              <strong>จำนวน:</strong> ${info.event.extendedProps.pax || "-"}<br>
+              
               <strong>ประเภท:</strong> ${
                 info.event.extendedProps.type || "-"
               }<br>
               <strong>รายละเอียด:</strong> ${
                 info.event.extendedProps.detail || "-"
               }<br>
-              <strong>โรงแรม:</strong> ${
-                info.event.extendedProps.hotel || "-"
-              }<br>
+             
             </div>
       
             <!-- คอลัมน์ขวา -->
             <div style="flex: 1;">
-              
-              <strong>รับที่:</strong> ${
-                info.event.extendedProps.pickupFrom || "-"
-              }<br>
-              <strong>ส่งที่:</strong> ${
-                info.event.extendedProps.dropTo || "-"
-              }<br>
+
               ${
                 isTransfer
                   ? `
-                <strong>ไฟล์ต:</strong> ${
-                  info.event.extendedProps.flight || "-"
-                }<br>
-                <strong>เวลาลงเครื่อง:</strong> ${
-                  info.event.extendedProps.time || "-"
-                }<br>
-              `
+                <strong>รุ่นรถ:</strong> ${info.event.extendedProps.carModel}<br>
+                <strong>ป้ายทะเบียน:</strong> ${info.event.extendedProps.licensePlate}<br>
+                <strong>ชื่อคนขับ:</strong> ${info.event.extendedProps.driverName}<br>
+                <strong>เบอร์โทร:</strong> ${info.event.extendedProps.phoneNumber}<br>
+                `
                   : `
-                <strong>Fee:</strong> ${info.event.extendedProps.fee || "-"}<br>
-                <strong>อาหาร:</strong> ${
-                  info.event.extendedProps.meal || "-"
-                }<br>
-                <strong>หมายเลขห้อง:</strong> ${
-                  info.event.extendedProps.roomNo || "-"
-                }<br>
-                <strong>ติดต่อ:</strong> ${
-                  info.event.extendedProps.contactNo || "-"
-                }<br>
-              `
+                 <strong>โรงแรม:</strong> ${
+                   info.event.extendedProps.hotel || "-"
+                 }<br>
+          <strong>หมายเลขห้อง:</strong> ${
+            info.event.extendedProps.roomNo || "-"
+          }<br>
+          <strong>Fee:</strong> ${info.event.extendedProps.fee || "-"}<br>
+          <strong>อาหาร:</strong> ${info.event.extendedProps.meal || "-"}<br>
+          <strong>ติดต่อ:</strong> ${
+            info.event.extendedProps.contactNo || "-"
+          }<br>
+                `
               }
               <strong>หมายเหตุ:</strong> ${
                 info.event.extendedProps.note || "-"
               }<br>
-              <strong>สถานะ:</strong> ${info.event.extendedProps.status || "-"}
-<h5 style="color:rgb(128, 128, 128);"><i><strong>${
-          isTransfer ? "Transfer" : "Tour"
-        }</strong></i></h5>
-      <h6 style="color:rgb(128, 128, 128);"><i><strong>${
-        info.event.extendedProps.id || "-"
-      }</strong></i></h6>
+              <strong>สถานะ:</strong> ${
+                info.event.extendedProps.status || "-"
+              }<br>
+              <h5 style="color:rgb(128, 128, 128);"><i><strong>${
+                isTransfer ? "Transfer" : "Tour"
+              }</strong></i></h5>
+              <h6 style="color:rgb(128, 128, 128);"><i><strong>${
+                info.event.extendedProps.id || "-"
+              }</strong></i></h6>
             </div>
           </div>
         `;

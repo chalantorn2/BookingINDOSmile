@@ -95,14 +95,18 @@
         let currentSortKey = null;
         let currentSortDirection = "asc";
 
+        // ข้อความเริ่มต้นแสดงในตารางขณะโหลดข้อมูล
         tableBody.innerHTML =
-          "<tr><td colspan='4' class='text-center'>Loading...</td></tr>";
+          "<tr><td colspan='5' class='text-center'>Loading...</td></tr>";
 
+        // ฟังก์ชันแปลงวันที่จาก YYYY-MM-DD เป็น DD/MM/YYYY
         function formatDate(date) {
+          if (!date) return "-";
           const [year, month, day] = date.split("-");
           return `${day}/${month}/${year}`;
         }
 
+        // ฟังก์ชันจัดเรียงข้อมูลตามคีย์
         function sortTable(data, key) {
           const direction = currentSortDirection === "asc" ? 1 : -1;
           return data.sort((a, b) => {
@@ -115,6 +119,7 @@
           });
         }
 
+        // อัปเดตไอคอนการจัดเรียงบนหัวตาราง
         function updateSortIcons() {
           document.querySelectorAll(".sortable i").forEach((icon) => {
             icon.className = "bi bi-arrow-down-up";
@@ -130,23 +135,25 @@
           }
         }
 
+        // ฟังก์ชันเรนเดอร์ตาราง
         function renderTable(data) {
           tableBody.innerHTML = "";
           data.forEach((booking) => {
-            const bookingType = booking.type || "-"; // Assuming the 'type' field differentiates between Tour and Transfer
+            const bookingType = booking.type || "-"; // กำหนดประเภท (Tour/Transfer)
             const row = document.createElement("tr");
             row.innerHTML = `
-      <td><input type="checkbox" class="booking-select" data-id="${
-        booking.id
-      }" /></td>
-      <td>${booking.agent || "-"}</td>
-       <td>${bookingType}</td>
-      <td>${booking.name || "-"}</td>     
-      <td>${booking.date || "-"}</td>
-    `;
+        <td><input type="checkbox" class="booking-select" data-id="${
+          booking.id
+        }" /></td>
+        <td>${booking.agent || "-"}</td>
+        <td>${bookingType}</td>
+        <td>${booking.name || "-"}</td>
+        <td>${booking.date || "-"}</td>
+      `;
             tableBody.appendChild(row);
           });
 
+          // อัปเดตสถานะปุ่มเมื่อมีการเลือก
           document.querySelectorAll(".booking-select").forEach((checkbox) => {
             checkbox.addEventListener("change", () => {
               const selected =
@@ -156,6 +163,7 @@
           });
         }
 
+        // ฟังก์ชันสร้าง Order ID
         function generateOrderID(agent, count) {
           const today = new Date();
           const yy = today.getFullYear().toString().slice(-2);
@@ -165,54 +173,54 @@
         }
 
         try {
-          const toursQuery = query(
-            ref(database, "tourBookings"),
-            orderByChild("orderId"),
-            equalTo(null)
-          );
-          const transfersQuery = query(
-            ref(database, "transferBookings"),
-            orderByChild("orderId"),
-            equalTo(null)
-          );
+          const toursRef = ref(database, "tourBookings");
+          const transfersRef = ref(database, "transferBookings");
 
+          // ดึงข้อมูลจาก Firebase
           const [toursSnapshot, transfersSnapshot] = await Promise.all([
-            get(toursQuery),
-            get(transfersQuery),
+            get(toursRef),
+            get(transfersRef),
           ]);
 
           let availableBookings = [];
 
+          // กรองข้อมูล Tour ที่ไม่มี orderId
           if (toursSnapshot.exists()) {
             toursSnapshot.forEach((snap) => {
               const data = snap.val();
-              availableBookings.push({
-                id: snap.key,
-                agent: data.tourAgent,
-                name: `${data.tourFirstName || ""} ${
-                  data.tourLastName || ""
-                }`.trim(),
-                type: "Tour", // เพิ่มประเภทเป็น Tour
-                date: formatDate(data.tourDate),
-              });
+              if (!data.orderId) {
+                availableBookings.push({
+                  id: snap.key,
+                  agent: data.tourAgent || "-",
+                  name: `${data.tourFirstName || ""} ${
+                    data.tourLastName || ""
+                  }`.trim(),
+                  type: "Tour",
+                  date: formatDate(data.tourDate),
+                });
+              }
             });
           }
 
+          // กรองข้อมูล Transfer ที่ไม่มี orderId
           if (transfersSnapshot.exists()) {
             transfersSnapshot.forEach((snap) => {
               const data = snap.val();
-              availableBookings.push({
-                id: snap.key,
-                agent: data.transferAgent,
-                name: `${data.transferFirstName || ""} ${
-                  data.transferLastName || ""
-                }`.trim(),
-                type: "Transfer", // เพิ่มประเภทเป็น Transfer
-                date: formatDate(data.transferDate),
-              });
+              if (!data.orderId) {
+                availableBookings.push({
+                  id: snap.key,
+                  agent: data.transferAgent || "-",
+                  name: `${data.transferFirstName || ""} ${
+                    data.transferLastName || ""
+                  }`.trim(),
+                  type: "Transfer",
+                  date: formatDate(data.transferDate),
+                });
+              }
             });
           }
 
+          // ตรวจสอบว่ามีข้อมูลหรือไม่
           if (availableBookings.length === 0) {
             tableBody.innerHTML =
               "<tr><td colspan='5' class='text-center'>No available bookings</td></tr>";
@@ -220,6 +228,7 @@
             renderTable(availableBookings);
           }
 
+          // จัดการการคลิกเพื่อจัดเรียงข้อมูลในตาราง
           document.querySelectorAll(".sortable").forEach((header) => {
             header.addEventListener("click", () => {
               const sortKey = header.dataset.sort;
@@ -236,6 +245,7 @@
             });
           });
 
+          // ฟังก์ชันสร้าง Order
           createOrderBtn.addEventListener("click", async () => {
             const selectedBookings = Array.from(
               document.querySelectorAll(".booking-select:checked")
@@ -278,7 +288,7 @@
         } catch (error) {
           console.error("Error fetching data or creating order:", error);
           tableBody.innerHTML =
-            "<tr><td colspan='4' class='text-center text-danger'>Failed to load data</td></tr>";
+            "<tr><td colspan='5' class='text-center text-danger'>Failed to load data</td></tr>";
         }
       });
     </script>

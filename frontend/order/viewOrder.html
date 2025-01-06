@@ -239,13 +239,16 @@
           toursSnapshot.forEach((snap) => {
             const data = snap.val();
             results.push({
-              dbKey: snap.key, // key ของ booking ใน DB
+              dbKey: snap.key,
               agent: data.tourAgent || "-",
               name: `${data.tourFirstName || ""} ${
                 data.tourLastName || ""
               }`.trim(),
               type: "Tour",
               date: data.tourDate || "-",
+              time: data.tourPickUpTime || "00:00",
+              sendTo: data.tourSendTo || "-",
+              hotel: data.tourHotel || "-",
             });
           });
         }
@@ -272,16 +275,13 @@
       async function processOrders(orders) {
         const processedOrders = [];
 
-        // วนลูปทุก orderId
         for (const orderId of Object.keys(orders)) {
           const order = orders[orderId];
           const bookings = order.bookings || [];
           let bookingDetails = [];
           let customerName = "Unknown Name";
 
-          // ดึงข้อมูล bookingDetails
           const bookingPromises = bookings.map(async (bkId) => {
-            // ลองหาว่าอยู่ใน tourBookings หรือ transferBookings
             const tourRef = ref(database, `tourBookings/${bkId}`);
             const transferRef = ref(database, `transferBookings/${bkId}`);
 
@@ -293,12 +293,20 @@
               }`.trim();
               bookingDetails.push({
                 dbKey: bkId,
-                date: bData.tourDate,
+                date: bData.tourDate || "Unknown Date",
                 time: bData.tourPickUpTime || "00:00",
                 type: "Tour",
                 sendTo: bData.tourSendTo || "-",
                 id: bData.tourID || bkId,
+                hotel: bData.tourHotel || "-",
+                roomNo: bData.tourRoomNo || "-",
+                fee: bData.tourFee || "-", // เพิ่มฟิลด์ค่าธรรมเนียม
+                meal: bData.tourMeal || "-", // เพิ่มฟิลด์มื้ออาหาร
+                contactNo: bData.tourContactNo || "-", // เพิ่มฟิลด์เบอร์โทรติดต่อ
+                note: bData.tourNote || "-", // เพิ่มฟิลด์หมายเหตุ
+                status: bData.status || "-", // เพิ่มฟิลด์สถานะ
               });
+              // console.log("Tour Data:", tourSnap.val());
             } else {
               const transferSnap = await get(transferRef);
               if (transferSnap.exists()) {
@@ -308,19 +316,26 @@
                 }`.trim();
                 bookingDetails.push({
                   dbKey: bkId,
-                  date: bData.transferDate,
+                  date: bData.transferDate || "Unknown Date",
                   time: bData.transferPickUpTime || "00:00",
                   type: "Transfer",
                   sendTo: bData.transferSendTo || "-",
                   id: bData.transferID || bkId,
+                  carModel: bData.carModel || "-", // ฟิลด์รุ่นรถ
+                  licensePlate: bData.licensePlate || "-", // ฟิลด์ป้ายทะเบียน
+                  driverName: bData.driverName || "-", // ฟิลด์ชื่อคนขับ
+                  phoneNumber: bData.phoneNumber || "-", // ฟิลด์เบอร์โทรคนขับ
+                  note: bData.transferNote || "-", // เพิ่มฟิลด์หมายเหตุ
+                  status: bData.status || "-", // เพิ่มฟิลด์สถานะ
                 });
+                // console.log("Transfer Data:", transferSnap.val());
               }
             }
           });
 
           await Promise.all(bookingPromises);
 
-          // จัดเรียง bookingDetails ตามวันที่ -> เวลา
+          // จัดเรียง bookingDetails
           bookingDetails.sort((a, b) => {
             const dateA = new Date(a.date);
             const dateB = new Date(b.date);
@@ -340,8 +355,8 @@
           }, null);
 
           processedOrders.push({
-            orderId, // key ใน DB ของ orders
-            order, // object { id: "...", bookings: [...] }
+            orderId,
+            order,
             customerName,
             earliestDate,
             latestDate,
@@ -456,28 +471,40 @@
                         "list-group-item d-flex justify-content-between align-items-center";
 
                       item.innerHTML = `
-                  <div>
-                    <strong>${idx + 1}. ${bk.type}</strong>
-                    <small>
-                      <span class="text-muted">Date:</span> ${formatDate(
-                        bk.date
-                      )} |
-                      <span class="text-muted">Time:</span> ${bk.time} |
-                      <span class="text-muted">Send To:</span> ${bk.sendTo}
-                    </small>
-                  </div>
-                  <div>
-                    <span class="badge bg-primary">${bk.id}</span>
-                    <button 
-                      class="btn btn-sm btn-danger ms-3 remove-booking"
-                      data-booking-key="${bk.dbKey}"
-                      data-order-key="${orderId}"
-                      data-booking-type="${bk.type}"
-                    >
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                `;
+    <div>
+      <strong>${idx + 1}. ${bk.type}</strong>
+      <small>
+        <span class="text-muted">Date:</span> ${formatDate(bk.date)} |
+        <span class="text-muted">Time:</span> ${bk.time || "-"} |
+        <span class="text-muted">Send To:</span> ${bk.sendTo || "-"}
+      </small>
+    </div>
+    <div>
+      <span class="badge bg-primary">${bk.id}</span>
+      <button 
+        class="btn btn-sm btn-danger ms-3 remove-booking"
+        data-booking-key="${bk.dbKey}"
+        data-order-key="${orderId}"
+        data-booking-type="${bk.type}"
+      >
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  `;
+
+                      // เพิ่ม Event Listener สำหรับ Tooltip
+                      const badge = item.querySelector(".badge");
+                      badge.addEventListener("mouseenter", (e) => {
+                        showPreviewTooltip(e, bk.id, bk); // แสดง Tooltip
+                      });
+
+                      badge.addEventListener("mousemove", (e) => {
+                        updateTooltipPosition(e); // อัปเดตตำแหน่ง Tooltip
+                      });
+
+                      badge.addEventListener("mouseleave", () => {
+                        hideTooltip(); // ซ่อน Tooltip
+                      });
 
                       // ผูก Event ปุ่ม Remove Booking
                       item
@@ -506,7 +533,83 @@
           }
         );
       }
+      function showPreviewTooltip(event, bookingId, bookingData) {
+        console.log("Inside showPreviewTooltip - Booking Data:", bookingData);
 
+        const isTransfer = bookingData.type === "Transfer";
+        const tooltipContent = `
+    <div style="display: flex; gap: 20px;">
+      <div style="flex: 1;">
+        <h5><strong>${bookingData.date || "-"}</strong></h5>
+        <h6><strong>เวลารับ:</strong> ${bookingData.time || "-"}</h6>
+        <strong>ชื่อ:</strong> ${bookingData.firstName || "-"}<br>
+        <strong>นามสกุล:</strong> ${bookingData.lastName || "-"}<br>
+        <strong>จำนวน:</strong> ${bookingData.pax || "-"}<br>
+        <strong>ส่งใคร:</strong> ${bookingData.sendTo || "-"}<br>
+        <strong>Agent:</strong> ${bookingData.agent || "-"}<br>
+        <strong>ประเภท:</strong> ${bookingData.type || "-"}<br>
+        <strong>รายละเอียด:</strong> ${bookingData.detail || "-"}<br>
+      </div>
+
+      <div style="flex: 1;">
+        ${
+          isTransfer
+            ? `
+          <strong>รุ่นรถ:</strong> ${bookingData.carModel || "-"}<br>
+          <strong>ป้ายทะเบียน:</strong> ${bookingData.licensePlate || "-"}<br>
+          <strong>ชื่อคนขับ:</strong> ${bookingData.driverName || "-"}<br>
+          <strong>เบอร์โทร:</strong> ${bookingData.phoneNumber || "-"}<br>
+          `
+            : `
+          <strong>โรงแรม:</strong> ${bookingData.hotel || "-"}<br>
+          <strong>หมายเลขห้อง:</strong> ${bookingData.roomNo || "-"}<br>
+          <strong>Fee:</strong> ${bookingData.fee || "-"}<br>
+          <strong>อาหาร:</strong> ${bookingData.meal || "-"}<br>
+          <strong>ติดต่อ:</strong> ${bookingData.contactNo || "-"}<br>
+          `
+        }
+        <strong>หมายเหตุ:</strong> ${bookingData.note || "-"}<br>
+        <strong>สถานะ:</strong> ${bookingData.status || "-"}<br>
+      </div>
+    </div>
+  `;
+
+        let tooltip = document.querySelector("#hoverTooltip");
+        if (!tooltip) {
+          tooltip = document.createElement("div");
+          tooltip.id = "hoverTooltip";
+          tooltip.style.position = "absolute";
+          tooltip.style.backgroundColor = "#fff";
+          tooltip.style.padding = "10px";
+          tooltip.style.border = "1px solid #ddd";
+          tooltip.style.borderRadius = "5px";
+          tooltip.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
+          tooltip.style.zIndex = "1000";
+          tooltip.style.display = "none";
+          tooltip.style.fontSize = "0.9rem";
+          tooltip.style.color = "#333";
+          document.body.appendChild(tooltip);
+        }
+
+        tooltip.innerHTML = tooltipContent;
+        tooltip.style.display = "block";
+        tooltip.style.left = `${event.pageX + 10}px`;
+        tooltip.style.top = `${event.pageY + 10}px`;
+      }
+      function updateTooltipPosition(event) {
+        const tooltip = document.querySelector("#hoverTooltip");
+        if (tooltip) {
+          tooltip.style.left = `${event.pageX + 10}px`;
+          tooltip.style.top = `${event.pageY + 10}px`;
+        }
+      }
+      // ซ่อน Tooltip
+      function hideTooltip() {
+        const tooltip = document.querySelector("#hoverTooltip");
+        if (tooltip) {
+          tooltip.style.display = "none";
+        }
+      }
       // ฟังก์ชันลบ Order จาก Firebase
       async function deleteOrder(orderId) {
         const orderRef = ref(database, `orders/${orderId}`);
