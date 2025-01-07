@@ -295,10 +295,7 @@ class CalendarComponent extends HTMLElement {
               <strong>ส่งใคร:</strong> ${
                 info.event.extendedProps.sendTo || "-"
               }<br>
-              <strong>Agent:</strong> ${
-                info.event.extendedProps.agent || "-"
-              }<br>
-              
+            
               <strong>ประเภท:</strong> ${
                 info.event.extendedProps.type || "-"
               }<br>

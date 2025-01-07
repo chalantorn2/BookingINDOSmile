@@ -360,7 +360,6 @@
             "tourFirstName",
             "tourLastName",
             "tourSendTo",
-            "tourAgent",
             "tourType",
             "tourDetail",
             "tourPax",
@@ -372,6 +371,7 @@
             "tourContactNo",
             "tourPickUpTime",
             "tourNote",
+            "tourAgent",
             "timestamp",
           ],
           transfer: [
@@ -380,7 +380,6 @@
             "transferFirstName",
             "transferLastName",
             "transferSendTo",
-            "transferAgent",
             "transferType",
             "transferDetail",
             "transferPax",
@@ -392,12 +391,13 @@
             "transferDropTo",
             "transferNote",
             "timestamp",
+            "transferAgent",
           ],
         };
 
         const labelMap = {
-          orderId: "รหัสออเดอร์",
-          tourID: "รหัสทัวร์",
+          orderId: "OrderID",
+          tourID: "BookingID",
           tourFirstName: "ชื่อ (ทัวร์)",
           tourLastName: "นามสกุล (ทัวร์)",
           tourSendTo: "ส่งใคร (ทัวร์)",
@@ -413,7 +413,7 @@
           tourContactNo: "เบอร์ติดต่อ (ทัวร์)",
           tourPickUpTime: "เวลารับ (ทัวร์)",
           tourNote: "หมายเหตุ (ทัวร์)",
-          transferID: "รหัสรับ-ส่ง",
+          transferID: "BookingID",
           transferFirstName: "ชื่อ (รับ-ส่ง)",
           transferLastName: "นามสกุล (รับ-ส่ง)",
           transferSendTo: "ส่งใคร (รับ-ส่ง)",
