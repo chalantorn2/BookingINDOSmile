@@ -405,7 +405,7 @@
           tourType: "ประเภท (ทัวร์)",
           tourDetail: "รายละเอียด (ทัวร์)",
           tourPax: "จำนวน (ทัวร์)",
-          tourFee: "ค่าทัวร์",
+          tourFee: "ค่าอุทยาน",
           tourMeal: "อาหาร",
           tourDate: "วันที่ (ทัวร์)",
           tourHotel: "โรงแรม (ทัวร์)",
@@ -484,7 +484,7 @@
             let value = data[fieldName] || "";
             let inputElement = "";
 
-            // หากเป็น date ให้แปลงเป็น dd/mm/yyyy
+            // หากเป็น date หรือ timestamp ให้แปลงเป็น dd/mm/yyyy
             if (
               fieldName === "tourDate" ||
               fieldName === "transferDate" ||
@@ -496,23 +496,43 @@
                   : formatDate(value);
             }
 
+            // ตรวจสอบว่าฟิลด์นั้นเป็นฟิลด์ที่ต้องล็อกหรือไม่
+            const isLockedField =
+              fieldName === "orderId" ||
+              fieldName === "tourID" ||
+              fieldName === "transferID" ||
+              fieldName === "timestamp";
+
             // หากเป็น detail ให้ใช้ textarea
             if (fieldName === "tourDetail" || fieldName === "transferDetail") {
               inputElement = `
-              <textarea class="form-control" id="field-${fieldName}" rows="5">${value}</textarea>
-            `;
+        <textarea 
+          class="form-control" 
+          id="field-${fieldName}" 
+          rows="5" 
+          ${isLockedField ? "disabled" : ""}
+          style="${isLockedField ? "background-color: #f8f9fa;" : ""}"
+        >${value}</textarea>
+      `;
             } else {
               inputElement = `
-              <input type="text" class="form-control" id="field-${fieldName}" value="${value}" />
-            `;
+        <input 
+          type="text" 
+          class="form-control" 
+          id="field-${fieldName}" 
+          value="${value}" 
+          ${isLockedField ? "disabled" : ""}
+          style="${isLockedField ? "background-color: #f8f9fa;" : ""}"
+        />
+      `;
             }
 
             return `
-            <div class="col-md-6">
-              <label for="field-${fieldName}" class="form-label font-weight-bold">${labelMap[fieldName]}</label>
-              ${inputElement}
-            </div>
-          `;
+      <div class="col-md-6">
+        <label for="field-${fieldName}" class="form-label font-weight-bold">${labelMap[fieldName]}</label>
+        ${inputElement}
+      </div>
+    `;
           };
 
           const fieldHtml1 = createFieldHtml(field1);
