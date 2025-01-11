@@ -680,7 +680,7 @@
               const [day, month, year] = value.split("/"); // แปลงวันที่เป็น YYYY-MM-DD
               updatedData[key] = `${year}-${month}-${day}`;
             } else if (key === "timestamp") {
-              // updatedData[key] = Date.now(); // เก็บ timestamp
+              updatedData[key] = data.timestamp || Date.now();
             } else {
               updatedData[key] = value; // เก็บข้อมูลปกติ
             }
