@@ -1,4 +1,5 @@
 // /component/booking-table.js
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
 import {
   getDatabase,
@@ -8,6 +9,10 @@ import {
 
 import { database } from "/js/firebase-config.js";
 
+// ถ้าคุณใช้แบบ ES Module (แนะนำ) ให้ import flatpickr จาก ESM URL
+// ถ้าคุณใช้แบบ Script ธรรมดา ให้ลบออกแล้วใช้ window.flatpickr แทน
+// import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/esm/index.js";
+
 class BookingTable extends HTMLElement {
   constructor() {
     super();
@@ -16,10 +21,12 @@ class BookingTable extends HTMLElement {
     this.currentPage = 1; // หน้าเริ่มต้น
 
     // ---- (1) คอลัมน์ทั้งหมด (key, label) ----
+    // เพิ่ม "customer" ระหว่าง "agent" กับ "sendTo"
     this.allColumns = [
       { key: "type", label: "Type" },
       { key: "id", label: "Booking ID" },
       { key: "agent", label: "Agent" },
+      { key: "customer", label: "Customer Name" }, // <-- เพิ่มคอลัมน์
       { key: "sendTo", label: "Send To" },
       { key: "date", label: "Date" },
       { key: "timestamp", label: "Timestamp" },
@@ -30,9 +37,13 @@ class BookingTable extends HTMLElement {
 
     // ---- (2) ตัวแปรสำหรับข้อมูล bookings และการ sort ----
     this.allBookings = []; // เก็บข้อมูลทั้งหมด (Tour + Transfer)
-    this.filteredBookings = []; // เก็บข้อมูลหลัง Filter (Day, Month, Year)
+    this.filteredBookings = []; // เก็บข้อมูลหลัง Filter
     this.sortKey = "timestamp"; // ค่าเริ่มต้น: sort ตาม timestamp
     this.sortDirection = "desc"; // เรียงจากล่าสุดมาก่อน
+
+    // ตัวแปรสำหรับการกรองตามช่วงวันที่ (เก็บจาก tourDate / transferDate)
+    this.startDateStr = null; // string "dd/mm/yyyy"
+    this.endDateStr = null; // string "dd/mm/yyyy"
 
     // Container หลักใน Shadow DOM
     this.container = document.createElement("div");
@@ -58,18 +69,33 @@ class BookingTable extends HTMLElement {
 
       const tempData = [];
 
+      // ฟังก์ชันแปลง "YYYY-MM-DD" => timestamp (00:00:00 ของวันนั้น)
+      const parseYYYYMMDDtoTimestamp = (dateStr) => {
+        if (!dateStr || dateStr === "-") return 0;
+        // สมมติค่าที่เก็บใน Firebase เป็น "2025-01-03"
+        const [yyyy, mm, dd] = dateStr.split("-");
+        if (!yyyy || !mm || !dd) return 0;
+
+        const d = new Date(+yyyy, +mm - 1, +dd, 0, 0, 0);
+        if (isNaN(d.getTime())) return 0;
+        return d.getTime();
+      };
+
       // --- ดึง Tour ---
       if (tourSnap.exists()) {
         tourSnap.forEach((snap) => {
           const d = snap.val();
+          // สมมติ d.tourDate = "2025-01-03"
           tempData.push({
             type: "Tour",
             id: d.tourID || snap.key,
             agent: d.tourAgent || "-",
+            customer: d.tourFirstName || "-", // ลูกค้า
             sendTo: d.tourSendTo || "-",
             date: d.tourDate || "-", // "YYYY-MM-DD"
-            // เก็บตัวเลขไว้เรียงได้ง่าย (ถ้า d.timestamp เป็น number)
             rawTimestamp: typeof d.timestamp === "number" ? d.timestamp : 0,
+            // rawDate ใช้สำหรับช่วงวันที่ (Start Date / End Date)
+            rawDate: parseYYYYMMDDtoTimestamp(d.tourDate || ""),
           });
         });
       }
@@ -78,25 +104,28 @@ class BookingTable extends HTMLElement {
       if (transferSnap.exists()) {
         transferSnap.forEach((snap) => {
           const d = snap.val();
+          // สมมติ d.transferDate = "2025-01-03"
           tempData.push({
             type: "Transfer",
             id: d.transferID || snap.key,
             agent: d.transferAgent || "-",
+            customer: d.transferFirstName || "-", // ลูกค้า
             sendTo: d.transferSendTo || "-",
             date: d.transferDate || "-", // "YYYY-MM-DD"
             rawTimestamp: typeof d.timestamp === "number" ? d.timestamp : 0,
+            rawDate: parseYYYYMMDDtoTimestamp(d.transferDate || ""),
           });
         });
       }
 
-      // เก็บลงตัวแปรของ component
       this.allBookings = tempData;
+      console.log("All Bookings:", this.allBookings);
 
       // เรียก populate Dropdown (Day/Month/Year)
       this.populateDateFilters();
 
-      // เรียกฟังก์ชัน filter (ค่าเริ่มต้นไม่เลือกอะไร = ดูทั้งหมด) แล้ว sort + render
-      this.applyDateFilter();
+      // เรียก applyAllFilters() เพื่อกรอง + sort + render
+      this.applyAllFilters();
     } catch (err) {
       console.error("Error loading data in booking-table:", err);
       const tBody = this.container.querySelector("#bookingTableBody");
@@ -173,6 +202,16 @@ class BookingTable extends HTMLElement {
     transition: all 0.3s ease;
   }
 
+  /* ปรับให้ input[type=text] ก็มี style เดียวกัน */
+  .filter-group input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }
+
   table {
     width: 100%;
     border-collapse: collapse;
@@ -201,31 +240,31 @@ class BookingTable extends HTMLElement {
       grid-template-columns: 1fr;
     }
   }
-    .pagination-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
 
-.pagination-container button {
-  margin: 0 5px;
-  padding: 5px 10px;
-  border: none;
-  background: #007bff;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-}
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
 
-.pagination-container button.active {
-  background: #0056b3;
-  font-weight: bold;
-}
+  .pagination-container button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
 
-.pagination-container button:hover {
-  background: #0056b3;
-}
+  .pagination-container button.active {
+    background: #0056b3;
+    font-weight: bold;
+  }
 
+  .pagination-container button:hover {
+    background: #0056b3;
+  }
 </style>
 
 <div class="container">
@@ -236,7 +275,7 @@ class BookingTable extends HTMLElement {
 
   <!-- Filters and Sort Options -->
   <div class="filter-sort-container">
-    <!-- Row 1: Date Filters -->
+    <!-- Row 1: Date Filters (Day/Month/Year) -->
     <div class="row-group">
       <div class="filter-group">
         <label for="dayFilter">Day:</label>
@@ -266,6 +305,7 @@ class BookingTable extends HTMLElement {
           <option value="type">Type</option>
           <option value="id">Booking ID</option>
           <option value="agent">Agent</option>
+          <option value="customer">CustomerName</option>
           <option value="sendTo">Send To</option>
           <option value="date">Date</option>
           <option value="timestamp" selected>Timestamp</option>
@@ -277,6 +317,18 @@ class BookingTable extends HTMLElement {
           <option value="asc">Ascending</option>
           <option value="desc" selected>Descending</option>
         </select>
+      </div>
+    </div>
+
+    <!-- Row 3: Filter by Date Range (tourDate / transferDate) -->
+    <div class="row-group">
+      <div class="filter-group">
+        <label for="startDateFilter">Start Date:</label>
+        <input type="text" id="startDateFilter" placeholder="เลือกวันที่เริ่มต้น" />
+      </div>
+      <div class="filter-group">
+        <label for="endDateFilter">End Date:</label>
+        <input type="text" id="endDateFilter" placeholder="เลือกวันที่สิ้นสุด" />
       </div>
     </div>
   </div>
@@ -293,10 +345,9 @@ class BookingTable extends HTMLElement {
   <div id="pagination" class="pagination-container"></div>
 
 </div>
-
     `;
 
-    // Bind Events to Date Filters
+    // Bind Events to Day/Month/Year Filters
     const dayFilterEl = this.container.querySelector("#dayFilter");
     const monthFilterEl = this.container.querySelector("#monthFilter");
     const yearFilterEl = this.container.querySelector("#yearFilter");
@@ -304,7 +355,7 @@ class BookingTable extends HTMLElement {
     [dayFilterEl, monthFilterEl, yearFilterEl].forEach((filterEl) => {
       if (filterEl) {
         filterEl.addEventListener("change", () => {
-          this.applyDateFilter(); // Automatically apply filter when user selects a value
+          this.applyAllFilters();
         });
       }
     });
@@ -325,17 +376,39 @@ class BookingTable extends HTMLElement {
         this.renderTable();
       });
     }
+
+    // เรียก Flatpickr กับ Start/End Date
+    const startDateInput = this.container.querySelector("#startDateFilter");
+    const endDateInput = this.container.querySelector("#endDateFilter");
+
+    // flatpickr แบบ ES Module
+    flatpickr(startDateInput, {
+      dateFormat: "d/m/Y", // ให้แสดง/รับเป็น dd/mm/yyyy
+      onChange: (selectedDates, dateStr) => {
+        // dateStr เช่น "13/01/2025"
+        this.startDateStr = dateStr || null;
+        this.applyAllFilters();
+      },
+    });
+
+    flatpickr(endDateInput, {
+      dateFormat: "d/m/Y",
+      onChange: (selectedDates, dateStr) => {
+        this.endDateStr = dateStr || null;
+        this.applyAllFilters();
+      },
+    });
   }
 
   // --- (4.x) Populate ตัวเลือก Day, Month, Year จากข้อมูลทั้งหมด (this.allBookings) ---
   populateDateFilters() {
-    // เอาทุก date (YYYY-MM-DD) มาแตกเป็น day/month/year
     const daySet = new Set();
     const monthSet = new Set();
     const yearSet = new Set();
 
     this.allBookings.forEach((bk) => {
-      if (!bk.date || bk.date === "-") return; // ถ้าไม่มี date, ข้าม
+      // bk.date = "YYYY-MM-DD"
+      if (!bk.date || bk.date === "-") return;
       const [yyyy, mm, dd] = bk.date.split("-");
       if (yyyy && mm && dd) {
         daySet.add(dd);
@@ -344,19 +417,17 @@ class BookingTable extends HTMLElement {
       }
     });
 
-    // แปลงเป็น array แล้ว sort
     const dayArr = Array.from(daySet).sort((a, b) => Number(a) - Number(b));
     const monthArr = Array.from(monthSet).sort((a, b) => Number(a) - Number(b));
     const yearArr = Array.from(yearSet).sort((a, b) => Number(a) - Number(b));
 
-    // เพิ่มลงใน dropdown
     const dayFilter = this.container.querySelector("#dayFilter");
     const monthFilter = this.container.querySelector("#monthFilter");
     const yearFilter = this.container.querySelector("#yearFilter");
 
     dayArr.forEach((d) => {
       const opt = document.createElement("option");
-      opt.value = d; // "01" / "02" ...
+      opt.value = d;
       opt.textContent = d;
       dayFilter.appendChild(opt);
     });
@@ -376,38 +447,59 @@ class BookingTable extends HTMLElement {
     });
   }
 
-  // --- (4.y) ฟังก์ชัน Filter ตาม day/month/year (จาก Dropdown) ---
-  applyDateFilter() {
-    const dayFilterVal = this.container.querySelector("#dayFilter").value; // "" or "01" "02" ...
-    const monthFilterVal = this.container.querySelector("#monthFilter").value; // "" or "01" "02" ...
-    const yearFilterVal = this.container.querySelector("#yearFilter").value; // "" or "2025" ...
+  // --- ฟังก์ชันรวมสำหรับ apply filter (Day/Month/Year + Date Range)
+  applyAllFilters() {
+    const dayFilterVal = this.container.querySelector("#dayFilter").value;
+    const monthFilterVal = this.container.querySelector("#monthFilter").value;
+    const yearFilterVal = this.container.querySelector("#yearFilter").value;
 
-    // Filter บน allBookings แล้วเก็บใน filteredBookings
+    // แปลง this.startDateStr, this.endDateStr (รูปแบบ "dd/mm/yyyy") => timestamp
+    const startTs = this.startDateStr
+      ? this.parseDdMmYyyyToTimestamp(this.startDateStr, true) // true = เริ่มวัน
+      : null;
+    const endTs = this.endDateStr
+      ? this.parseDdMmYyyyToTimestamp(this.endDateStr, false) // false = สิ้นวัน
+      : null;
+
     this.filteredBookings = this.allBookings.filter((bk) => {
-      if (!bk.date || bk.date === "-") return false; // ถ้าไม่มีวันเลย ก็ไม่โชว์
-      const [yyyy, mm, dd] = bk.date.split("-");
+      // (1) Filter Day/Month/Year (อิงจาก bk.date)
+      if (bk.date && bk.date !== "-") {
+        const [yyyy, mm, dd] = bk.date.split("-");
+        if (yearFilterVal && yearFilterVal !== yyyy) return false;
+        if (monthFilterVal && monthFilterVal !== mm) return false;
+        if (dayFilterVal && dayFilterVal !== dd) return false;
+      }
 
-      // ถ้า user เลือก year แต่ปีไม่ match -> ตัดทิ้ง
-      if (yearFilterVal && yearFilterVal !== yyyy) return false;
-      // ถ้า user เลือก month แต่เดือนไม่ match -> ตัดทิ้ง
-      if (monthFilterVal && monthFilterVal !== mm) return false;
-      // ถ้า user เลือก day แต่วันไม่ match -> ตัดทิ้ง
-      if (dayFilterVal && dayFilterVal !== dd) return false;
+      // (2) Filter Date Range (startTs <= bk.rawDate <= endTs)
+      if (startTs && bk.rawDate < startTs) return false;
+      if (endTs && bk.rawDate > endTs) return false;
 
-      // ผ่านทุกเงื่อนไข -> เก็บ
       return true;
     });
 
-    // จากนั้นเรียก sort + render
+    console.log("After filter:", this.filteredBookings);
+
     this.sortBookings();
     this.renderTable();
-    this.renderPagination(); // เพิ่มการอัปเดต Pagination
+    this.renderPagination();
+  }
+
+  // ฟังก์ชันช่วย parse "dd/mm/yyyy" เป็น timestamp
+  parseDdMmYyyyToTimestamp(dateStr, isStartOfDay = true) {
+    if (!dateStr) return null;
+    const [dd, mm, yyyy] = dateStr.split("/");
+    if (!dd || !mm || !yyyy) return null;
+
+    let h = isStartOfDay ? 0 : 23;
+    let m = isStartOfDay ? 0 : 59;
+    let s = isStartOfDay ? 0 : 59;
+
+    const d = new Date(+yyyy, +mm - 1, +dd, h, m, s);
+    return isNaN(d.getTime()) ? null : d.getTime();
   }
 
   // --- (5) จัดเรียง (sort) bookings ตาม sortKey และ sortDirection ---
   sortBookings() {
-    // ตรงนี้เปลี่ยนจาก this.allBookings เป็น this.filteredBookings
-    // เพราะจะแสดงเฉพาะที่ผ่าน filter แล้ว
     this.filteredBookings.sort((a, b) => {
       let valA, valB;
 
@@ -419,7 +511,6 @@ class BookingTable extends HTMLElement {
         valB = b[this.sortKey] || "";
       }
 
-      // แยกกรณีเทียบเป็น number หรือ string
       if (typeof valA === "number" && typeof valB === "number") {
         return this.sortDirection === "asc" ? valA - valB : valB - valA;
       } else {
@@ -451,7 +542,7 @@ class BookingTable extends HTMLElement {
     // Body
     tbody.innerHTML = "";
 
-    const paginatedData = this.paginateData(); // ใช้ข้อมูลที่แบ่งหน้า
+    const paginatedData = this.paginateData();
     if (paginatedData.length === 0) {
       tbody.innerHTML = `<tr><td colspan="99">No bookings found</td></tr>`;
       return;
@@ -462,8 +553,10 @@ class BookingTable extends HTMLElement {
       this.selectedColumns.forEach((col) => {
         const td = document.createElement("td");
         if (col.key === "date") {
+          // แปลง "YYYY-MM-DD" => "dd/mm/yyyy"
           td.textContent = this.formatDate(bk.date);
         } else if (col.key === "timestamp") {
+          // แสดง timestamp เป็น วันที่/เวลา
           td.textContent = this.formatTimestamp(bk.rawTimestamp);
         } else {
           td.textContent = bk[col.key] || "-";
@@ -474,7 +567,7 @@ class BookingTable extends HTMLElement {
     });
   }
 
-  // --- (7.1) Format timestamp => "dd/mm/yyyy HH:MM" ---
+  // --- แสดง timestamp เป็น "dd/mm/yyyy HH:MM น."
   formatTimestamp(ts) {
     if (!ts) return "-";
     const d = new Date(ts);
@@ -487,7 +580,7 @@ class BookingTable extends HTMLElement {
     return `${day}/${month}/${year} ${hh}:${mm} น.`;
   }
 
-  // --- (7.2) Format "YYYY-MM-DD" => "dd/mm/yyyy" ---
+  // --- แสดง "YYYY-MM-DD" => "dd/mm/yyyy"
   formatDate(dateStr) {
     if (!dateStr || dateStr === "-") return "-";
     const [year, month, day] = dateStr.split("-");
@@ -505,7 +598,7 @@ class BookingTable extends HTMLElement {
     const totalPages = Math.ceil(
       this.filteredBookings.length / this.itemsPerPage
     );
-    if (newPage < 1 || newPage > totalPages) return; // ไม่อนุญาตให้เกินหน้า
+    if (newPage < 1 || newPage > totalPages) return;
     this.currentPage = newPage;
     this.renderTable();
     this.renderPagination();
@@ -516,7 +609,7 @@ class BookingTable extends HTMLElement {
       this.filteredBookings.length / this.itemsPerPage
     );
     const paginationContainer = this.container.querySelector("#pagination");
-    paginationContainer.innerHTML = ""; // ล้างก่อนสร้างใหม่
+    paginationContainer.innerHTML = "";
 
     for (let i = 1; i <= totalPages; i++) {
       const button = document.createElement("button");

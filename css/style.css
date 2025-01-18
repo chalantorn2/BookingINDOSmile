@@ -50,6 +50,11 @@ h1 {
   background-color: #d4f7d4; /* เขียวสด */
   border-left: 4px solid #28a745; /* เส้นขอบเขียว */
 }
+.status-ยกเลิก {
+  background-color: #f8d7da; /* แดงอ่อน */
+  border-left: 4px solid #dc3545; /* แดงเข้ม */
+}
+
 .status-indicator {
   display: inline-block;
   width: 20px;

@@ -401,7 +401,7 @@ class CalendarComponent extends HTMLElement {
         case "เสร็จสมบูรณ์":
           return "#218838"; // สีเขียวเข้มขึ้น
         default:
-          return "#000000"; // สีดำ (สำหรับสถานะที่ไม่รู้จัก)
+          return "#ff0033"; // สีดำ (สำหรับสถานะที่ไม่รู้จัก)
       }
     };
 
