@@ -63,7 +63,14 @@
 
       <!-- Orders List -->
       <div class="mt-4">
-        <h2 class="text-center">Orders</h2>
+        <!-- <h2 class="text-center">Orders</h2> -->
+        <p
+          id="totalOrders"
+          class="text-center bg-primary text-white p-3 rounded shadow-lg fw-bold fs-4"
+        >
+          ออเดอร์ทั้งหมด : 0
+        </p>
+
         <ul class="list-group" id="ordersList">
           <li class="list-group-item text-center">Loading...</li>
         </ul>
@@ -217,58 +224,94 @@
 
       // ----- ฟังก์ชันโหลด Booking ที่ยังไม่ถูกผูกกับ Order -----
       async function loadAvailableBookings() {
+        console.log("Loading available bookings...");
+
+        // ดึงข้อมูลจาก Firebase โดยอิงตาม orderId ที่ควรเป็น null หรือว่าง
         const toursQuery = query(
           ref(database, "tourBookings"),
-          orderByChild("orderId"),
-          equalTo(null)
+          orderByChild("orderId")
         );
+
         const transfersQuery = query(
           ref(database, "transferBookings"),
-          orderByChild("orderId"),
-          equalTo(null)
+          orderByChild("orderId")
         );
 
-        const [toursSnapshot, transfersSnapshot] = await Promise.all([
-          get(toursQuery),
-          get(transfersQuery),
-        ]);
+        try {
+          // ดึงข้อมูลจาก tourBookings และ transferBookings พร้อมกัน
+          const [toursSnapshot, transfersSnapshot] = await Promise.all([
+            get(toursQuery),
+            get(transfersQuery),
+          ]);
 
-        const results = [];
+          console.log(
+            "Tour Bookings:",
+            toursSnapshot.exists() ? toursSnapshot.val() : "No data"
+          );
+          console.log(
+            "Transfer Bookings:",
+            transfersSnapshot.exists() ? transfersSnapshot.val() : "No data"
+          );
 
-        if (toursSnapshot.exists()) {
-          toursSnapshot.forEach((snap) => {
-            const data = snap.val();
-            results.push({
-              dbKey: snap.key,
-              agent: data.tourAgent || "-",
-              name: `${data.tourFirstName || ""} ${
-                data.tourLastName || ""
-              }`.trim(),
-              type: "Tour",
-              date: data.tourDate || "-",
-              time: data.tourPickUpTime || "00:00",
-              sendTo: data.tourSendTo || "-",
-              hotel: data.tourHotel || "-",
+          const results = [];
+
+          // ประมวลผลข้อมูล Tour Bookings
+          if (toursSnapshot.exists()) {
+            toursSnapshot.forEach((snap) => {
+              const data = snap.val();
+              if (
+                !data.orderId ||
+                data.orderId === "" ||
+                data.orderId === null
+              ) {
+                results.push({
+                  dbKey: snap.key,
+                  agent: data.tourAgent || "-",
+                  name: `${data.tourFirstName || ""} ${
+                    data.tourLastName || ""
+                  }`.trim(),
+                  type: "Tour",
+                  date: data.tourDate || "-",
+                  time: data.tourPickUpTime || "00:00",
+                  sendTo: data.tourSendTo || "-",
+                  hotel: data.tourHotel || "-",
+                });
+              }
             });
-          });
-        }
+          }
 
-        if (transfersSnapshot.exists()) {
-          transfersSnapshot.forEach((snap) => {
-            const data = snap.val();
-            results.push({
-              dbKey: snap.key,
-              agent: data.transferAgent || "-",
-              name: `${data.transferFirstName || ""} ${
-                data.transferLastName || ""
-              }`.trim(),
-              type: "Transfer",
-              date: data.transferDate || "-",
+          // ประมวลผลข้อมูล Transfer Bookings
+          if (transfersSnapshot.exists()) {
+            transfersSnapshot.forEach((snap) => {
+              const data = snap.val();
+              if (
+                !data.orderId ||
+                data.orderId === "" ||
+                data.orderId === null
+              ) {
+                results.push({
+                  dbKey: snap.key,
+                  agent: data.transferAgent || "-",
+                  name: `${data.transferFirstName || ""} ${
+                    data.transferLastName || ""
+                  }`.trim(),
+                  type: "Transfer",
+                  date: data.transferDate || "-",
+                  time: data.transferPickUpTime || "00:00",
+                  sendTo: data.transferSendTo || "-",
+                });
+              }
             });
-          });
-        }
+          }
 
-        return results;
+          console.log("Filtered Available Bookings Data:", results);
+
+          // ส่งผลลัพธ์ที่ได้กลับไปใช้ต่อในแอป
+          return results;
+        } catch (err) {
+          console.error("Error fetching available bookings:", err);
+          return [];
+        }
       }
 
       // ----- ฟังก์ชันประมวลผล Order -----
@@ -298,13 +341,18 @@
                 type: "Tour",
                 sendTo: bData.tourSendTo || "-",
                 id: bData.tourID || bkId,
+                firstName: bData.tourFirstName || "-",
+                lastName: bData.tourLastName || "-",
+                detail: bData.tourDetail || "-",
+                pax: bData.tourPax || "-",
+                fee: bData.tourFee || "-",
+                meal: bData.tourMeal || "-",
                 hotel: bData.tourHotel || "-",
                 roomNo: bData.tourRoomNo || "-",
-                fee: bData.tourFee || "-", // เพิ่มฟิลด์ค่าธรรมเนียม
-                meal: bData.tourMeal || "-", // เพิ่มฟิลด์มื้ออาหาร
-                contactNo: bData.tourContactNo || "-", // เพิ่มฟิลด์เบอร์โทรติดต่อ
-                note: bData.tourNote || "-", // เพิ่มฟิลด์หมายเหตุ
-                status: bData.status || "-", // เพิ่มฟิลด์สถานะ
+                contactNo: bData.tourContactNo || "-",
+                note: bData.tourNote || "-",
+                agent: bData.tourAgent || "-",
+                status: bData.status || "-",
               });
               // console.log("Tour Data:", tourSnap.val());
             } else {
@@ -321,12 +369,16 @@
                   type: "Transfer",
                   sendTo: bData.transferSendTo || "-",
                   id: bData.transferID || bkId,
-                  carModel: bData.carModel || "-", // ฟิลด์รุ่นรถ
-                  licensePlate: bData.licensePlate || "-", // ฟิลด์ป้ายทะเบียน
-                  driverName: bData.driverName || "-", // ฟิลด์ชื่อคนขับ
-                  phoneNumber: bData.phoneNumber || "-", // ฟิลด์เบอร์โทรคนขับ
-                  note: bData.transferNote || "-", // เพิ่มฟิลด์หมายเหตุ
-                  status: bData.status || "-", // เพิ่มฟิลด์สถานะ
+                  firstName: bData.transferFirstName || "-",
+                  lastName: bData.transferLastName || "-",
+                  detail: bData.transferDetail || "-",
+                  pax: bData.transferPax || "-",
+                  flight: bData.transferFlight || "-",
+                  pickupFrom: bData.transferPickupFrom || "-",
+                  dropTo: bData.transferDropTo || "-",
+                  note: bData.transferNote || "-",
+                  agent: bData.transferAgent || "-",
+                  status: bData.status || "-",
                 });
                 // console.log("Transfer Data:", transferSnap.val());
               }
@@ -369,13 +421,19 @@
 
       // ----- ฟังก์ชัน render Orders -----
       function renderOrders(orderData) {
+        const totalOrdersElement = document.getElementById("totalOrders");
+
         ordersList.innerHTML = "";
 
         if (orderData.length === 0) {
           ordersList.innerHTML =
             '<li class="list-group-item text-center">No orders found</li>';
+          totalOrdersElement.textContent = "ออเดอร์ทั้งหมด : 0";
           return;
         }
+
+        // อัปเดตจำนวน Order ทั้งหมด
+        totalOrdersElement.textContent = `ออเดอร์ทั้งหมด : ${orderData.length}`;
 
         orderData.forEach(
           ({
@@ -390,37 +448,88 @@
             li.className = "list-group-item";
 
             li.innerHTML = `
-        <div class="card mb-1">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="mb-1"><strong>${order.id || "No ID"}</strong></h6>
-                <p class="mb-0  text-muted">
-                 <span class="badge bg-primary"> ${customerName}</span> | 
-                  <span class="badge bg-secondary">
-                    ${formatDate(earliestDate)} - ${formatDate(latestDate)}
-                  </span>
-                </p>
-              </div>
-              <div>
-                <button 
-                  class="btn btn-success btn-sm me-2 add-booking-to-order"
-                  data-order-key="${orderId}"
-                >
-                  <i class="bi bi-plus-circle"></i> Add Booking
-                </button>
-                <button 
-                  class="btn btn-outline-primary btn-sm toggle-details" 
-                  data-order-id="${orderId}"
-                >
-                  <i class="bi bi-caret-down"></i> 
-                </button>
-              </div>
-            </div>
-          </div>
-          <ul class="list-group mt-3 d-none" id="details-${orderId}"></ul>
+  <div class="card mb-1">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h6 class="mb-1">
+            <strong>${order.id || "No ID"}</strong>
+            <span > / ${bookingDetails.length} bookings</span>
+          </h6>
+          <p class="mb-0 text-muted">
+            <span class="badge bg-primary"> ${customerName}</span> | 
+            <span class="badge bg-secondary">
+              ${formatDate(earliestDate)} - ${formatDate(latestDate)}
+            </span>
+          </p>
         </div>
-      `;
+        <div>
+          <button 
+            class="btn btn-success btn-sm me-2 add-booking-to-order"
+            data-order-key="${orderId}"
+          >
+            <i class="bi bi-plus-circle"></i>
+          </button>
+          <button 
+            class="btn btn-danger btn-sm me-2 delete-order"
+            data-order-key="${orderId}"
+          >
+            <i class="bi bi-trash"></i> 
+          </button>
+          <button 
+            class="btn btn-outline-primary btn-sm toggle-details" 
+            data-order-id="${orderId}"
+          >
+            <i class="bi bi-caret-down"></i> 
+          </button>
+        </div>
+      </div>
+    </div>
+    <ul class="list-group mt-3 d-none" id="details-${orderId}"></ul>
+  </div>
+`;
+
+            // Event ลบ Order
+            const deleteOrderBtn = li.querySelector(".delete-order");
+            deleteOrderBtn.addEventListener("click", async () => {
+              if (
+                confirm(
+                  `Are you sure you want to delete Order ID: ${order.id}?`
+                )
+              ) {
+                try {
+                  // ดึงข้อมูล order จาก Firebase
+                  const orderRef = ref(database, `orders/${orderId}`);
+                  const orderSnap = await get(orderRef);
+
+                  if (orderSnap.exists()) {
+                    const orderData = orderSnap.val();
+                    const bookingIds = orderData.bookings || [];
+
+                    // ลบ order จาก bookings แต่ละรายการ
+                    const updates = {};
+                    bookingIds.forEach((bkId) => {
+                      updates[`tourBookings/${bkId}/orderId`] = null;
+                      updates[`transferBookings/${bkId}/orderId`] = null;
+                    });
+
+                    // ลบ order จากฐานข้อมูล
+                    updates[`orders/${orderId}`] = null;
+
+                    // อัปเดตข้อมูลใน Firebase
+                    await update(ref(database), updates);
+
+                    alert(`Order ID: ${order.id} deleted successfully!`);
+                    li.remove(); // ลบออกจาก UI
+                  } else {
+                    alert("Order not found!");
+                  }
+                } catch (error) {
+                  console.error("Error deleting order:", error);
+                  alert("Failed to delete the order. Please try again.");
+                }
+              }
+            });
 
             ordersList.appendChild(li);
 
@@ -477,10 +586,13 @@
         <span class="text-muted">Date:</span> ${formatDate(bk.date)} |
         <span class="text-muted">Time:</span> ${bk.time || "-"} |
         <span class="text-muted">Send To:</span> ${bk.sendTo || "-"}
+        <span class="text-muted">Send To:</span> ${bk.firstName + bk.lastName}
       </small>
     </div>
     <div>
-      <span class="badge bg-primary">${bk.id}</span>
+      <button id="badgeID" class="badge bg-primary booking-badge" data-id="${
+        bk.id
+      }" data-type="${bk.type}">${bk.id}</button>
       <button 
         class="btn btn-sm btn-danger ms-3 remove-booking"
         data-booking-key="${bk.dbKey}"
@@ -491,21 +603,7 @@
       </button>
     </div>
   `;
-
-                      // เพิ่ม Event Listener สำหรับ Tooltip
-                      const badge = item.querySelector(".badge");
-                      badge.addEventListener("mouseenter", (e) => {
-                        showPreviewTooltip(e, bk.id, bk); // แสดง Tooltip
-                      });
-
-                      badge.addEventListener("mousemove", (e) => {
-                        updateTooltipPosition(e); // อัปเดตตำแหน่ง Tooltip
-                      });
-
-                      badge.addEventListener("mouseleave", () => {
-                        hideTooltip(); // ซ่อน Tooltip
-                      });
-
+                      detailsList.appendChild(item);
                       // ผูก Event ปุ่ม Remove Booking
                       item
                         .querySelector(".remove-booking")
@@ -564,39 +662,54 @@
 
       // ----- ฟังก์ชัน Remove Booking -----
       async function removeBookingFromOrder(bookingKey, bookingType, orderKey) {
-        // 1) ลบ bookingKey ออกจาก field "bookings" ของ order นั้น
-        // 2) เคลียร์ orderId ใน tourBookings/transferBookings ให้เป็น null
-
         try {
-          // 1) ดึง order ปัจจุบัน
+          // 1) ดึง order ปัจจุบันจาก Firebase
           const orderRef = ref(database, `orders/${orderKey}`);
           const orderSnap = await get(orderRef);
+
           if (!orderSnap.exists()) {
             alert("Order does not exist or has been removed.");
             return;
           }
+
           const orderData = orderSnap.val();
+          const bookingIds = orderData.bookings || [];
 
-          // เอา bookingKey ออกจาก array
-          const newBookingsArray = (orderData.bookings || []).filter(
-            (bk) => bk !== bookingKey
+          // ตรวจสอบประเภท booking และดึง ID ตามที่ต้องการ
+          let bookingPath = "";
+          let bookingId = bookingKey; // ใช้ค่าเริ่มต้นเป็น bookingKey
+          if (bookingType === "Tour") {
+            bookingPath = `tourBookings/${bookingKey}`;
+          } else if (bookingType === "Transfer") {
+            bookingPath = `transferBookings/${bookingKey}`;
+          }
+
+          const bookingRef = ref(database, bookingPath);
+          const bookingSnap = await get(bookingRef);
+
+          if (bookingSnap.exists()) {
+            const bookingData = bookingSnap.val();
+            bookingId =
+              bookingData.tourID || bookingData.transferID || bookingKey;
+          }
+
+          // แสดง popup ยืนยันก่อนลบ
+          const confirmation = confirm(
+            `Are you sure you want to remove Booking ID: ${bookingId}?`
           );
+          if (!confirmation) return;
 
-          // อัปเดตกลับไปยัง order
+          // เอา bookingKey ออกจาก array ของ order
+          const newBookingsArray = bookingIds.filter((bk) => bk !== bookingKey);
+
+          // อัปเดต order ด้วยรายการ bookings ใหม่
           await update(orderRef, { bookings: newBookingsArray });
 
-          // 2) เคลียร์ orderId ใน bookings
-          let bookingPath = "";
-          if (bookingType === "Tour") {
-            bookingPath = `tourBookings/${bookingKey}/orderId`;
-          } else if (bookingType === "Transfer") {
-            bookingPath = `transferBookings/${bookingKey}/orderId`;
-          }
-          const bookingRef = ref(database, bookingPath);
-          await set(bookingRef, null);
+          // ล้างค่า orderId ใน booking ที่ลบออก
+          await update(bookingRef, { orderId: null });
 
-          alert(`Booking ${bookingKey} removed from Order!`);
-          location.reload(); // reload หน้าเพื่ออัปเดตข้อมูล (หรือจะเรียก process+render ใหม่ก็ได้)
+          alert(`Booking ID: ${bookingId} removed from Order!`);
+          location.reload(); // reload หน้าเพื่ออัปเดตข้อมูล
         } catch (err) {
           console.error("Error removing booking:", err);
           alert("Failed to remove booking. See console.");
@@ -722,6 +835,336 @@
         const year = d.getFullYear();
         return `${day}/${month}/${year}`;
       }
+
+      /* =========================================
+   1) โค้ดฟังก์ชัน showPopup(data, type)
+   ========================================= */
+      function showPopup(data, type) {
+        // ---------------------------------------------------------------------
+        // 1) กำหนดฟิลด์ที่ต้องการแสดงใน Modal ตามประเภท (tour / transfer)
+        //    ให้ตรงกับโครงสร้าง bookingDetails.push(...) ที่คุณใช้อยู่
+        // ---------------------------------------------------------------------
+        // ตัวอย่างการจับคู่ฟิลด์ใน "Tour":
+        //   bookingDetails.push({
+        //     id, date, time, sendTo, hotel, roomNo, fee, meal, contactNo, note, status
+        //   })
+        //
+        // ส่วน "Transfer":
+        //   bookingDetails.push({
+        //     id, date, time, sendTo, carModel, licensePlate, driverName, phoneNumber, note, status
+        //   })
+        //
+        // แยกเป็น 2 คอลัมน์ต่อแถวเหมือนตัวอย่าง Layout ที่ให้มา
+        // (ปรับเพิ่ม/ลดตามต้องการ)
+        const fieldOrder = {
+          tour: [
+            "id",
+            "date",
+            "time",
+            "sendTo",
+            "firstName",
+            "lastName",
+            "detail",
+            "pax",
+            "hotel",
+            "roomNo",
+            "fee",
+            "meal",
+            "contactNo",
+            "note",
+            "agent",
+            // "status" will be displayed via Select dropdown
+          ],
+          transfer: [
+            "id",
+            "date",
+            "time",
+            "sendTo",
+            "firstName",
+            "lastName",
+            "detail",
+            "pax",
+            "flight",
+            "pickupFrom",
+            "dropTo",
+            "note",
+            "agent",
+            // "status" will be displayed via Select dropdown
+          ],
+        };
+
+        // ---------------------------------------------------------------------
+        // 2) Label Map กำหนดว่าจะให้แสดงชื่อฟิลด์ว่าอะไรใน Modal
+        // ---------------------------------------------------------------------
+        const labelMap = {
+          orderId: "Order ID",
+          id: "Booking ID",
+          firstName: "ชื่อ",
+          lastName: "นามสกุล",
+          sendTo: "ส่งให้",
+          agent: "Agent",
+          type: "ประเภท",
+          detail: "รายละเอียด",
+          pax: "จำนวน",
+          fee: "ค่าอุทยาน",
+          meal: "อาหาร",
+          date: "วันที่",
+          hotel: "โรงแรม",
+          roomNo: "หมายเลขห้อง",
+          contactNo: "เบอร์ติดต่อ",
+          time: "เวลา",
+          pickUpTime: "เวลารับ",
+          pickupFrom: "สถานที่รับ",
+          dropTo: "สถานที่ส่ง",
+          flight: "เที่ยวบิน",
+          note: "หมายเหตุ",
+          timestamp: "ตราประทับ",
+        };
+
+        // ---------------------------------------------------------------------
+        // 3) ฟังก์ชันตัวอย่างแปลงวันที่ (ถ้าคุณมีของเดิมอยู่แล้วใช้ได้เลย)
+        // ---------------------------------------------------------------------
+        function formatDate(value) {
+          if (!value) return "-";
+          // สมมติ value มาเป็น "YYYY-MM-DD"
+          const parts = value.split("-");
+          if (parts.length === 3) {
+            const [year, month, day] = parts;
+            return `${day}/${month}/${year}`;
+          }
+          return value; // fallback ถ้า parse ไม่ได้
+        }
+
+        // ---------------------------------------------------------------------
+        // 4) สร้าง element Modal (Bootstrap)
+        // ---------------------------------------------------------------------
+        const popup = document.createElement("div");
+        popup.className = "modal fade";
+        popup.id = "detailPopup";
+        popup.tabIndex = "-1";
+        popup.setAttribute("role", "dialog");
+
+        // ---------------------------------------------------------------------
+        // 5) สร้าง Select สถานะ (เพิ่มตัวเลือก "ยกเลิก" ไว้ด้วย)
+        // ---------------------------------------------------------------------
+        const statusOptions = `
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label for="field-status" class="form-label font-weight-bold">สถานะ</label>
+        <select id="field-status" class="form-select" disabled>
+          <option value="รอดำเนินการ">รอดำเนินการ</option>
+          <option value="จองแล้ว">จองแล้ว</option>
+          <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
+          <option value="เสร็จสมบูรณ์">เสร็จสมบูรณ์</option>
+          <option value="ยกเลิก">ยกเลิก</option>
+        </select>
+      </div>
+    </div>
+  `;
+
+        // ---------------------------------------------------------------------
+        // 6) ฟิลด์เพิ่มเติมสำหรับ Transfer เช่น carModel, licensePlate ฯลฯ
+        //    (ตามตัวอย่าง Layout)
+        // ---------------------------------------------------------------------
+        // จะโชว์/ซ่อนเมื่อสถานะเป็น [จองแล้ว, ดำเนินการอยู่, เสร็จสมบูรณ์]
+        // *หมายเหตุ* ถ้าอยากให้โชว์ทุกสถานะก็ปรับ logic ได้
+        const additionalTransferFields = `
+    <div id="additionalTransferFields" class="row g-3 mb-3 ${
+      ["จองแล้ว", "ดำเนินการอยู่", "เสร็จสมบูรณ์"].includes(data.status)
+        ? ""
+        : "d-none"
+    }">
+      <div class="col-md-6">
+        <label class="form-label font-weight-bold">Car Model</label>
+        <input type="text" class="form-control" value="${
+          data.carModel || "-"
+        }" disabled />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label font-weight-bold">License Plate</label>
+        <input type="text" class="form-control" value="${
+          data.licensePlate || "-"
+        }" disabled />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label font-weight-bold">Driver Name</label>
+        <input type="text" class="form-control" value="${
+          data.driverName || "-"
+        }" disabled />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label font-weight-bold">Driver Phone</label>
+        <input type="text" class="form-control" value="${
+          data.phoneNumber || "-"
+        }" disabled />
+      </div>
+    </div>
+  `;
+
+        // ---------------------------------------------------------------------
+        // 7) ฟังก์ชันสร้าง "แถว" สำหรับ 2 ฟิลด์/แถว (คอลัมน์ซ้าย-ขวา)
+        // ---------------------------------------------------------------------
+        const createFieldRow = (field1, field2) => {
+          // สร้าง HTML ของฟิลด์ย่อย
+          const createFieldHtml = (fieldName) => {
+            // ถ้าว่างหรือไม่มีฟิลด์ ให้ return "" (เผื่อบางแถวใช้ฟิลด์เดียว)
+            if (!fieldName) return "";
+
+            // ดึงค่าจาก data
+            let value = data[fieldName] || "-";
+
+            // ถ้าเป็น date ให้ format
+            if (fieldName === "date") {
+              value = formatDate(value);
+            }
+
+            // สร้าง input (disabled) ในรูปแบบ text หรือ textarea (ถ้าคุณต้องการ)
+            // แต่กรณีนี้ input อย่างเดียวก็พอ
+            return `
+        <div class="col-md-6">
+          <label class="form-label font-weight-bold">${
+            labelMap[fieldName] || fieldName
+          }</label>
+          <input
+            type="text"
+            class="form-control"
+            value="${value}"
+            disabled
+            style="background-color: #f8f9fa;"
+          />
+        </div>
+      `;
+          };
+
+          const fieldHtml1 = createFieldHtml(field1);
+          const fieldHtml2 = createFieldHtml(field2);
+
+          return `<div class="row g-3 mb-3">${fieldHtml1}${fieldHtml2}</div>`;
+        };
+
+        // ---------------------------------------------------------------------
+        // 8) สร้างโค้ด HTML ฟิลด์ทั้งหมด โดยจับคู่ 2 ฟิลด์ต่อ 1 แถว
+        // ---------------------------------------------------------------------
+        const fields = fieldOrder[type] || [];
+        const generateFields = (() => {
+          const rows = [];
+          for (let i = 0; i < fields.length; i += 2) {
+            rows.push(createFieldRow(fields[i], fields[i + 1]));
+          }
+          return rows.join("");
+        })();
+
+        // รวมฟิลด์หลัก + Select สถานะ + ฟิลด์รถ (เฉพาะ Transfer)
+        const generateFieldsWithStatus =
+          generateFields +
+          statusOptions +
+          (type === "transfer" ? additionalTransferFields : "");
+
+        // ---------------------------------------------------------------------
+        // 9) สร้างเนื้อหา Modal (รักษา Layout เหมือนต้นฉบับ)
+        // ---------------------------------------------------------------------
+        const content = `
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content border-0 shadow-lg rounded-3">
+        <div class="modal-header ${
+          type === "tour" ? "bg-success" : "bg-primary"
+        } text-white">
+          <h5 class="modal-title fw-bold">
+            ${type === "tour" ? "Tour Details" : "Transfer Details"}
+          </h5>
+          <button type="button" class="btn-close btn-light" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body px-4 py-5">
+          <div class="container-fluid">
+            <form id="editForm">
+              ${generateFieldsWithStatus}
+            </form>
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between">
+          <!-- ปุ่มลบข้อมูล (Disable เพื่อไม่ให้ทำงานจริง) -->
+          <button type="button" class="btn btn-outline-danger delete-btn" disabled>
+            <i class="bi bi-trash me-1"></i>ลบข้อมูล
+          </button>
+          <div>
+            <!-- ปุ่มปิด -->
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x me-1"></i>ปิด
+            </button>
+            <!-- ปุ่มบันทึกข้อมูล (Disable) -->
+            <button type="button" class="btn ${
+              type === "tour" ? "btn-success" : "btn-primary"
+            } save-btn" disabled>
+              <i class="bi bi-save me-1"></i>บันทึกข้อมูล
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+        // ใส่เนื้อหา content ลงไปใน popup
+        popup.innerHTML = content;
+        document.body.appendChild(popup);
+
+        // สร้างตัว Modal ด้วย Bootstrap
+        const modal = new bootstrap.Modal(popup);
+        modal.show();
+
+        // ---------------------------------------------------------------------
+        // 10) จัดการ Event เปลี่ยนสถานะ -> โชว์/ซ่อนฟิลด์รถ (เฉพาะ Transfer)
+        // ---------------------------------------------------------------------
+        const statusField = popup.querySelector("#field-status");
+        // กำหนด value ของสถานะเริ่มต้น
+        statusField.value = data.status || "รอดำเนินการ";
+
+        statusField.addEventListener("change", () => {
+          if (type === "transfer") {
+            const additionalFields = popup.querySelector(
+              "#additionalTransferFields"
+            );
+            if (
+              ["จองแล้ว", "ดำเนินการอยู่", "เสร็จสมบูรณ์"].includes(
+                statusField.value
+              )
+            ) {
+              additionalFields.classList.remove("d-none");
+            } else {
+              additionalFields.classList.add("d-none");
+            }
+          }
+        });
+
+        // ---------------------------------------------------------------------
+        // 11) เมื่อปิด Popup -> ลบ Element ทิ้ง (cleanup)
+        // ---------------------------------------------------------------------
+        popup.addEventListener("hidden.bs.modal", () => {
+          document.body.removeChild(popup);
+        });
+      }
+
+      /* =========================================
+   2) โค้ด Event Listener คลิกที่ badge
+   ========================================= */
+      document.addEventListener("click", (event) => {
+        // เช็คว่าคลิกที่ element ที่มี id เป็น 'badgeID' หรือไม่
+        if (event.target.id === "badgeID") {
+          // เอาข้อความบน badge นั้นมาเป็น bookingId
+          const bookingId = event.target.textContent.trim();
+
+          // หา booking ที่มี .id ตรงกับ badge นี้
+          const booking = allProcessedOrders
+            .flatMap((order) => order.bookingDetails)
+            .find((bk) => bk.id === bookingId);
+
+          if (booking) {
+            // ถ้าพบ booking => เรียก popup โดยส่ง booking object + ประเภท (tour/transfer)
+            showPopup(booking, booking.type.toLowerCase());
+          } else {
+            alert("ไม่พบข้อมูลการจอง");
+          }
+        }
+      });
     </script>
     <script type="module" src="/component/excel_export.js"></script>
   </body>

@@ -103,3 +103,8 @@ h1 {
   color: #17a2b8;
   margin-left: 0.5rem;
 } */
+
+.booking-badge {
+  border: none !important;
+  box-shadow: none !important;
+}
