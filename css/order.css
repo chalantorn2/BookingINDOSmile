@@ -33,3 +33,73 @@ h1 {
     transform: translateY(0);
   }
 }
+
+/* ===========================
+   จัดสไตล์ส่วนการแสดง Booking List
+   =========================== */
+
+/* ลดขนาดความกว้างการ์ด หรือปรับ margins/padding */
+#bookingList .card {
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+  height: auto; /* ปรับตามต้องการ ถ้า detail ยาวมาก */
+  overflow: hidden; /* ตัดข้อความที่ยาวเกิน */
+}
+
+#bookingList .card:hover {
+  transform: scale(1.02);
+}
+
+#bookingList .card-body {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem; /* ปรับได้ */
+}
+
+#bookingList .card-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ปุ่ม Add */
+.btnAddBooking {
+  min-width: 80px;
+}
+
+/* ===========================
+   ตารางแสดง Booking ที่เลือก
+   =========================== */
+#selectedBookingsContainer .table thead th {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#selectedBookingsContainer .table td input {
+  max-width: 80px;
+}
+
+.totalCostCell,
+.profitCell {
+  font-weight: 600;
+}
+
+/* ===========================
+   สรุปด้านล่าง
+   =========================== */
+#summaryContainer p {
+  font-size: 1.1rem;
+}
+#orderDropdown {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* #orderDropdown {
+    width: 100%;
+} */
+/* #summaryContainer span {
+  font-size: 1.2rem;
+  color: #17a2b8;
+  margin-left: 0.5rem;
+} */

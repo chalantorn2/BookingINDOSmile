@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice - INDO Smile Booking</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/invoice.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Invoice</h1>
+        <p>INDO Smile Booking</p>
+      </header>
+
+      <section class="invoice-details">
+        <div class="customer-info">
+          <p>
+            <strong>ลูกค้า:</strong> <span id="customer-name">John Doe</span>
+          </p>
+          <p>
+            <strong>ที่อยู่:</strong>
+            <span id="customer-address">123 Street, City</span>
+          </p>
+          <p><strong>วันที่:</strong> <span id="invoice-date"></span></p>
+        </div>
+
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>รายละเอียด</th>
+              <th>จำนวน</th>
+              <th>ราคา/หน่วย</th>
+              <th>รวม</th>
+            </tr>
+          </thead>
+          <tbody id="invoice-items">
+            <!-- JS will populate here -->
+          </tbody>
+        </table>
+
+        <div class="total-section">
+          <p>
+            <strong>รวมทั้งหมด:</strong> <span id="total-amount">0.00</span> บาท
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <button onclick="printInvoice()">พิมพ์ใบเสร็จ</button>
+      </footer>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const invoiceItems = [
+          { id: 1, description: "ทัวร์เกาะพีพี", quantity: 2, unitPrice: 1500 },
+          { id: 2, description: "ล่องแพไม้ไผ่", quantity: 1, unitPrice: 800 },
+        ];
+
+        function populateInvoice() {
+          let tbody = document.getElementById("invoice-items");
+          let totalAmount = 0;
+
+          invoiceItems.forEach((item, index) => {
+            let row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.description}</td>
+                            <td>${item.quantity}</td>
+                            <td>${item.unitPrice.toLocaleString()}</td>
+                            <td>${(
+                              item.quantity * item.unitPrice
+                            ).toLocaleString()}</td>
+                        </tr>
+                    `;
+            tbody.innerHTML += row;
+            totalAmount += item.quantity * item.unitPrice;
+          });
+
+          document.getElementById("total-amount").innerText =
+            totalAmount.toLocaleString();
+          document.getElementById("invoice-date").innerText =
+            new Date().toLocaleDateString();
+        }
+
+        function printInvoice() {
+          window.print();
+        }
+
+        populateInvoice();
+        window.printInvoice = printInvoice;
+      });
+    </script>
+  </body>
+</html>

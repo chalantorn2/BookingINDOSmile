@@ -119,7 +119,7 @@ class BookingTable extends HTMLElement {
       }
 
       this.allBookings = tempData;
-      console.log("All Bookings:", this.allBookings);
+      // console.log("All Bookings:", this.allBookings);
 
       // เรียก populate Dropdown (Day/Month/Year)
       this.populateDateFilters();
@@ -477,7 +477,7 @@ class BookingTable extends HTMLElement {
       return true;
     });
 
-    console.log("After filter:", this.filteredBookings);
+    // console.log("After filter:", this.filteredBookings);
 
     this.sortBookings();
     this.renderTable();

@@ -154,6 +154,24 @@
 
       import { database } from "/js/firebase-config.js";
 
+      // ฟังก์ชันช่วย format วันเป็น dd/mm/yyyy
+      const formatDate = (dateString) => {
+        if (!dateString) return "";
+        const parts = dateString.split("/");
+        if (parts.length === 3) {
+          return dateString;
+        } else {
+          const dateObj = new Date(dateString);
+          if (isNaN(dateObj)) {
+            return dateString;
+          }
+          const day = String(dateObj.getDate()).padStart(2, "0");
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+          const year = dateObj.getFullYear();
+          return `${day}/${month}/${year}`;
+        }
+      };
+
       async function fetchBookings(selectedDate) {
         const tourContainer = document.getElementById("tourBookings");
         const transferContainer = document.getElementById("transferBookings");
@@ -246,8 +264,8 @@
             });
           }
 
-          console.log("Tour Data:", tourData); // Debug: ตรวจสอบข้อมูล Tour
-          console.log("Transfer Data:", transferData); // Debug: ตรวจสอบข้อมูล Transfer
+          // console.log("Tour Data:", tourData); // Debug: ตรวจสอบข้อมูล Tour
+          // console.log("Transfer Data:", transferData); // Debug: ตรวจสอบข้อมูล Transfer
 
           // จัดเรียงข้อมูล Tour ตามเวลา
           tourData.sort((a, b) =>
@@ -276,15 +294,20 @@
                   }" data-type="tour"><i class="bi bi-eye"></i></button>
                 </div>
                 <small>
-                  <span style="background-color: #198754; color: white; padding: 2px 5px; border-radius: 3px;">
-                    <i class="bi bi-clock"> </i><strong>${
-                      data.tourPickUpTime || data.pickUpTime || "-"
+                  <span style="background-color: #0f5434; color: white; padding: 2px 5px; border-radius: 3px;">
+                    <i class="bi bi-clock"> </i><strong> Pick Up Time ${
+                      data.tourPickUpTime || "-"
                     }</strong>
-                  </span> |
+                  </span> <strong style="background-color: #198754; color: white; padding: 2px 5px; margin: 5px; border-radius: 3px;"> <i class="bi bi-calendar-check"> </i> ${formatDate(
+                    data.tourDate || "-"
+                  )} </strong><br> 
                   <strong>${data.tourSendTo || data.sendTo || "-"}</strong> |
                   <strong>รายละเอียด:</strong> ${
                     data.tourDetail || data.detail || "-"
-                  }
+                  } 
+                  <br><strong><i class="bi bi-geo-alt-fill"> </i> โรงแรม:</strong> ${
+                    data.tourHotel || "-"
+                  }  
                 </small><br>
                 <strong style="color: #686868;"><i>${
                   data.tourID || "-"
@@ -318,17 +341,20 @@
                 <div class="d-flex justify-content-between">
                   <span><strong> ${index + 1}. ${customerName}</strong> | ${
                 data.transferPax || data.pax || "-"
-              } คน</span>
+              } คน </span>
                   <button class="btn btn-sm btn-info view-details-btn" data-id="${
                     data.id
                   }" data-type="transfer"><i class="bi bi-eye"></i></button>
                 </div>
                 <small>
-                  <span style="background-color: #0d6efd; color: white; padding: 2px 5px; border-radius: 3px;">
-                    <i class="bi bi-clock"></i> <strong>${
-                      data.transferPickUpTime || data.pickUpTime || "-"
+                  <span style="background-color: #06357d; color: white; padding: 2px 5px; border-radius: 3px;">
+                    <i class="bi bi-clock"></i> 
+                    <strong>Pick Up Time ${
+                      data.transferPickUpTime || "-"
                     }</strong>
-                  </span> |
+                  </span> <strong style="background-color: #0d6efd; color: white; padding: 2px 5px; margin: 5px; border-radius: 3px;"><i class="bi bi-calendar-check"> </i> ${formatDate(
+                    data.transferDate || "-"
+                  )} </strong><br> 
                   <strong>${
                     data.transferSendTo || data.sendTo || "-"
                   }</strong> |
@@ -339,13 +365,17 @@
                     data.transferDropTo || data.dropTo || "-"
                   }
                     |
-                  <strong>ไฟล์ต:</strong> ${data.transferFlight || "-"}
+                  <strong><i class="bi bi-airplane-fill"></i> ไฟลต์:</strong> ${
+                    data.transferFlight || "-"
+                  }
                     |
                   <strong>เวลา:</strong> ${data.transferTime || "-"}
                 </small><br>
                 <strong style="color: #686868;"><i>${
                   data.transferID || "-"
                 }</i></strong>
+                <br>
+               
               `;
               transferContainer.appendChild(listItem);
             });
@@ -439,24 +469,6 @@
           transferDropTo: "สถานที่ส่ง",
           transferNote: "หมายเหตุ (รับ-ส่ง)",
           timestamp: "ตราประทับ",
-        };
-
-        // ฟังก์ชันช่วย format วันเป็น dd/mm/yyyy
-        const formatDate = (dateString) => {
-          if (!dateString) return "";
-          const parts = dateString.split("/");
-          if (parts.length === 3) {
-            return dateString;
-          } else {
-            const dateObj = new Date(dateString);
-            if (isNaN(dateObj)) {
-              return dateString;
-            }
-            const day = String(dateObj.getDate()).padStart(2, "0");
-            const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-            const year = dateObj.getFullYear();
-            return `${day}/${month}/${year}`;
-          }
         };
 
         const formatTimestamp = (data) => {

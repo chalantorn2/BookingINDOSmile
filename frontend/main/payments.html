@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payments</title>
+    <!-- Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Select (สำหรับ Search+Dropdown) -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/order.css" />
+  </head>
+
+  <body>
+    <menu-component></menu-component>
+
+    <div class="container py-5">
+      <div class="header text-center mb-4">
+        <h1 class="title">Payments</h1>
+        <p class="subtitle">จัดการการคิดเงินสำหรับ Orders</p>
+      </div>
+
+      <!-- Orders List -->
+      <div class="mt-4 text-center">
+        <h2 class="mb-3">Orders</h2>
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <!-- ปรับให้เป็น selectpicker เพื่อใช้ data-live-search -->
+            <select class="form-select w-100" id="orderDropdown">
+              <option value="">Loading...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Booking Container -->
+      <div class="mt-5 d-none" id="bookingContainer">
+        <!-- แสดงชื่อ-นามสกุล และจำนวนคน (แค่ครั้งเดียว) -->
+        <div class="text-center mb-4">
+          <!-- <h2>Booking Details</h2> -->
+          <p
+            id="customerNameDisplay"
+            class="fs-2 fw-bold text-primary mt-3"
+          ></p>
+        </div>
+
+        <!-- 1) แสดงรายการ Booking ให้กดเลือก -->
+        <div class="row" id="bookingList"></div>
+
+        <!-- 2) ตารางแสดง Booking ที่ถูก Add -->
+        <div class="mt-5 d-none" id="selectedBookingsContainer">
+          <h3 class="text-center mb-3">Selected Bookings</h3>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+              <thead class="table-info">
+                <tr>
+                  <th>ID</th>
+                  <th>Send To</th>
+                  <th>Details</th>
+                  <th>Type</th>
+                  <th>Cost</th>
+                  <th>Pax</th>
+                  <th>Total Cost</th>
+                  <th>Selling Price</th>
+                  <th>Profit</th>
+                  <th>Remove</th>
+                </tr>
+              </thead>
+              <tbody id="bookingDetailsTable">
+                <tr>
+                  <td colspan="10" class="text-center">
+                    ยังไม่มีการเลือก Booking
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="mt-4 d-none" id="summaryContainer">
+          <!-- ปรับดีไซน์ Summary ให้อยู่ใน card -->
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <!-- <h3 class="text-center mb-3">Summary</h3> -->
+              <div class="row text-center">
+                <div class="col-md-4 mb-3">
+                  <p>
+                    <strong>รวมต้นทุนทั้งหมด:</strong><br />
+                    <span class="fs-2 fw-bold text-info" id="totalCost">0</span>
+                  </p>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <p>
+                    <strong>รวมราคาขายทั้งหมด:</strong><br />
+                    <span
+                      class="fs-2 fw-bold text-primary"
+                      id="totalSellingPrice"
+                      >0</span
+                    >
+                  </p>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <p>
+                    <strong>กำไรรวมทั้งหมด:</strong><br />
+                    <span class="fs-2 fw-bold text-success" id="totalProfit"
+                      >0</span
+                    >
+                  </p>
+                </div>
+              </div>
+              <!-- ปุ่ม Save -->
+              <div class="text-center">
+                <button class="btn btn-success px-4" id="saveDataBtn">
+                  <i class="bi bi-save"></i> บันทึกข้อมูล
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- jQuery (ต้องมาก่อน bootstrap-select) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap Select JS (สำหรับทำ Live Search ใน Dropdown) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+    <script type="module" src="/component/menu.js"></script>
+    <!-- Firebase และโค้ดหลัก -->
+    <script type="module">
+      import { database } from "/js/firebase-config.js";
+      import {
+        ref,
+        get,
+        set,
+      } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
+      // ฟังก์ชันช่วย: ตัดทศนิยมทั้งหมด + ใส่เครื่องหมาย , คั่นหลักพัน
+      function formatNumberWithCommas(num) {
+        const intNum = Math.floor(num); // ปัดทศนิยมทิ้ง
+        return intNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const orderDropdown = document.getElementById("orderDropdown");
+        const bookingContainer = document.getElementById("bookingContainer");
+        const customerNameDisplay = document.getElementById(
+          "customerNameDisplay"
+        );
+        const bookingList = document.getElementById("bookingList");
+        const selectedBookingsContainer = document.getElementById(
+          "selectedBookingsContainer"
+        );
+        const bookingDetailsTable = document.getElementById(
+          "bookingDetailsTable"
+        );
+        const summaryContainer = document.getElementById("summaryContainer");
+        const totalCost = document.getElementById("totalCost");
+        const totalSellingPrice = document.getElementById("totalSellingPrice");
+        const totalProfit = document.getElementById("totalProfit");
+        const saveDataBtn = document.getElementById("saveDataBtn");
+
+        if (
+          !orderDropdown ||
+          !bookingContainer ||
+          !customerNameDisplay ||
+          !bookingList ||
+          !selectedBookingsContainer ||
+          !bookingDetailsTable ||
+          !summaryContainer ||
+          !totalCost ||
+          !totalSellingPrice ||
+          !totalProfit ||
+          !saveDataBtn
+        ) {
+          console.error("Some elements are missing in the DOM");
+          return;
+        }
+
+        // โหลด Orders จาก Firebase
+        const ordersRef = ref(database, "orders");
+        const ordersSnapshot = await get(ordersRef);
+
+        if (!ordersSnapshot.exists()) {
+          orderDropdown.innerHTML = '<option value="">No orders found</option>';
+          return;
+        }
+
+        const orders = ordersSnapshot.val();
+        orderDropdown.innerHTML = "<option value=''>Select an Order</option>";
+
+        Object.keys(orders).forEach((firebaseId) => {
+          const order = orders[firebaseId];
+          const orderId = order.id || firebaseId;
+          const option = document.createElement("option");
+          option.value = firebaseId;
+          option.textContent = orderId;
+          orderDropdown.appendChild(option);
+        });
+
+        // เปิดใช้งาน selectpicker (live search)
+        orderDropdown.classList.add("selectpicker");
+        orderDropdown.setAttribute("data-live-search", "true");
+        window.$(orderDropdown).selectpicker();
+
+        // เมื่อมีการเปลี่ยน Order
+        orderDropdown.addEventListener("change", async () => {
+          const selectedOrderKey = orderDropdown.value;
+          if (selectedOrderKey) {
+            bookingContainer.classList.remove("d-none");
+            await loadBookings(selectedOrderKey);
+          } else {
+            // ถ้าไม่เลือก
+            bookingContainer.classList.add("d-none");
+            customerNameDisplay.textContent = "";
+            bookingList.innerHTML = "";
+            bookingDetailsTable.innerHTML = `
+              <tr>
+                <td colspan="10" class="text-center">ยังไม่มีการเลือก Booking</td>
+              </tr>
+            `;
+            selectedBookingsContainer.classList.add("d-none");
+            summaryContainer.classList.add("d-none");
+          }
+        });
+
+        // ฟังก์ชันคำนวณสรุป
+        function updateSummary() {
+          let sumTotalCost = 0;
+          let sumSellingPrice = 0;
+          let sumProfit = 0;
+
+          const rows = bookingDetailsTable.querySelectorAll("tr");
+          rows.forEach((row) => {
+            const totalCostCell = row.querySelector(".totalCostCell");
+            const profitCell = row.querySelector(".profitCell");
+            const sellingPriceInput = row.querySelector(".sellingPriceInput");
+
+            if (totalCostCell && profitCell && sellingPriceInput) {
+              // แปลงกลับเป็นตัวเลขเพื่อนำมาบวก
+              // (เอาตัวเลขที่โชว์ออกจาก , ก่อน)
+              const costValRaw = totalCostCell.textContent.replace(/,/g, "");
+              const profitValRaw = profitCell.textContent.replace(/,/g, "");
+              const sellingPriceVal =
+                parseFloat(sellingPriceInput.value.replace(/,/g, "")) || 0;
+
+              const costVal = parseFloat(costValRaw) || 0;
+              const profitVal = parseFloat(profitValRaw) || 0;
+
+              sumTotalCost += costVal;
+              sumSellingPrice += sellingPriceVal;
+              sumProfit += profitVal;
+            }
+          });
+
+          // ใส่สัญลักษณ์ ฿ และ format commas
+          totalCost.textContent = "฿" + formatNumberWithCommas(sumTotalCost);
+          totalSellingPrice.textContent =
+            "฿" + formatNumberWithCommas(sumSellingPrice);
+          totalProfit.textContent = "฿" + formatNumberWithCommas(sumProfit);
+        }
+
+        // ฟังก์ชันสร้างแถวในตาราง
+        // เพิ่มพารามิเตอร์ที่รับ booking + countSpan เพื่อแก้ chosenCount
+        // ฟังก์ชันสร้างแถวในตาราง
+        function createBookingRow(booking, countSpan) {
+          // ดึงข้อมูลที่จำเป็น
+          const isTour = booking.type === "tour";
+          const id = isTour ? booking.tourID : booking.transferID;
+          const sendTo = isTour ? booking.tourSendTo : booking.transferSendTo;
+          const detail = isTour ? booking.tourDetail : booking.transferDetail;
+          const bookingType = booking.bookingType || ""; // ค่าที่โหลดมาหรือ default
+
+          // ตัดทศนิยมก่อนแสดง (ถ้าคุณตัดที่อื่นอยู่แล้ว ก็ปรับตามได้)
+          let cost = Math.floor(parseFloat(booking.cost) || 0);
+          let quantity = Math.floor(parseFloat(booking.quantity) || 0);
+          let sellingPrice = Math.floor(parseFloat(booking.sellingPrice) || 0);
+
+          // คำนวณเริ่มต้น
+          const totalCostVal = cost * quantity;
+          const profitVal = sellingPrice - totalCostVal;
+
+          // สร้าง <tr>
+          const row = document.createElement("tr");
+          row.innerHTML = `
+    <td>${id || "-"}</td>
+    <td>${sendTo || "-"}</td>
+    <td class=" lh-1" style="max-width: 250px;">${detail || "-"}</td>
+  <td>
+    <select class="bookingType form-select">
+      <option value="" ${
+        bookingType === "" ? "selected" : ""
+      }>--Select--</option>
+      <option value="adult" ${
+        bookingType === "adult" ? "selected" : ""
+      }>ADL</option>
+      <option value="child" ${
+        bookingType === "child" ? "selected" : ""
+      }>CHD</option>
+    </select>
+  </td>
+    <td>
+      <input
+        type="number"
+        step="any"
+        class="costInput form-control"
+        value="${cost}"
+      />
+    </td>
+    <td>
+      <input
+        type="number"
+        class="quantityInput form-control"
+        value="${quantity}"
+      />
+    </td>
+    <td class="totalCostCell">${formatNumberWithCommas(totalCostVal)}</td>
+    <td>
+      <input
+        type="number"
+        step="any"
+        class="sellingPriceInput form-control"
+        value="${sellingPrice}"
+      />
+    </td>
+    <td class="profitCell">${formatNumberWithCommas(profitVal)}</td>
+    <td>
+      <button class="btn btn-danger btnRemoveBooking">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
+  `;
+
+          // เก็บ element ไว้ใช้งาน
+          const costInput = row.querySelector(".costInput");
+          const quantityInput = row.querySelector(".quantityInput");
+          const sellingPriceInput = row.querySelector(".sellingPriceInput");
+          const bookingTypeSelect = row.querySelector(".bookingType");
+          const totalCostCell = row.querySelector(".totalCostCell");
+          const profitCell = row.querySelector(".profitCell");
+          const removeBtn = row.querySelector(".btnRemoveBooking");
+
+          // ฟังก์ชันอัปเดตตัวเลขในแถว
+          const updateRow = () => {
+            let newCost = Math.floor(parseFloat(costInput.value) || 0);
+            let newQuantity = Math.floor(parseFloat(quantityInput.value) || 0);
+            let newSellingPrice = Math.floor(
+              parseFloat(sellingPriceInput.value) || 0
+            );
+
+            // อัปเดตค่าใน input (เป็น int)
+            costInput.value = newCost;
+            quantityInput.value = newQuantity;
+            sellingPriceInput.value = newSellingPrice;
+
+            const newTotalCost = newCost * newQuantity;
+            const newProfit = newSellingPrice - newTotalCost;
+
+            // แสดงผล
+            totalCostCell.textContent = formatNumberWithCommas(newTotalCost);
+            profitCell.textContent = formatNumberWithCommas(newProfit);
+
+            updateSummary();
+          };
+
+          // ผูก event เมื่อแก้ไข cost, quantity, sellingPrice
+          costInput.addEventListener("input", updateRow);
+          quantityInput.addEventListener("input", updateRow);
+          sellingPriceInput.addEventListener("input", updateRow);
+          bookingTypeSelect.addEventListener("change", updateSummary);
+
+          // ปุ่ม Remove
+          removeBtn.addEventListener("click", () => {
+            // ลบแถว
+            row.remove();
+
+            // ลด _chosenCount ของ booking
+            if (
+              typeof booking._chosenCount === "number" &&
+              booking._chosenCount > 0
+            ) {
+              booking._chosenCount--;
+              // อัปเดต color และตัวเลขใน chosenCountSpan
+              updateChosenCountUI(booking, countSpan);
+            }
+
+            updateSummary();
+
+            // ถ้าไม่มีแถวในตาราง => ใส่ placeholder
+            const rowsLeft = bookingDetailsTable.querySelectorAll("tr").length;
+            if (rowsLeft === 0) {
+              bookingDetailsTable.innerHTML = `
+        <tr>
+          <td colspan="10" class="text-center">ยังไม่มีการเลือก Booking</td>
+        </tr>
+      `;
+              summaryContainer.classList.add("d-none");
+            }
+          });
+
+          return row;
+        }
+        function updateChosenCountUI(booking, countSpan) {
+          if (!countSpan) return;
+          // อัปเดตตัวเลข
+          countSpan.textContent = booking._chosenCount;
+
+          // ถ้า chosen >= 1 => bg-primary, ถ้า 0 => bg-secondary
+          if (booking._chosenCount >= 1) {
+            countSpan.classList.remove("bg-secondary");
+            countSpan.classList.add("bg-primary");
+          } else {
+            countSpan.classList.remove("bg-primary");
+            countSpan.classList.add("bg-secondary");
+          }
+        }
+
+        // ฟังก์ชัน: เมื่อคลิกปุ่ม Add Booking
+        function addBookingToTable(booking, countSpan) {
+          // ถ้ามี placeholder => ลบออก
+          if (bookingDetailsTable.querySelector("td[colspan='10']")) {
+            bookingDetailsTable.innerHTML = "";
+          }
+
+          // สร้างแถว
+          const newRow = createBookingRow(booking, countSpan);
+          bookingDetailsTable.appendChild(newRow);
+
+          // นับ chosenCount
+          booking._chosenCount = (booking._chosenCount || 0) + 1;
+          // อัปเดต UI
+          updateChosenCountUI(booking, countSpan);
+
+          selectedBookingsContainer.classList.remove("d-none");
+          summaryContainer.classList.remove("d-none");
+          updateSummary();
+        }
+
+        // ฟังก์ชันโหลด Booking ตาม Order
+        async function loadBookings(orderKey) {
+          const tourBookingsRef = ref(database, "tourBookings");
+          const transferBookingsRef = ref(database, "transferBookings");
+          const paymentDataRef = ref(database, "payments/" + orderKey);
+
+          const [tourSnapshot, transferSnapshot, paymentSnapshot] =
+            await Promise.all([
+              get(tourBookingsRef),
+              get(transferBookingsRef),
+              get(paymentDataRef),
+            ]);
+
+          bookingList.innerHTML = "";
+          bookingDetailsTable.innerHTML = `
+            <tr>
+              <td colspan="10" class="text-center">ยังไม่มีการเลือก Booking</td>
+            </tr>
+          `;
+          selectedBookingsContainer.classList.add("d-none");
+          summaryContainer.classList.add("d-none");
+          totalCost.textContent = "฿0";
+          totalSellingPrice.textContent = "฿0";
+          totalProfit.textContent = "฿0";
+
+          const orderObj = orders[orderKey];
+          const orderId = orderObj.id || orderKey;
+
+          let allBookings = [];
+
+          if (tourSnapshot.exists()) {
+            Object.values(tourSnapshot.val()).forEach((b) => {
+              if (b.orderId === orderId) {
+                allBookings.push({ type: "tour", ...b });
+              }
+            });
+          }
+
+          if (transferSnapshot.exists()) {
+            Object.values(transferSnapshot.val()).forEach((b) => {
+              if (b.orderId === orderId) {
+                allBookings.push({ type: "transfer", ...b });
+              }
+            });
+          }
+
+          // ดึงข้อมูลชื่อ-นามสกุล และ pax จาก Booking ตัวแรก
+          if (allBookings.length > 0) {
+            const firstBooking = allBookings[0];
+            const isTour = firstBooking.type === "tour";
+
+            const firstName = isTour
+              ? firstBooking.tourFirstName || ""
+              : firstBooking.transferFirstName || "";
+            const lastName = isTour
+              ? firstBooking.tourLastName || ""
+              : firstBooking.transferLastName || "";
+            const pax = isTour
+              ? firstBooking.tourPax || 0
+              : firstBooking.transferPax || 0;
+
+            customerNameDisplay.textContent = `${firstName} ${lastName} / ${pax} คน`;
+          } else {
+            customerNameDisplay.textContent = "No customer info.";
+          }
+
+          // สร้างรายการ booking ให้ผู้ใช้เลือก Add
+          allBookings.forEach((booking, index) => {
+            const isTour = booking.type === "tour"; // <--- ประกาศก่อน
+            let cardHeader = "";
+            let cardDetail = "";
+
+            if (booking.type === "tour") {
+              cardHeader = booking.tourSendTo || "-";
+              cardDetail = booking.tourDetail || "";
+            } else {
+              cardHeader = booking.transferSendTo || "-";
+              cardDetail = booking.transferDetail || "";
+            }
+
+            const colDiv = document.createElement("div");
+            colDiv.classList.add("col-md-4", "mb-3");
+            const bookingId = isTour ? booking.tourID : booking.transferID;
+            // ออกแบบการ์ด
+            colDiv.innerHTML = `
+  <div class="card h-100 shadow-sm" data-type="${
+    booking.type || ""
+  }" data-id="${isTour ? booking.tourID : booking.transferID}">
+    <div class="card-body">
+      <h5 class="card-title fw-bold text-truncate">${cardHeader}</h5>
+      <p class="card-text fst-italic lh-1 ">
+        ${cardDetail}
+      </p>
+      <strong>Booking #${index + 1}:</strong> ${
+              booking.type === "tour" ? "Tour" : "Transfer"
+            }<br/>
+      ...
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <button class="btn btn-primary btnAddBooking" type="button">
+          <i class="bi bi-plus-lg"></i> Add
+        </button>
+        <span>
+          <small>Chosen: </small>
+          <span class="chosenCount badge bg-secondary">0</span>
+          <small> times</small>
+        </span>
+      </div>
+    </div>
+  </div>
+`;
+
+            const btnAddBooking = colDiv.querySelector(".btnAddBooking");
+            const chosenCountSpan = colDiv.querySelector(".chosenCount");
+
+            btnAddBooking.addEventListener("click", () => {
+              addBookingToTable(booking, chosenCountSpan);
+            });
+
+            bookingList.appendChild(colDiv);
+          });
+
+          // ถ้ามีการเซฟข้อมูลใน payments/${orderKey} จะโหลดมาโชว์ในตาราง
+          // หลัง get(paymentSnapshot)
+          if (paymentSnapshot.exists()) {
+            const savedData = paymentSnapshot.val();
+            // ถ้าใช้โครงสร้าง invoice => finalData.bookings, ถ้าเก็บเป็น Array ตรง ๆ => savedData
+            // สมมติเป็น finalData.bookings:
+            const savedBookings = savedData.bookings || [];
+
+            if (Array.isArray(savedBookings)) {
+              bookingDetailsTable.innerHTML = "";
+              selectedBookingsContainer.classList.remove("d-none");
+              summaryContainer.classList.remove("d-none");
+
+              // สร้างตัว aggregator dictionary
+              const chosenCountMap = {};
+              // key: type + "|" + id  => จำนวนรวม
+
+              // 1) สร้าง row ในตาราง (แต่ละ row คือ 1 Booking ใน savedBookings)
+              savedBookings.forEach((item) => {
+                // สร้าง key
+                const key = `${item.type || ""}|${item.id || ""}`;
+                // เพิ่มเข้า dictionary
+                if (!chosenCountMap[key]) {
+                  chosenCountMap[key] = 0;
+                }
+                chosenCountMap[key] += item.chosenCount || 0;
+
+                // สร้าง object สำหรับ createBookingRow
+                const dummyBooking = {
+                  type: item.type || "",
+                  tourID: item.id,
+                  transferID: item.id,
+                  tourSendTo: item.sendTo,
+                  transferSendTo: item.sendTo,
+                  tourDetail: item.detail,
+                  transferDetail: item.detail,
+                  cost: item.cost,
+                  quantity: item.quantity,
+                  sellingPrice: item.sellingPrice,
+                  bookingType: item.bookingType || "",
+                  _chosenCount: item.chosenCount || 0, // ใน 1 แถว
+                };
+
+                // สร้าง span
+                const chosenSpan = document.createElement("span");
+                chosenSpan.classList.add("chosenCount", "badge");
+
+                // อัปเดต UI ของแถว (1 แถว = 1 item)
+                updateChosenCountUI(dummyBooking, chosenSpan);
+
+                const row = createBookingRow(dummyBooking, chosenSpan);
+                bookingDetailsTable.appendChild(row);
+              });
+
+              // 2) อัปเดต chosenCount บน "การ์ด" แต่ละ booking (ใน bookingList)
+              //    (เพราะใน bookingList[] คุณมี allBookings,
+              //     เราจะดูว่า booking มี key type+id ตรงกับ chosenCountMap ไหม)
+              bookingList.querySelectorAll(".card").forEach((cardEl) => {
+                // ดึง data-type, data-id หรืออะไรก็ได้
+                // สมมติคุณเก็บ type กับ id ไว้ใน booking (ปกติ)
+                const cardType = cardEl.dataset.type || "";
+                const cardId = cardEl.dataset.id || "";
+                const chosenSpan = cardEl.querySelector(".chosenCount");
+
+                if (!chosenSpan) return;
+
+                // หาใน chosenCountMap
+                const key = `${cardType}|${cardId}`;
+                const totalChosen = chosenCountMap[key] || 0;
+
+                // อัปเดต booking._chosenCount (ถ้าคุณเก็บ booking object ใน data)
+                // แล้วอัปเดต UI
+                chosenSpan.textContent = totalChosen;
+                if (totalChosen >= 1) {
+                  chosenSpan.classList.remove("bg-secondary");
+                  chosenSpan.classList.add("bg-primary");
+                } else {
+                  chosenSpan.classList.remove("bg-primary");
+                  chosenSpan.classList.add("bg-secondary");
+                }
+              });
+
+              updateSummary();
+            }
+          }
+        }
+
+        // ฟังก์ชันบันทึกข้อมูล
+        saveDataBtn.addEventListener("click", () => {
+          const selectedOrderKey = orderDropdown.value;
+          if (!selectedOrderKey) return;
+
+          const rows = bookingDetailsTable.querySelectorAll("tr");
+          // เช็คว่าไม่มี booking?
+          if (rows.length === 1 && rows[0].querySelector("td[colspan='10']")) {
+            alert("ไม่มีข้อมูล Booking ในตาราง");
+            return;
+          }
+
+          // 1) เก็บ bookings ลง array
+          const bookingsArray = [];
+          rows.forEach((row) => {
+            const removeBtn = row.querySelector(".btnRemoveBooking");
+            if (!removeBtn) return; // แถว placeholder
+
+            const cells = row.querySelectorAll("td");
+            const bookingTypeSelect = row.querySelector(".bookingType");
+            const costInput = row.querySelector(".costInput");
+            const quantityInput = row.querySelector(".quantityInput");
+            const sellingPriceInput = row.querySelector(".sellingPriceInput");
+            const chosenCountSpan = row.querySelector(".chosenCount");
+
+            let chosenCountVal = 0;
+            if (chosenCountSpan) {
+              chosenCountVal = parseInt(chosenCountSpan.textContent, 10) || 0;
+            }
+
+            const idText = cells[0].textContent.trim();
+            const sendToText = cells[1].textContent.trim();
+            const detailText = cells[2].textContent.trim();
+            const bType = bookingTypeSelect.value;
+
+            const costVal = Math.floor(parseFloat(costInput.value) || 0);
+            const quantityVal = Math.floor(
+              parseFloat(quantityInput.value) || 0
+            );
+            const sellingPriceVal = Math.floor(
+              parseFloat(sellingPriceInput.value) || 0
+            );
+
+            // เก็บ type ลงด้วย (ถ้าคุณมีตัวแปร booking ใน scope ก็เอา booking.type มาใส่)
+            // สมมติว่าคุณเก็บ type ไว้เป็น data-attribute หรือ tag อื่น ๆ
+            // ตัวอย่างนี้จะใช้ item.type ถ้าคุณดึงค่าจาก DOM ได้
+            // หากคุณไม่มี ให้ดูวิธีปัจจุบัน (เช่น row.dataset.type)
+            const rowType = row.dataset.type || "";
+            // หรือถ้าคุณสามารถดึง booking.type จาก DOM/Mapping อื่น ๆ ได้ ก็ใช้ได้เหมือนกัน
+
+            const obj = {
+              type: rowType, // สำคัญ: ต้องมี type
+              id: idText,
+              sendTo: sendToText,
+              detail: detailText,
+              bookingType: bType, // "adult"/"child"/""
+              cost: costVal,
+              quantity: quantityVal,
+              sellingPrice: sellingPriceVal,
+              chosenCount: chosenCountVal,
+            };
+
+            bookingsArray.push(obj);
+          });
+
+          // 2) ดึงค่า Summary ปัจจุบัน (ตัดสัญลักษณ์ ฿ และ , ออก)
+          const totalCostVal = parseInt(
+            totalCost.textContent.replace(/[^\d]/g, "") || "0",
+            10
+          );
+          const totalSellingVal = parseInt(
+            totalSellingPrice.textContent.replace(/[^\d]/g, "") || "0",
+            10
+          );
+          const totalProfitVal = parseInt(
+            totalProfit.textContent.replace(/[^\d]/g, "") || "0",
+            10
+          );
+
+          // 3) สร้างโครงสร้างเพื่อทำ Invoice ได้ง่ายในอนาคต
+          const finalData = {
+            invoiceNumber: "", // คุณใส่ทีหลังได้
+            invoiceDate: "", // คุณใส่ทีหลังได้
+            bookings: bookingsArray,
+            summary: {
+              totalCost: totalCostVal,
+              totalSellingPrice: totalSellingVal,
+              totalProfit: totalProfitVal,
+            },
+          };
+
+          set(ref(database, "payments/" + selectedOrderKey), finalData)
+            .then(() => {
+              alert("บันทึกข้อมูลเรียบร้อย");
+            })
+            .catch((err) => {
+              console.error("Error saving data: ", err);
+              alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+            });
+        });
+      });
+      function formatDate(dateStr) {
+        if (!dateStr || dateStr === "-") return "-";
+        const [year, month, day] = dateStr.split("-");
+        if (!year || !month || !day) return dateStr;
+        return `${day}/${month}/${year}`;
+      }
+    </script>
+  </body>
+</html>
