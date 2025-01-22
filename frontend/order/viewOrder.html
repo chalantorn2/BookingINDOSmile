@@ -454,10 +454,12 @@
         <div>
           <h6 class="mb-1">
             <strong>${order.id || "No ID"}</strong>
-            <span > / ${bookingDetails.length} bookings</span>
+            <span > / ${
+              bookingDetails.length
+            } </span> <i class="bi bi-calendar2-check"></i>
           </h6>
           <p class="mb-0 text-muted">
-            <span class="badge bg-primary"> ${customerName}</span> | 
+            <span class="badge" style="background-color: #094cb0; color: white;">${customerName}</span> | 
             <span class="badge bg-secondary">
               ${formatDate(earliestDate)} - ${formatDate(latestDate)}
             </span>
@@ -465,7 +467,7 @@
         </div>
         <div>
           <button 
-            class="btn btn-success btn-sm me-2 add-booking-to-order"
+            class="btn btn-secondary btn-sm me-2 add-booking-to-order"
             data-order-key="${orderId}"
           >
             <i class="bi bi-plus-circle"></i>
@@ -580,21 +582,27 @@
                         "list-group-item d-flex justify-content-between align-items-center";
 
                       item.innerHTML = `
-    <div>
+  <div class="d-flex justify-content-between align-items-start w-100">
+    <div class="flex-grow-1">
+      <small class="d-block d-inline-block text-wrap" style="max-width: 90%;">
       <strong>${idx + 1}. ${bk.type}</strong>
-      <small>
-        <span class="text-muted">Date:</span> ${formatDate(bk.date)} |
+              <span class="text-muted">Date:</span> ${formatDate(bk.date)} |
         <span class="text-muted">Time:</span> ${bk.time || "-"} |
         <span class="text-muted">Send To:</span> ${bk.sendTo || "-"}
-        <span class="text-muted">Send To:</span> ${bk.firstName + bk.lastName}
+        <span class="text-muted">Name:</span> ${bk.firstName} ${bk.lastName}
+        <br> 
+        <span class="text-muted ">Detail:</span> ${bk.detail || "-"} 
       </small>
     </div>
-    <div>
-      <button id="badgeID" class="badge bg-primary booking-badge" data-id="${
-        bk.id
-      }" data-type="${bk.type}">${bk.id}</button>
+
+    <div class="d-flex align-items-center">
+      <button id="badgeID" class="badge ${
+        bk.type === "Tour" ? "bg-success" : "bg-primary"
+      } booking-badge me-2" data-id="${bk.id}" data-type="${bk.type}">
+        ${bk.id}
+      </button>
       <button 
-        class="btn btn-sm btn-danger ms-3 remove-booking"
+        class="btn btn-sm btn-danger remove-booking"
         data-booking-key="${bk.dbKey}"
         data-order-key="${orderId}"
         data-booking-type="${bk.type}"
@@ -602,7 +610,9 @@
         <i class="bi bi-trash"></i>
       </button>
     </div>
-  `;
+  </div>
+`;
+
                       detailsList.appendChild(item);
                       // ผูก Event ปุ่ม Remove Booking
                       item
