@@ -1,98 +1,683 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Invoice - INDO Smile Booking</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/invoice.css" />
+    <title>Invoice</title>
+    <!-- Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Prompt", sans-serif;
+      }
+      .invoice-title {
+        font-size: 2rem;
+        font-weight: 600;
+      }
+      /* ซ่อนปุ่มตอนสั่งพิมพ์ */
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+      }
+      /* style สำหรับ Ref กลายเป็น input เมื่อ double-click */
+      .ref-edit-input {
+        width: 80px;
+      }
+    </style>
   </head>
   <body>
-    <div class="container">
-      <header>
-        <h1>Invoice</h1>
-        <p>INDO Smile Booking</p>
-      </header>
+    <div class="container py-4">
+      <!-- ส่วน Header (Company Info) -->
+      <div class="text-center mb-4">
+        <h4 class="mb-1 fw-bold">IndoSmileSouthServices</h4>
+        <p class="mb-1">
+          199/100 M009 Thepkrasattri Subdistrict<br />
+          Thalang District Phuket Province 83000<br />
+          Tel : 0822536662 Hotline : 0952655516<br />
+          Email: indosmilesouthservices@gmail.com
+        </p>
+      </div>
 
-      <section class="invoice-details">
-        <div class="customer-info">
-          <p>
-            <strong>ลูกค้า:</strong> <span id="customer-name">John Doe</span>
-          </p>
-          <p>
-            <strong>ที่อยู่:</strong>
-            <span id="customer-address">123 Street, City</span>
-          </p>
-          <p><strong>วันที่:</strong> <span id="invoice-date"></span></p>
-        </div>
+      <!-- วันที่ (Range) -->
+      <div
+        class="text-center mb-4"
+        id="dateRangeDisplay"
+        style="font-size: 1.1rem"
+      >
+        <!-- จะเติมด้วย JavaScript -->
+      </div>
 
-        <table class="invoice-table">
-          <thead>
+      <!-- Title Invoice -->
+      <div class="text-center mb-3">
+        <h2 class="invoice-title">Invoice</h2>
+        <p class="text-muted">รายละเอียด Order / Payment ทั้งหมด</p>
+      </div>
+
+      <!-- ปุ่มต่าง ๆ (Select Payment, Save Invoice, Print, กลับ) -->
+      <div class="text-center mb-4 no-print">
+        <button class="btn btn-warning me-2" id="selectPaymentsBtn">
+          <i class="bi bi-check-all"></i> Select Payments
+        </button>
+        <button class="btn btn-success me-2" id="saveInvoiceBtn">
+          <i class="bi bi-save"></i> บันทึก Invoice
+        </button>
+        <button class="btn btn-primary me-2" id="printBtn">
+          <i class="bi bi-printer"></i> พิมพ์
+        </button>
+        <button
+          class="btn btn-secondary"
+          onclick="window.location.href='/frontend/main/payments.html'"
+        >
+          <i class="bi bi-arrow-left"></i> กลับไปหน้า Payments
+        </button>
+      </div>
+
+      <!-- ส่วนตาราง Invoice -->
+      <div class="table-responsive">
+        <table
+          class="table table-bordered text-center align-middle"
+          id="invoiceTable"
+        >
+          <thead class="table-light">
             <tr>
-              <th>#</th>
-              <th>รายละเอียด</th>
-              <th>จำนวน</th>
-              <th>ราคา/หน่วย</th>
-              <th>รวม</th>
+              <th>Item</th>
+              <th>NAME</th>
+              <th>REF.</th>
+              <th>Date in PHUKET</th>
+              <th>Hotel</th>
+              <th>TOUR INCLUDE</th>
+              <th>PRICE</th>
+              <th>Fee</th>
+              <th>Unit</th>
+              <th>TOTAL</th>
             </tr>
           </thead>
-          <tbody id="invoice-items">
-            <!-- JS will populate here -->
+          <tbody>
+            <!-- จะเติมข้อมูลด้วย JavaScript -->
           </tbody>
         </table>
+      </div>
 
-        <div class="total-section">
-          <p>
-            <strong>รวมทั้งหมด:</strong> <span id="total-amount">0.00</span> บาท
-          </p>
-        </div>
-      </section>
-
-      <footer>
-        <button onclick="printInvoice()">พิมพ์ใบเสร็จ</button>
-      </footer>
+      <!-- แสดง GRAND TOTAL -->
+      <div class="text-end mt-3 fs-5 fw-bold" id="grandTotalDisplay"></div>
     </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const invoiceItems = [
-          { id: 1, description: "ทัวร์เกาะพีพี", quantity: 2, unitPrice: 1500 },
-          { id: 2, description: "ล่องแพไม้ไผ่", quantity: 1, unitPrice: 800 },
-        ];
+    <!-- Modal เลือก Payments -->
+    <div
+      class="modal fade"
+      id="selectPaymentsModal"
+      tabindex="-1"
+      aria-labelledby="selectPaymentsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="selectPaymentsModalLabel">
+              เลือก Payments ที่ต้องการสร้าง Invoice
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <!-- รายการ Checkbox Payment -->
+            <div id="paymentsListContainer">
+              <!-- จะเติมด้วย JavaScript -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="confirmSelectBtn">
+              Confirm Selection
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        function populateInvoice() {
-          let tbody = document.getElementById("invoice-items");
-          let totalAmount = 0;
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-          invoiceItems.forEach((item, index) => {
-            let row = `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.description}</td>
-                            <td>${item.quantity}</td>
-                            <td>${item.unitPrice.toLocaleString()}</td>
-                            <td>${(
-                              item.quantity * item.unitPrice
-                            ).toLocaleString()}</td>
-                        </tr>
-                    `;
-            tbody.innerHTML += row;
-            totalAmount += item.quantity * item.unitPrice;
+    <!-- Firebase Config + JS -->
+    <script type="module">
+      import { database } from "/js/firebase-config.js";
+      import {
+        ref,
+        get,
+        set,
+        push,
+      } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
+      // สร้าง nameText เป็น "firstName lastName / pax"
+      // const nameText = `${firstName} ${lastName} / ${pax}`.trim();
+      // -------------------------------------------------------
+      // ฟังก์ชันช่วย format ตัวเลขใส่ comma
+      // -------------------------------------------------------
+      function formatNumberWithCommas(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
+
+      // -------------------------------------------------------
+      // ฟังก์ชัน parse string -> Date object (DD/MM/YYYY)
+      // -------------------------------------------------------
+      function parseDateStr(dateStr) {
+        if (!dateStr) return null;
+        const [d, m, y] = dateStr.split("/");
+        if (!d || !m || !y) return null;
+        return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+      }
+
+      // -------------------------------------------------------
+      // ฟังก์ชันแปลง Date -> "DD MMM YY" (12 JAN 25)
+      // -------------------------------------------------------
+      function formatToShortThaiDate(dateObj) {
+        if (!dateObj) return "-";
+        const day = dateObj.getDate();
+        const month = dateObj
+          .toLocaleString("en-US", { month: "short" })
+          .toUpperCase();
+        const year = (dateObj.getFullYear() % 100).toString().padStart(2, "0");
+        return `${day} ${month} ${year}`;
+      }
+
+      // -------------------------------------------------------
+      // สร้างช่วงวันที่ เช่น "12 - 18 JAN 25" หรือข้ามปี
+      // -------------------------------------------------------
+      function formatDateRange(minDateObj, maxDateObj) {
+        if (!minDateObj || !maxDateObj) return "-";
+
+        const sameMonth =
+          minDateObj.getMonth() === maxDateObj.getMonth() &&
+          minDateObj.getFullYear() === maxDateObj.getFullYear();
+        const sameYear = minDateObj.getFullYear() === maxDateObj.getFullYear();
+
+        if (sameMonth) {
+          const day1 = minDateObj.getDate();
+          const day2 = maxDateObj.getDate();
+          const monthYear = formatToShortThaiDate(minDateObj).slice(
+            formatToShortThaiDate(minDateObj).indexOf(" ") + 1
+          );
+          return `${day1} - ${day2} ${monthYear}`;
+        } else if (sameYear) {
+          // 12 JAN - 2 FEB 25
+          const leftPart = `${minDateObj.getDate()} ${minDateObj
+            .toLocaleString("en-US", { month: "short" })
+            .toUpperCase()}`;
+          const rightPart = formatToShortThaiDate(maxDateObj);
+          const year = (minDateObj.getFullYear() % 100)
+            .toString()
+            .padStart(2, "0");
+          return `${leftPart} - ${rightPart.slice(0, -3)} ${year}`;
+        } else {
+          // ข้ามปี
+          const leftPart = formatToShortThaiDate(minDateObj);
+          const rightPart = formatToShortThaiDate(maxDateObj);
+          return `${leftPart} - ${rightPart}`;
+        }
+      }
+
+      // ตัวแปร global เก็บ data ที่โหลดมา
+      let allPaymentsData = {};
+      let allTourBookingsData = {};
+      let allTransferBookingsData = {};
+      // เก็บ keys ของ Payment ที่ผู้ใช้เลือก
+      let selectedPaymentKeys = [];
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const selectPaymentsBtn = document.getElementById("selectPaymentsBtn");
+        const confirmSelectBtn = document.getElementById("confirmSelectBtn");
+        const printBtn = document.getElementById("printBtn");
+        const saveInvoiceBtn = document.getElementById("saveInvoiceBtn");
+        const dateRangeDisplay = document.getElementById("dateRangeDisplay");
+        const invoiceTbody = document.querySelector("#invoiceTable tbody");
+        const grandTotalDisplay = document.getElementById("grandTotalDisplay");
+
+        // Modal
+        const selectPaymentsModalEl = document.getElementById(
+          "selectPaymentsModal"
+        );
+        const selectPaymentsModal = new bootstrap.Modal(selectPaymentsModalEl, {
+          backdrop: "static",
+          keyboard: false,
+        });
+        const paymentsListContainer = document.getElementById(
+          "paymentsListContainer"
+        );
+
+        // ปุ่ม Print
+        if (printBtn) {
+          printBtn.addEventListener("click", () => {
+            window.print();
+          });
+        }
+
+        // โหลดข้อมูล payments / tourBookings / transferBookings
+        const [paySnap, tourSnap, transferSnap] = await Promise.all([
+          get(ref(database, "payments")),
+          get(ref(database, "tourBookings")),
+          get(ref(database, "transferBookings")),
+        ]);
+
+        if (paySnap.exists()) {
+          allPaymentsData = paySnap.val();
+        }
+        if (tourSnap.exists()) {
+          allTourBookingsData = tourSnap.val();
+        }
+        if (transferSnap.exists()) {
+          allTransferBookingsData = transferSnap.val();
+        }
+
+        // --------------------------------------------------------
+        // ปุ่ม "Select Payments" => เปิด Modal
+        // --------------------------------------------------------
+        selectPaymentsBtn.addEventListener("click", () => {
+          buildPaymentsList();
+          selectPaymentsModal.show();
+        });
+
+        // --------------------------------------------------------
+        // ปุ่ม "Confirm Selection"
+        // --------------------------------------------------------
+        confirmSelectBtn.addEventListener("click", () => {
+          // อ่านค่า checkbox
+          selectedPaymentKeys = [];
+          const checkboxes = paymentsListContainer.querySelectorAll(
+            "input[type='checkbox']:checked"
+          );
+          checkboxes.forEach((ck) => {
+            selectedPaymentKeys.push(ck.value);
+          });
+          selectPaymentsModal.hide();
+
+          // สร้างตาราง Invoice ใหม่
+          buildInvoiceTable(selectedPaymentKeys);
+        });
+
+        // --------------------------------------------------------
+        // ฟังก์ชันสร้างรายการ Checkbox Payment ใน Modal
+        // --------------------------------------------------------
+        function buildPaymentsList() {
+          paymentsListContainer.innerHTML = "";
+          let hasAny = false;
+
+          // allPaymentsData โครงสร้าง เช่น
+          // {
+          //   "P_INDO": {
+          //       "REET-250121-001": {...}
+          //   },
+          //   "P_indo": {
+          //       "shikha-250121-002": {...}
+          //   }
+          // }
+          const mainKeys = Object.keys(allPaymentsData).sort();
+          mainKeys.forEach((mainK) => {
+            const subObj = allPaymentsData[mainK];
+            if (!subObj || typeof subObj !== "object") return;
+
+            const subKeys = Object.keys(subObj).sort();
+            subKeys.forEach((subK) => {
+              hasAny = true;
+              // key เช่น "P_INDO/REET-250121-001"
+              const combinedKey = `${mainK}/${subK}`;
+              const alreadySelected = selectedPaymentKeys.includes(combinedKey);
+
+              const label = document.createElement("label");
+              label.classList.add("d-flex", "align-items-center", "mb-2");
+              label.innerHTML = `
+                <input
+                  type="checkbox"
+                  class="form-check-input me-2"
+                  value="${combinedKey}"
+                  ${alreadySelected ? "checked" : ""}
+                />
+                <span>${combinedKey}</span>
+              `;
+              paymentsListContainer.appendChild(label);
+            });
           });
 
-          document.getElementById("total-amount").innerText =
-            totalAmount.toLocaleString();
-          document.getElementById("invoice-date").innerText =
-            new Date().toLocaleDateString();
+          if (!hasAny) {
+            paymentsListContainer.innerHTML = `
+              <div class="alert alert-warning">No Payments Found</div>
+            `;
+          }
         }
 
-        function printInvoice() {
-          window.print();
+        // --------------------------------------------------------
+        // ฟังก์ชันสร้างตาราง Invoice
+        // --------------------------------------------------------
+        // เก็บ REF ของแต่ละ Payment ชั่วคราว
+        // เก็บ REF ของแต่ละ Payment ชั่วคราว
+        const refMap = {}; // key => string
+
+        function buildInvoiceTable(paymentKeys) {
+          invoiceTbody.innerHTML = "";
+          dateRangeDisplay.textContent = `Date Range: -`;
+
+          if (!paymentKeys || paymentKeys.length === 0) {
+            invoiceTbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="text-center text-danger">No Payments Selected</td>
+      </tr>
+    `;
+            return;
+          }
+
+          let itemCount = 0;
+          let overallMinDate = null;
+          let overallMaxDate = null;
+          let grandTotal = 0; // รวม TOTAL ของแต่ละ Payment
+
+          paymentKeys.forEach((combinedKey) => {
+            // แยก "P_INDO/REET-250121-001" => ["P_INDO", "REET-250121-001"]
+            const [mainK, subK] = combinedKey.split("/");
+            if (!allPaymentsData[mainK] || !allPaymentsData[mainK][subK])
+              return;
+
+            const payment = allPaymentsData[mainK][subK];
+            itemCount++;
+
+            // 1) รวม bookings (Array หรือ Object)
+            let bookingsArr = [];
+            if (Array.isArray(payment.bookings)) {
+              bookingsArr = payment.bookings;
+            } else if (
+              payment.bookings &&
+              typeof payment.bookings === "object"
+            ) {
+              bookingsArr = Object.values(payment.bookings);
+            }
+
+            if (!bookingsArr || bookingsArr.length === 0) {
+              // ไม่มี booking
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+        <td>${itemCount}</td>
+        <td>NAME ???</td>
+        <td>REF ???</td>
+        <td colspan="7" class="text-danger">No bookings found</td>
+      `;
+              invoiceTbody.appendChild(tr);
+              return;
+            }
+
+            // 2) NAME = firstName + lastName / pax
+            let firstName = "";
+            let lastName = "";
+            let pax = "";
+            if (payment.customer) {
+              firstName = payment.customer.firstName || "";
+              lastName = payment.customer.lastName || "";
+              pax = payment.customer.pax || "";
+            }
+            const nameText = `${firstName} ${lastName} / ${pax}`.trim();
+
+            // 3) REF => ถ้ายังไม่มีใน refMap => ตั้งเป็น "-"
+            const refKey = combinedKey;
+            if (typeof refMap[refKey] === "undefined") {
+              refMap[refKey] = "-";
+            }
+
+            // 4) HOTEL => เอาจาก booking ตัวแรก
+            let hotelText = "-";
+            const firstBk = bookingsArr[0];
+            if (firstBk) {
+              if (firstBk.type === "tour" && firstBk.tourHotel) {
+                hotelText = firstBk.tourHotel;
+              } else if (firstBk.type === "transfer" && firstBk.transferHotel) {
+                hotelText = firstBk.transferHotel;
+              }
+            }
+
+            // 5) Payment summary => totalSellingPrice
+            const paymentTotal = payment.summary?.totalSellingPrice || 0;
+            grandTotal += paymentTotal;
+
+            // 6) วนลูป bookings
+            const rowSpanCount = bookingsArr.length;
+
+            bookingsArr.forEach((bk, index) => {
+              // PRICE => bk.sellingPrice
+              // FEE => 0 (หรือจะใส่ค่าจาก bk.fee ถ้ามี)
+              // UNIT => bk.quantity
+              // TOTAL => bk.sellingPrice (หรือ bk.total ถ้ามีเก็บไว้)
+              const priceVal = bk.sellingPrice ?? 0;
+              const feeVal = 0;
+              const unitVal = bk.quantity ?? 0;
+              const rowTotal = bk.sellingPrice ?? 0;
+              const detailText = bk.detail || "-";
+              const type = bk.bookingType || "-";
+
+              // Date => tourDate / transferDate
+              let bookingDate = "-";
+              if (bk.type === "tour") {
+                bookingDate = bk.tourDate || "-";
+              } else if (bk.type === "transfer") {
+                bookingDate = bk.transferDate || "-";
+              }
+
+              // parseDateStr => หา minDate/maxDate
+              const dateObj = parseDateStr(bookingDate);
+              if (dateObj) {
+                if (!overallMinDate || dateObj < overallMinDate) {
+                  overallMinDate = dateObj;
+                }
+                if (!overallMaxDate || dateObj > overallMaxDate) {
+                  overallMaxDate = dateObj;
+                }
+              }
+
+              // สร้าง <tr>
+              const tr = document.createElement("tr");
+
+              if (index === 0) {
+                // แถวแรก => merge 4 คอลัมน์: Item, NAME, REF, HOTEL
+                tr.innerHTML = `
+          <td rowspan="${rowSpanCount}">${itemCount}</td>
+          <td rowspan="${rowSpanCount}" class="nameCell">${nameText}</td>
+          <td rowspan="${rowSpanCount}" class="refCell" data-key="${refKey}">
+            ${refMap[refKey]}
+          </td>
+          <td rowspan="${rowSpanCount}" class="hotelCell">${hotelText}</td>
+
+          <!-- (5) Date in PHUKET -->
+          <td>${formatDate(bookingDate)}</td>
+
+          <!-- (6) TOUR INCLUDE -->
+          <td class="text-start">${detailText} ${type}</td>
+
+          <!-- (7) PRICE, (8) Fee, (9) Unit, (10) TOTAL -->
+          <td>${formatNumberWithCommas(priceVal)}</td>
+          <td>${formatNumberWithCommas(feeVal)}</td>
+          <td>${unitVal}</td>
+          <td>${formatNumberWithCommas(rowTotal)}</td>
+        `;
+              } else {
+                // แถวอื่น ๆ => เว้น 4 ช่องแรก
+                tr.innerHTML = `
+          <td>${formatDate(bookingDate)}</td>
+          <td class="text-start">${detailText} ${type}</td>
+          <td>${formatNumberWithCommas(priceVal)}</td>
+          <td>${formatNumberWithCommas(feeVal)}</td>
+          <td>${unitVal}</td>
+          <td>${formatNumberWithCommas(rowTotal)}</td>
+        `;
+              }
+
+              invoiceTbody.appendChild(tr);
+            });
+
+            // แสดง Payment Total (optional)
+            const totalRow = document.createElement("tr");
+            totalRow.innerHTML = `
+      <td colspan="9" class="text-end fw-bold">Payment Total</td>
+      <td class="fw-bold">${formatNumberWithCommas(paymentTotal)}</td>
+    `;
+            invoiceTbody.appendChild(totalRow);
+          });
+
+          // สร้างแถว GRAND TOTAL
+          const grandRow = document.createElement("tr");
+          grandRow.innerHTML = `
+    <td colspan="9" class="text-end fw-bold text-success">GRAND TOTAL</td>
+    <td class="fw-bold text-success">${formatNumberWithCommas(grandTotal)}</td>
+  `;
+          invoiceTbody.appendChild(grandRow);
+
+          // อัปเดต Date Range
+          if (overallMinDate && overallMaxDate) {
+            const rangeStr = formatDateRange(overallMinDate, overallMaxDate);
+            dateRangeDisplay.textContent = `Date Range: ${rangeStr}`;
+          } else {
+            dateRangeDisplay.textContent = `Date Range: -`;
+          }
+
+          // เปิดฟีเจอร์แก้ไข REF ด้วย Double-click
+          enableRefEdit();
         }
 
-        populateInvoice();
-        window.printInvoice = printInvoice;
+        // ------------------------------------------------------------------
+        // ฟังก์ชัน enableRefEdit() : ให้ double-click เซลล์ REF => ใส่ <input>
+        // ------------------------------------------------------------------
+        function enableRefEdit() {
+          const refCells = invoiceTbody.querySelectorAll(".refCell");
+          refCells.forEach((cell) => {
+            cell.addEventListener("dblclick", () => {
+              const oldText = cell.textContent.trim();
+              const key = cell.dataset.key; // เช่น "P_INDO/REET-250121-001"
+
+              // สร้าง input
+              const input = document.createElement("input");
+              input.type = "text";
+              input.value = oldText === "-" ? "" : oldText;
+              input.classList.add("form-control");
+              input.style.maxWidth = "120px";
+
+              cell.textContent = "";
+              cell.appendChild(input);
+              input.focus();
+
+              const saveRef = () => {
+                const newVal = input.value.trim() || "-";
+                refMap[key] = newVal;
+                cell.innerHTML = newVal;
+              };
+
+              input.addEventListener("blur", saveRef);
+              input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  saveRef();
+                }
+              });
+            });
+          });
+        }
+
+        // ---------------------------------------------------------
+        // ฟังก์ชัน: เมื่อกดบันทึก Invoice
+        // ---------------------------------------------------------
+        if (saveInvoiceBtn) {
+          saveInvoiceBtn.addEventListener("click", async () => {
+            const dateRangeText = dateRangeDisplay.textContent.replace(
+              "Date Range: ",
+              ""
+            );
+
+            // สร้างโหนด invoice ใหม่ (auto key)
+            const invoicesRef = ref(database, "invoices");
+            const newInvoiceRef = push(invoicesRef);
+
+            const invoicePayload = {
+              companyInfo: {
+                name: "IndoSmileSouthServices",
+                address: `199/100 M009 Thepkrasattri Subdistrict\nThalang District Phuket Province 83000`,
+                tel: "0822536662",
+                hotline: "0952655516",
+                email: "indosmilesouthservices@gmail.com",
+              },
+              dateRangeText,
+              selectedPaymentKeys,
+              createdAt: new Date().toISOString(),
+            };
+
+            try {
+              await set(newInvoiceRef, invoicePayload);
+              alert(`บันทึก Invoice เรียบร้อย! (Key: ${newInvoiceRef.key})`);
+            } catch (err) {
+              console.error(err);
+              alert("เกิดข้อผิดพลาดในการบันทึก Invoice");
+            }
+          });
+        }
+
+        // ---------------------------------------------------------
+        // ฟังก์ชัน: ผูก double-click บน REF => เปลี่ยนเป็น input
+        // ---------------------------------------------------------
+        function setupRefEdit() {
+          // หา td.refCell
+          const refCells = invoiceTbody.querySelectorAll(".refCell");
+          refCells.forEach((cell) => {
+            cell.addEventListener("dblclick", () => {
+              const currentRef = cell.getAttribute("data-ref") || "-";
+              // สร้าง input
+              const inputEl = document.createElement("input");
+              inputEl.type = "text";
+              inputEl.value = currentRef;
+              inputEl.classList.add("ref-edit-input");
+              // ลบเนื้อหาเดิม
+              cell.innerHTML = "";
+              cell.appendChild(inputEl);
+              inputEl.focus();
+
+              // เมื่อ blur หรือกด Enter => กลับเป็น text
+              const finalize = () => {
+                const newVal = inputEl.value.trim() || "-";
+                cell.setAttribute("data-ref", newVal);
+                cell.textContent = newVal;
+              };
+              inputEl.addEventListener("blur", finalize);
+              inputEl.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                  finalize();
+                }
+              });
+            });
+          });
+        }
       });
+      function formatDate(dateStr) {
+        if (!dateStr || dateStr === "-") return "-";
+        const [year, month, day] = dateStr.split("-");
+        if (!year || !month || !day) return dateStr;
+        return `${day}/${month}/${year}`;
+      }
     </script>
   </body>
 </html>
