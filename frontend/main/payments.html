@@ -61,7 +61,8 @@
           <!-- <h2>Booking Details</h2> -->
           <p
             id="customerNameDisplay"
-            class="fs-2 fw-bold text-primary mt-3"
+            class="fs-2 fw-bold mt-3"
+            style="color: #b30b00"
           ></p>
         </div>
 
@@ -70,10 +71,12 @@
 
         <!-- 2) ตารางแสดง Booking ที่ถูก Add -->
         <div class="mt-5 d-none" id="selectedBookingsContainer">
-          <h3 class="text-center mb-3">Selected Bookings</h3>
+          <!-- <h3 class="text-center mb-3">Selected Bookings</h3> -->
           <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-              <thead class="table-info">
+            <table
+              class="table table-striped table-hover text-center align-middle"
+            >
+              <thead class="table-warning">
                 <tr>
                   <th>ID</th>
                   <th>Send To</th>
@@ -343,12 +346,12 @@
     
     <!-- Hotel => <input> -->
     <td>
-      <input
+      <textarea
         type="text"
         class="hotelInput form-control"
         style="min-width: 150px; white-space: pre-wrap;"
-        value="${hotelVal}"
-      />
+        > ${hotelVal}
+      </textarea>
     </td>
     
     <!-- Details => <textarea> -->
@@ -374,38 +377,31 @@
       </select>
     </td>
     
-    <td>
-      <input
-        type="number"
-        step="any"
-        class="costInput form-control"
-        value="${cost}"
-      />
-    </td>
-    <td>
-      <input
-        type="number"
-        class="quantityInput form-control"
-        value="${quantity}"
-      />
-    </td>
-    <td class="totalCostCell">${totalCostVal.toLocaleString()}</td>
-    
-    <td>
-      <input
-        type="number"
-        step="any"
-        class="sellingPriceInput form-control"
-        value="${sellingPrice}"
-      />
-    </td>
-    <td class="profitCell">${profitVal.toLocaleString()}</td>
-    
-    <td>
-      <button class="btn btn-danger btnRemoveBooking">
-        <i class="bi bi-trash"></i>
-      </button>
-    </td>
+   <td>
+  <textarea
+    class="numcenter costInput form-control"
+  >${cost}</textarea>
+</td>
+<td>
+  <textarea
+    class="numcenter quantityInput form-control"
+  >${quantity}</textarea>
+</td>
+<td class="numcenter totalCostCell">${totalCostVal.toLocaleString()}</td>
+
+<td>
+  <textarea
+    class="numcenter sellingPriceInput form-control"
+  >${sellingPrice}</textarea>
+</td>
+<td class="numcenter profitCell">${profitVal.toLocaleString()}</td>
+
+<td>
+  <button class="btn btn-danger btnRemoveBooking">
+    <i class="bi bi-trash"></i>
+  </button>
+</td>
+
   `;
 
           // ผูก event update cost/quantity/sellingPrice
@@ -598,18 +594,35 @@
                 booking.type || ""
               }" data-id="${bookingId}">
                 <div class="card-body">
-                  <h5 class="card-title fw-bold text-truncate">${
-                    cardHeader || "-"
-                  }</h5>
+                  <h4 class="card-title text-white fw-bold align-center text-center
+                 text-truncate rounded-2 py-1 ${
+                   booking.type === "tour" ? "bg-success" : "bg-primary"
+                 }">
+  ${cardHeader || "-"}
+</h4>
+
                   <p class="card-text fst-italic lh-1 ">
                     ${cardDetail || ""}
                   </p>
                   <strong>Booking #${index + 1}:</strong> ${
               isTour ? "Tour" : "Transfer"
             }<br/>
-                  ...
+                  <small class="text-muted">
+                      ID: ${
+                        booking.type === "tour"
+                          ? booking.tourID || "-"
+                          : booking.transferID || "-"
+                      }
+                    </small>
+                    <small class="text-muted">
+                     / DATE: ${formatToDDMMYYYY(
+                       booking.type === "tour"
+                         ? booking.tourDate || "-"
+                         : booking.transferDate || "-"
+                     )}
+                    </small>
                   <div class="d-flex justify-content-between align-items-center mt-3">
-                    <button class="btn btn-primary btnAddBooking" type="button">
+                    <button class="btn btn-secondary  btnAddBooking" type="button">
                       <i class="bi bi-plus-lg"></i> Add
                     </button>
                     <span>
@@ -697,9 +710,9 @@
                 chosenSpan.textContent = totalChosen;
                 if (totalChosen >= 1) {
                   chosenSpan.classList.remove("bg-secondary");
-                  chosenSpan.classList.add("bg-primary");
+                  chosenSpan.classList.add("bg-dark");
                 } else {
-                  chosenSpan.classList.remove("bg-primary");
+                  chosenSpan.classList.remove("bg-dark");
                   chosenSpan.classList.add("bg-secondary");
                 }
               });

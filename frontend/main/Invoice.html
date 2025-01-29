@@ -18,49 +18,11 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
       rel="stylesheet"
     />
-
-    <style>
-      body {
-        font-family: "Prompt", sans-serif;
-      }
-      .invoice-title {
-        font-size: 2rem;
-        font-weight: 600;
-      }
-      /* ซ่อนปุ่มตอนสั่งพิมพ์ */
-      @media print {
-        .no-print {
-          display: none !important;
-        }
-      }
-      /* style สำหรับ Ref กลายเป็น input เมื่อ double-click */
-      .ref-edit-input {
-        width: 80px;
-      }
-    </style>
+    <link rel="stylesheet" href="/css/invoice.css" />
   </head>
   <body>
+    <menu-component class="no-print"></menu-component>
     <div class="container py-4">
-      <!-- ส่วน Header (Company Info) -->
-      <div class="text-center mb-4">
-        <h4 class="mb-1 fw-bold">IndoSmileSouthServices</h4>
-        <p class="mb-1">
-          199/100 M009 Thepkrasattri Subdistrict<br />
-          Thalang District Phuket Province 83000<br />
-          Tel : 0822536662 Hotline : 0952655516<br />
-          Email: indosmilesouthservices@gmail.com
-        </p>
-      </div>
-
-      <!-- วันที่ (Range) -->
-      <div
-        class="text-center mb-4"
-        id="dateRangeDisplay"
-        style="font-size: 1.1rem"
-      >
-        <!-- จะเติมด้วย JavaScript -->
-      </div>
-
       <!-- Title Invoice -->
       <div class="text-center mb-3">
         <h2 class="invoice-title">Invoice</h2>
@@ -69,15 +31,28 @@
 
       <!-- ปุ่มต่าง ๆ (Select Payment, Save Invoice, Print, กลับ) -->
       <div class="text-center mb-4 no-print">
+        <!-- ปุ่มเดิม: Select Payments -->
         <button class="btn btn-warning me-2" id="selectPaymentsBtn">
           <i class="bi bi-check-all"></i> Select Payments
         </button>
+
+        <!-- ปุ่มเดิม: Save Invoice -->
         <button class="btn btn-success me-2" id="saveInvoiceBtn">
           <i class="bi bi-save"></i> บันทึก Invoice
         </button>
-        <button class="btn btn-primary me-2" id="printBtn">
-          <i class="bi bi-printer"></i> พิมพ์
+
+        <!-- ปุ่มใหม่: Export CSV (แทน Print) -->
+        <button class="btn btn-primary me-2" id="exportCsvBtn" disabled>
+          <!-- ไอคอนเปลี่ยนตามชอบ เช่น bi bi-file-earmark-spreadsheet -->
+          <i class="bi bi-file-earmark-spreadsheet"></i> Export ข้อมูล
         </button>
+
+        <!-- ปุ่มใหม่: View Invoice -->
+        <button class="btn btn-info me-2" id="viewInvoiceBtn">
+          <i class="bi bi-eye"></i> View Invoice
+        </button>
+
+        <!-- ปุ่ม Back to Payments -->
         <button
           class="btn btn-secondary"
           onclick="window.location.href='/frontend/main/payments.html'"
@@ -86,19 +61,37 @@
         </button>
       </div>
 
+      <!-- ส่วน Header (Company Info) -->
+      <!-- <div class="banner text-end my-4">
+        <img
+          src="/images/logo-banner-01.jpg"
+          alt="INDO SMILE SOUTH SERVICES Banner"
+          class="banner-image"
+        />
+      </div> -->
+      <!-- <div class="text-end mb-4">
+        <h4 class="mb-1 fw-bold">IndoSmileSouthServices</h4>
+        <p class="mb-1">
+          199/100 M009 Thepkrasattri Subdistrict<br />
+          Thalang District Phuket Province 83000<br />
+          Tel : 0822536662 Hotline : 0952655516<br />
+          Email: indosmilesouthservices@gmail.com
+        </p>
+      </div> -->
+
       <!-- ส่วนตาราง Invoice -->
       <div class="table-responsive">
         <table
           class="table table-bordered text-center align-middle"
           id="invoiceTable"
         >
-          <thead class="table-light">
+          <thead class="table-light text-center align-middle">
             <tr>
               <th>Item</th>
               <th>NAME</th>
               <th>REF.</th>
-              <th>Date in PHUKET</th>
               <th>Hotel</th>
+              <th>Date in PHUKET</th>
               <th>TOUR INCLUDE</th>
               <th>PRICE</th>
               <th>Fee</th>
@@ -158,11 +151,36 @@
         </div>
       </div>
     </div>
-
+    <!-- Modal ดู Invoice -->
+    <div class="modal fade" id="viewInvoiceModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">View Invoice</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <select class="form-select" id="invoicesSelect"></select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Close
+            </button>
+            <button class="btn btn-primary" id="viewSelectedInvoiceBtn">
+              View
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script type="module" src="/component/menu.js"></script>
     <!-- Firebase Config + JS -->
     <script type="module">
       import { database } from "/js/firebase-config.js";
@@ -208,38 +226,6 @@
       // -------------------------------------------------------
       // สร้างช่วงวันที่ เช่น "12 - 18 JAN 25" หรือข้ามปี
       // -------------------------------------------------------
-      function formatDateRange(minDateObj, maxDateObj) {
-        if (!minDateObj || !maxDateObj) return "-";
-
-        const sameMonth =
-          minDateObj.getMonth() === maxDateObj.getMonth() &&
-          minDateObj.getFullYear() === maxDateObj.getFullYear();
-        const sameYear = minDateObj.getFullYear() === maxDateObj.getFullYear();
-
-        if (sameMonth) {
-          const day1 = minDateObj.getDate();
-          const day2 = maxDateObj.getDate();
-          const monthYear = formatToShortThaiDate(minDateObj).slice(
-            formatToShortThaiDate(minDateObj).indexOf(" ") + 1
-          );
-          return `${day1} - ${day2} ${monthYear}`;
-        } else if (sameYear) {
-          // 12 JAN - 2 FEB 25
-          const leftPart = `${minDateObj.getDate()} ${minDateObj
-            .toLocaleString("en-US", { month: "short" })
-            .toUpperCase()}`;
-          const rightPart = formatToShortThaiDate(maxDateObj);
-          const year = (minDateObj.getFullYear() % 100)
-            .toString()
-            .padStart(2, "0");
-          return `${leftPart} - ${rightPart.slice(0, -3)} ${year}`;
-        } else {
-          // ข้ามปี
-          const leftPart = formatToShortThaiDate(minDateObj);
-          const rightPart = formatToShortThaiDate(maxDateObj);
-          return `${leftPart} - ${rightPart}`;
-        }
-      }
 
       // ตัวแปร global เก็บ data ที่โหลดมา
       let allPaymentsData = {};
@@ -253,7 +239,7 @@
         const confirmSelectBtn = document.getElementById("confirmSelectBtn");
         const printBtn = document.getElementById("printBtn");
         const saveInvoiceBtn = document.getElementById("saveInvoiceBtn");
-        const dateRangeDisplay = document.getElementById("dateRangeDisplay");
+
         const invoiceTbody = document.querySelector("#invoiceTable tbody");
         const grandTotalDisplay = document.getElementById("grandTotalDisplay");
 
@@ -326,15 +312,6 @@
           paymentsListContainer.innerHTML = "";
           let hasAny = false;
 
-          // allPaymentsData โครงสร้าง เช่น
-          // {
-          //   "P_INDO": {
-          //       "REET-250121-001": {...}
-          //   },
-          //   "P_indo": {
-          //       "shikha-250121-002": {...}
-          //   }
-          // }
           const mainKeys = Object.keys(allPaymentsData).sort();
           mainKeys.forEach((mainK) => {
             const subObj = allPaymentsData[mainK];
@@ -342,33 +319,46 @@
 
             const subKeys = Object.keys(subObj).sort();
             subKeys.forEach((subK) => {
+              const payment = subObj[subK];
+              // ข้ามถ้า invoiced === true
+              if (payment.invoiced === true) {
+                return;
+              }
+
+              // + firstName, lastName
+              let displayName = `${mainK}/${subK}`; // value ใช้ combinedKey
+              if (payment.customer && payment.customer.firstName) {
+                displayName += ` - ${payment.customer.firstName}`;
+                if (payment.customer.lastName) {
+                  displayName += ` ${payment.customer.lastName}`;
+                }
+              }
+
               hasAny = true;
-              // key เช่น "P_INDO/REET-250121-001"
               const combinedKey = `${mainK}/${subK}`;
               const alreadySelected = selectedPaymentKeys.includes(combinedKey);
 
               const label = document.createElement("label");
               label.classList.add("d-flex", "align-items-center", "mb-2");
               label.innerHTML = `
-                <input
-                  type="checkbox"
-                  class="form-check-input me-2"
-                  value="${combinedKey}"
-                  ${alreadySelected ? "checked" : ""}
-                />
-                <span>${combinedKey}</span>
-              `;
+        <input
+          type="checkbox"
+          class="form-check-input me-2"
+          value="${combinedKey}"
+          ${alreadySelected ? "checked" : ""}
+        />
+        <span>${displayName}</span>
+      `;
               paymentsListContainer.appendChild(label);
             });
           });
 
           if (!hasAny) {
             paymentsListContainer.innerHTML = `
-              <div class="alert alert-warning">No Payments Found</div>
-            `;
+      <div class="alert alert-warning">No Payments Found</div>
+    `;
           }
         }
-
         // --------------------------------------------------------
         // ฟังก์ชันสร้างตาราง Invoice
         // --------------------------------------------------------
@@ -378,7 +368,6 @@
 
         function buildInvoiceTable(paymentKeys) {
           invoiceTbody.innerHTML = "";
-          dateRangeDisplay.textContent = `Date Range: -`;
 
           if (!paymentKeys || paymentKeys.length === 0) {
             invoiceTbody.innerHTML = `
@@ -390,8 +379,7 @@
           }
 
           let itemCount = 0;
-          let overallMinDate = null;
-          let overallMaxDate = null;
+
           let grandTotal = 0; // รวม TOTAL ของแต่ละ Payment
 
           paymentKeys.forEach((combinedKey) => {
@@ -472,7 +460,7 @@
               const unitVal = bk.quantity ?? 0;
               const rowTotal = bk.sellingPrice ?? 0;
               const detailText = bk.detail || "-";
-              const type = bk.bookingType || "-";
+              const type = bk.bookingType;
 
               // Date => tourDate / transferDate
               let bookingDate = "-";
@@ -480,17 +468,6 @@
                 bookingDate = bk.tourDate || "-";
               } else if (bk.type === "transfer") {
                 bookingDate = bk.transferDate || "-";
-              }
-
-              // parseDateStr => หา minDate/maxDate
-              const dateObj = parseDateStr(bookingDate);
-              if (dateObj) {
-                if (!overallMinDate || dateObj < overallMinDate) {
-                  overallMinDate = dateObj;
-                }
-                if (!overallMaxDate || dateObj > overallMaxDate) {
-                  overallMaxDate = dateObj;
-                }
               }
 
               // สร้าง <tr>
@@ -536,7 +513,7 @@
             // แสดง Payment Total (optional)
             const totalRow = document.createElement("tr");
             totalRow.innerHTML = `
-      <td colspan="9" class="text-end fw-bold">Payment Total</td>
+      <td colspan="9" class="text-end fw-bold">Total</td>
       <td class="fw-bold">${formatNumberWithCommas(paymentTotal)}</td>
     `;
             invoiceTbody.appendChild(totalRow);
@@ -550,18 +527,57 @@
   `;
           invoiceTbody.appendChild(grandRow);
 
-          // อัปเดต Date Range
-          if (overallMinDate && overallMaxDate) {
-            const rangeStr = formatDateRange(overallMinDate, overallMaxDate);
-            dateRangeDisplay.textContent = `Date Range: ${rangeStr}`;
-          } else {
-            dateRangeDisplay.textContent = `Date Range: -`;
-          }
-
           // เปิดฟีเจอร์แก้ไข REF ด้วย Double-click
           enableRefEdit();
         }
 
+        const viewSelectedInvoiceBtn = document.getElementById(
+          "viewSelectedInvoiceBtn"
+        );
+        if (viewSelectedInvoiceBtn) {
+          viewSelectedInvoiceBtn.addEventListener("click", async () => {
+            const invoicesSelect = document.getElementById("invoicesSelect");
+            if (!invoicesSelect.value) {
+              alert("กรุณาเลือก Invoice ก่อน");
+              return;
+            }
+            const invoiceKey = invoicesSelect.value;
+
+            // โหลด Invoice
+            const invoiceSnap = await get(
+              ref(database, "invoices/" + invoiceKey)
+            );
+            if (!invoiceSnap.exists()) {
+              alert("ไม่พบข้อมูล Invoice นี้");
+              return;
+            }
+            const invoiceObj = invoiceSnap.val();
+
+            // ตรวจว่ามี selectedPaymentKeys ไหม
+            if (
+              !invoiceObj.selectedPaymentKeys ||
+              !Array.isArray(invoiceObj.selectedPaymentKeys)
+            ) {
+              alert("Invoice นี้ไม่มี selectedPaymentKeys");
+              return;
+            }
+
+            console.log("Load Invoice:", invoiceKey, invoiceObj);
+
+            // เรียก buildInvoiceTable(...) แสดงผล
+            buildInvoiceTable(invoiceObj.selectedPaymentKeys);
+
+            // ปิด modal
+            const viewInvoiceModalEl =
+              document.getElementById("viewInvoiceModal");
+            const viewInvoiceModal =
+              bootstrap.Modal.getInstance(viewInvoiceModalEl);
+            viewInvoiceModal.hide();
+
+            // เปิดปุ่ม export CSV
+            if (exportCsvBtn) exportCsvBtn.disabled = false;
+          });
+        }
         // ------------------------------------------------------------------
         // ฟังก์ชัน enableRefEdit() : ให้ double-click เซลล์ REF => ใส่ <input>
         // ------------------------------------------------------------------
@@ -605,31 +621,41 @@
         // ---------------------------------------------------------
         if (saveInvoiceBtn) {
           saveInvoiceBtn.addEventListener("click", async () => {
-            const dateRangeText = dateRangeDisplay.textContent.replace(
-              "Date Range: ",
-              ""
-            );
+            // บังคับผู้ใช้กรอกชื่อ Invoice
+            const invoiceName = prompt("กรุณาตั้งชื่อ Invoice:", "MyInvoice");
+            if (!invoiceName) {
+              alert("คุณยังไม่ได้ตั้งชื่อ Invoice");
+              return;
+            }
 
             // สร้างโหนด invoice ใหม่ (auto key)
             const invoicesRef = ref(database, "invoices");
             const newInvoiceRef = push(invoicesRef);
 
+            // let dateRangeText = "";  // ถ้าลบ date range ไปแล้ว ไม่ต้องใช้
             const invoicePayload = {
-              companyInfo: {
-                name: "IndoSmileSouthServices",
-                address: `199/100 M009 Thepkrasattri Subdistrict\nThalang District Phuket Province 83000`,
-                tel: "0822536662",
-                hotline: "0952655516",
-                email: "indosmilesouthservices@gmail.com",
-              },
-              dateRangeText,
-              selectedPaymentKeys,
+              invoiceName: invoiceName, // <-- ชื่อ invoice ที่ผู้ใช้ตั้ง
               createdAt: new Date().toISOString(),
+              selectedPaymentKeys, // เก็บ keys Payment
+              // ... อื่น ๆ ตามที่คุณต้องการ
             };
 
             try {
               await set(newInvoiceRef, invoicePayload);
-              alert(`บันทึก Invoice เรียบร้อย! (Key: ${newInvoiceRef.key})`);
+
+              // จากนั้น: Set invoiced = true ให้กับ Payment ที่เพิ่งเอามาออก Invoice
+              for (let ck of selectedPaymentKeys) {
+                const [mk, sk] = ck.split("/");
+                const paymentRef = ref(
+                  database,
+                  `payments/${mk}/${sk}/invoiced`
+                );
+                await set(paymentRef, true);
+              }
+
+              alert(`บันทึก Invoice เรียบร้อย! InvoiceName: ${invoiceName}`);
+              // เปิดปุ่ม export CSV ได้
+              if (exportCsvBtn) exportCsvBtn.disabled = false;
             } catch (err) {
               console.error(err);
               alert("เกิดข้อผิดพลาดในการบันทึก Invoice");
@@ -672,11 +698,106 @@
           });
         }
       });
+
       function formatDate(dateStr) {
         if (!dateStr || dateStr === "-") return "-";
         const [year, month, day] = dateStr.split("-");
         if (!year || !month || !day) return dateStr;
         return `${day}/${month}/${year}`;
+      }
+      const exportCsvBtn = document.getElementById("exportCsvBtn");
+      if (exportCsvBtn) {
+        // เริ่มต้น disabled
+        exportCsvBtn.disabled = true;
+
+        exportCsvBtn.addEventListener("click", () => {
+          // เรียกฟังก์ชัน export CSV
+          exportTableToCSV("invoice_export.csv");
+        });
+      }
+
+      // ฟังก์ชัน exportTableToCSV
+      function exportTableToCSV(filename) {
+        const table = document.getElementById("invoiceTable");
+        if (!table) {
+          alert("ไม่พบตาราง invoiceTable");
+          return;
+        }
+        let csv = [];
+        // สร้าง Array จาก each row
+        for (let i = 0; i < table.rows.length; i++) {
+          let row = [];
+          for (let j = 0; j < table.rows[i].cells.length; j++) {
+            let text = table.rows[i].cells[j].innerText.replace(
+              /(\r\n|\n|\r)/gm,
+              ""
+            );
+            text = text.replace(/"/g, '""'); // escape double quotes
+            row.push(`"${text}"`);
+          }
+          csv.push(row.join(","));
+        }
+
+        // รวมเป็น string
+        const csvString = csv.join("\n");
+
+        // สร้าง Blob
+        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      const viewInvoiceBtn = document.getElementById("viewInvoiceBtn");
+      if (viewInvoiceBtn) {
+        viewInvoiceBtn.addEventListener("click", () => {
+          viewInvoiceList();
+        });
+      }
+
+      // ฟังก์ชัน viewInvoiceList
+      async function viewInvoiceList() {
+        // โหลด invoices
+        const invoicesSnap = await get(ref(database, "invoices"));
+        if (!invoicesSnap.exists()) {
+          alert("ยังไม่มี Invoice ใดๆ");
+          return;
+        }
+        const invoicesData = invoicesSnap.val();
+
+        const invoicesSelect = document.getElementById("invoicesSelect");
+        if (!invoicesSelect) {
+          alert("ไม่พบ select #invoicesSelect");
+          return;
+        }
+        invoicesSelect.innerHTML = "";
+
+        const invoiceKeys = Object.keys(invoicesData);
+        invoiceKeys.forEach((k) => {
+          const invObj = invoicesData[k];
+          const option = document.createElement("option");
+          option.value = k;
+          const invName = invObj.invoiceName || "(NoName)";
+          // option.textContent = `${invName} [${k}]`;
+          option.textContent = `${invName}`;
+          invoicesSelect.appendChild(option);
+        });
+
+        // เปิด modal
+        const viewInvoiceModalEl = document.getElementById("viewInvoiceModal");
+        if (!viewInvoiceModalEl) {
+          alert("ไม่มี modal #viewInvoiceModal ใน HTML");
+          return;
+        }
+        const viewInvoiceModal = new bootstrap.Modal(viewInvoiceModalEl, {
+          backdrop: "static",
+          keyboard: false,
+        });
+        viewInvoiceModal.show();
       }
     </script>
   </body>

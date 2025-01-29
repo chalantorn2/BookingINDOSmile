@@ -108,3 +108,8 @@ h1 {
   border: none !important;
   box-shadow: none !important;
 }
+
+.numcenter {
+  text-align: center;
+  align-items: center;
+}
