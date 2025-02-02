@@ -212,7 +212,6 @@
           return;
         }
 
-        // โหลด Orders จาก Firebase
         const ordersRef = ref(database, "orders");
         const ordersSnapshot = await get(ordersRef);
 
@@ -222,22 +221,52 @@
         }
 
         const orders = ordersSnapshot.val();
+
+        // โหลดข้อมูล Booking ทั้งหมดจาก Firebase
+        const tourBookingsRef = ref(database, "tourBookings");
+        const transferBookingsRef = ref(database, "transferBookings");
+
+        const [tourSnapshot, transferSnapshot] = await Promise.all([
+          get(tourBookingsRef),
+          get(transferBookingsRef),
+        ]);
+
+        const allTours = tourSnapshot.exists() ? tourSnapshot.val() : {};
+        const allTransfers = transferSnapshot.exists()
+          ? transferSnapshot.val()
+          : {};
+
         orderDropdown.innerHTML = "<option value=''>Select an Order</option>";
 
         Object.keys(orders).forEach((firebaseId) => {
           const order = orders[firebaseId];
           const orderId = order.id || firebaseId;
+          const allBookings = order.bookings || [];
+
+          let customerFirstName = "-";
+          let customerLastName = "-";
+
+          if (allBookings.length > 0) {
+            // ดึง ID ของ booking ตัวแรกในรายการ
+            const firstBookingID = allBookings[0];
+
+            // ตรวจสอบว่า Booking นี้อยู่ใน tourBookings หรือ transferBookings
+            if (allTours[firstBookingID]) {
+              customerFirstName = allTours[firstBookingID].tourFirstName || "-";
+              customerLastName = allTours[firstBookingID].tourLastName || "-";
+            } else if (allTransfers[firstBookingID]) {
+              customerFirstName =
+                allTransfers[firstBookingID].transferFirstName || "-";
+              customerLastName =
+                allTransfers[firstBookingID].transferLastName || "-";
+            }
+          }
+
           const option = document.createElement("option");
-          option.value = firebaseId; // เก็บ key จาก Firebase
-          option.textContent = orderId; // โชว์เป็น orderId
+          option.value = firebaseId;
+          option.textContent = `${customerFirstName} ${customerLastName}`;
           orderDropdown.appendChild(option);
         });
-
-        // เปิดใช้งาน selectpicker (live search)
-        orderDropdown.classList.add("selectpicker");
-        orderDropdown.setAttribute("data-live-search", "true");
-        window.$(orderDropdown).selectpicker();
-
         // เมื่อมีการเปลี่ยน Order
         orderDropdown.addEventListener("change", async () => {
           const selectedOrderKey = orderDropdown.value;
@@ -574,6 +603,22 @@
             customerNameDisplay.textContent = "No customer info.";
           }
 
+          // เรียง allBookings ตามวันที่ (จากอดีตไปปัจจุบัน)
+          allBookings.sort((a, b) => {
+            const dateA = new Date(
+              a.type === "tour"
+                ? a.tourDate || "9999-12-31"
+                : a.transferDate || "9999-12-31"
+            ).getTime();
+            const dateB = new Date(
+              b.type === "tour"
+                ? b.tourDate || "9999-12-31"
+                : b.transferDate || "9999-12-31"
+            ).getTime();
+
+            return dateA - dateB; // เรียงลำดับวันที่จากอดีตไปปัจจุบัน
+          });
+
           // สร้างรายการ booking ให้ผู้ใช้เลือก Add
           allBookings.forEach((booking, index) => {
             booking._chosenCount = 0; // initialize
@@ -590,50 +635,53 @@
             colDiv.classList.add("col-md-4", "mb-3");
 
             colDiv.innerHTML = `
-              <div class="card h-100 shadow-sm" data-type="${
-                booking.type || ""
-              }" data-id="${bookingId}">
-                <div class="card-body">
-                  <h4 class="card-title text-white fw-bold align-center text-center
-                 text-truncate rounded-2 py-1 ${
-                   booking.type === "tour" ? "bg-success" : "bg-primary"
-                 }">
-  ${cardHeader || "-"}
-</h4>
-
-                  <p class="card-text fst-italic lh-1 ">
-                    ${cardDetail || ""}
-                  </p>
-                  <strong>Booking #${index + 1}:</strong> ${
-              isTour ? "Tour" : "Transfer"
-            }<br/>
-                  <small class="text-muted">
+        <div class="card h-100 shadow-sm" data-type="${
+          booking.type || ""
+        }" data-id="${bookingId}">
+            <div class="card-body">
+                <!-- Card Header -->
+                <h4 class="card-title text-white fw-bold text-center text-truncate rounded-2 py-1 
+                  ${booking.type === "tour" ? "bg-success" : "bg-primary"}">
+                  ${index + 1}. ${cardHeader || "-"}
+                </h4>
+                
+                <!-- Booking Details -->
+                <div class="d-flex justify-content-between align-items-center my-2">
+                    <h5 class="card-title text-dark fw-bold text-center text-truncate">
+                      ${formatToDDMMYYYY(
+                        booking.type === "tour"
+                          ? booking.tourDate || "-"
+                          : booking.transferDate || "-"
+                      )}
+                    </h5>
+                    <h5 class="card-title text-secondary fw-bold text-truncate">
                       ID: ${
                         booking.type === "tour"
                           ? booking.tourID || "-"
                           : booking.transferID || "-"
                       }
-                    </small>
-                    <small class="text-muted">
-                     / DATE: ${formatToDDMMYYYY(
-                       booking.type === "tour"
-                         ? booking.tourDate || "-"
-                         : booking.transferDate || "-"
-                     )}
-                    </small>
-                  <div class="d-flex justify-content-between align-items-center mt-3">
-                    <button class="btn btn-secondary  btnAddBooking" type="button">
-                      <i class="bi bi-plus-lg"></i> Add
+                    </h5>
+                </div>
+                
+                <!-- Card Description -->
+                <p class="card-text fst-italic lh-1">
+                    ${cardDetail || ""}
+                </p>
+                
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button class="btn btn-secondary btnAddBooking" type="button">
+                        <i class="bi bi-plus-lg"></i> Add
                     </button>
                     <span>
-                      <small>Chosen: </small>
-                      <span class="chosenCount badge bg-secondary">0</span>
-                      <small> times</small>
+                        <small>Chosen: </small>
+                        <span class="chosenCount badge bg-secondary">0</span>
+                        <small> times</small>
                     </span>
-                  </div>
                 </div>
-              </div>
-            `;
+            </div>
+        </div>
+    `;
 
             const btnAddBooking = colDiv.querySelector(".btnAddBooking");
             const chosenCountSpan = colDiv.querySelector(".chosenCount");

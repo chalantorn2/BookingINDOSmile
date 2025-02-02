@@ -48,6 +48,7 @@
         </button>
 
         <!-- ปุ่มใหม่: View Invoice -->
+        <!-- ปุ่มอื่น ๆ -->
         <button class="btn btn-info me-2" id="viewInvoiceBtn">
           <i class="bi bi-eye"></i> View Invoice
         </button>
@@ -59,6 +60,18 @@
         >
           <i class="bi bi-arrow-left"></i> กลับไปหน้า Payments
         </button>
+      </div>
+
+      <!-- เพิ่ม Checkbox ตรงนี้ -->
+      <div class="form-check d-inline-block">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="showCostProfitCheckbox"
+        />
+        <label class="form-check-label" for="showCostProfitCheckbox">
+          แสดงต้นทุน (Cost) และกำไร (Profit)
+        </label>
       </div>
 
       <!-- ส่วน Header (Company Info) -->
@@ -326,12 +339,17 @@
               }
 
               // + firstName, lastName
-              let displayName = `${mainK}/${subK}`; // value ใช้ combinedKey
+              let displayName = ""; // กำหนดค่าเริ่มต้นเป็นค่าว่าง
+
+              // ถ้ามีข้อมูลลูกค้า ให้ใช้เฉพาะชื่อและนามสกุล
               if (payment.customer && payment.customer.firstName) {
-                displayName += ` - ${payment.customer.firstName}`;
+                displayName = `${payment.customer.firstName}`;
                 if (payment.customer.lastName) {
                   displayName += ` ${payment.customer.lastName}`;
                 }
+              } else {
+                // กรณีไม่มีชื่อเลย ใช้ mainK/subK แทน (แต่คอมเม้นไว้)
+                // displayName = `${mainK}/${subK}`;
               }
 
               hasAny = true;
@@ -367,23 +385,38 @@
         const refMap = {}; // key => string
 
         function buildInvoiceTable(paymentKeys) {
+          const invoiceTbody = document.querySelector("#invoiceTable tbody");
+          if (!invoiceTbody) return;
+
+          // อ่านสถานะ checkbox
+          const showCostProfit = document.getElementById(
+            "showCostProfitCheckbox"
+          )
+            ? document.getElementById("showCostProfitCheckbox").checked
+            : false;
+
+          // เคลียร์ข้อมูลตารางก่อน
           invoiceTbody.innerHTML = "";
 
+          // ถ้าไม่มี payment ที่เลือก
           if (!paymentKeys || paymentKeys.length === 0) {
             invoiceTbody.innerHTML = `
       <tr>
-        <td colspan="10" class="text-center text-danger">No Payments Selected</td>
+        <td colspan="${
+          showCostProfit ? 12 : 10
+        }" class="text-center text-danger">
+          No Payments Selected
+        </td>
       </tr>
     `;
             return;
           }
 
           let itemCount = 0;
-
-          let grandTotal = 0; // รวม TOTAL ของแต่ละ Payment
+          let grandTotal = 0; // รวม TOTAL
 
           paymentKeys.forEach((combinedKey) => {
-            // แยก "P_INDO/REET-250121-001" => ["P_INDO", "REET-250121-001"]
+            // แยก mainK/subK
             const [mainK, subK] = combinedKey.split("/");
             if (!allPaymentsData[mainK] || !allPaymentsData[mainK][subK])
               return;
@@ -391,7 +424,7 @@
             const payment = allPaymentsData[mainK][subK];
             itemCount++;
 
-            // 1) รวม bookings (Array หรือ Object)
+            // bookings array/object
             let bookingsArr = [];
             if (Array.isArray(payment.bookings)) {
               bookingsArr = payment.bookings;
@@ -402,20 +435,22 @@
               bookingsArr = Object.values(payment.bookings);
             }
 
+            // ถ้าไม่มี bookings
             if (!bookingsArr || bookingsArr.length === 0) {
-              // ไม่มี booking
               const tr = document.createElement("tr");
               tr.innerHTML = `
         <td>${itemCount}</td>
         <td>NAME ???</td>
         <td>REF ???</td>
-        <td colspan="7" class="text-danger">No bookings found</td>
+        <td colspan="${showCostProfit ? 9 : 7}" class="text-danger">
+          No bookings found
+        </td>
       `;
               invoiceTbody.appendChild(tr);
               return;
             }
 
-            // 2) NAME = firstName + lastName / pax
+            // NAME text
             let firstName = "";
             let lastName = "";
             let pax = "";
@@ -426,13 +461,13 @@
             }
             const nameText = `${firstName} ${lastName} / ${pax}`.trim();
 
-            // 3) REF => ถ้ายังไม่มีใน refMap => ตั้งเป็น "-"
+            // REF (อาจเก็บไว้ใน refMap หรือแก้ไขได้ตามที่เคยเขียนไว้)
             const refKey = combinedKey;
             if (typeof refMap[refKey] === "undefined") {
               refMap[refKey] = "-";
             }
 
-            // 4) HOTEL => เอาจาก booking ตัวแรก
+            // HOTEL => จาก booking แรก
             let hotelText = "-";
             const firstBk = bookingsArr[0];
             if (firstBk) {
@@ -443,38 +478,43 @@
               }
             }
 
-            // 5) Payment summary => totalSellingPrice
+            // รวมยอด Payment นี้
             const paymentTotal = payment.summary?.totalSellingPrice || 0;
             grandTotal += paymentTotal;
 
-            // 6) วนลูป bookings
+            // เรียง bookings ตามวันที่ จากน้อย -> มาก
+            bookingsArr.sort((a, b) => {
+              const dateA = a.tourDate || a.transferDate; // ถ้าเป็น tour ใช้ tourDate, ถ้า transfer ใช้ transferDate
+              const dateB = b.tourDate || b.transferDate;
+              if (!dateA) return 1; // ถ้าไม่มี dateA ให้ไปหลัง
+              if (!dateB) return -1; // ถ้าไม่มี dateB ให้ไปหน้า
+              return new Date(dateA) - new Date(dateB);
+            });
+
+            // วนลูป bookings
             const rowSpanCount = bookingsArr.length;
-
             bookingsArr.forEach((bk, index) => {
-              // PRICE => bk.sellingPrice
-              // FEE => 0 (หรือจะใส่ค่าจาก bk.fee ถ้ามี)
-              // UNIT => bk.quantity
-              // TOTAL => bk.sellingPrice (หรือ bk.total ถ้ามีเก็บไว้)
               const priceVal = bk.sellingPrice ?? 0;
-              const feeVal = 0;
+              const feeVal = 0; // หรือถ้ามีฟิลด์ fee ใน bk สามารถปรับใช้ได้
               const unitVal = bk.quantity ?? 0;
-              const rowTotal = bk.sellingPrice ?? 0;
+              const rowTotal = priceVal; // หรือ bk.total ถ้ามี
               const detailText = bk.detail || "-";
-              const type = bk.bookingType;
+              const typeText = bk.type || bk.bookingType || "-";
 
-              // Date => tourDate / transferDate
-              let bookingDate = "-";
-              if (bk.type === "tour") {
-                bookingDate = bk.tourDate || "-";
-              } else if (bk.type === "transfer") {
-                bookingDate = bk.transferDate || "-";
-              }
+              // Cost/Profit
+              const costVal = bk.cost ?? 0;
+              // ถ้าอยากใช้ profit จากไฟล์ Payment โดยตรงก็ได้
+              // แต่ตัวอย่างนี้คำนวณจาก sellingPrice - cost
+              const profitVal = (bk.sellingPrice ?? 0) - costVal;
 
-              // สร้าง <tr>
+              // วันที่
+              let bookingDate = bk.tourDate || bk.transferDate || "-";
+
+              // สร้างแถว
               const tr = document.createElement("tr");
 
               if (index === 0) {
-                // แถวแรก => merge 4 คอลัมน์: Item, NAME, REF, HOTEL
+                // แถวแรก -> รวม 4 คอลัมน์ (Item, NAME, REF, HOTEL)
                 tr.innerHTML = `
           <td rowspan="${rowSpanCount}">${itemCount}</td>
           <td rowspan="${rowSpanCount}" class="nameCell">${nameText}</td>
@@ -482,25 +522,50 @@
             ${refMap[refKey]}
           </td>
           <td rowspan="${rowSpanCount}" class="hotelCell">${hotelText}</td>
-
-          <!-- (5) Date in PHUKET -->
+          
+          <!-- Date in PHUKET -->
           <td>${formatDate(bookingDate)}</td>
+          
+          <!-- TOUR INCLUDE -->
+          <td class="text-start">${detailText} (${typeText})</td>
 
-          <!-- (6) TOUR INCLUDE -->
-          <td class="text-start">${detailText} ${type}</td>
-
-          <!-- (7) PRICE, (8) Fee, (9) Unit, (10) TOTAL -->
+          <!-- PRICE -->
           <td>${formatNumberWithCommas(priceVal)}</td>
+
+          ${
+            showCostProfit
+              ? `
+                 <!-- COST -->
+                 <td>${formatNumberWithCommas(costVal)}</td>
+                 <!-- PROFIT -->
+                 <td>${formatNumberWithCommas(profitVal)}</td>
+               `
+              : ""
+          }
+
+          <!-- Fee -->
           <td>${formatNumberWithCommas(feeVal)}</td>
+          <!-- Unit -->
           <td>${unitVal}</td>
+          <!-- TOTAL -->
           <td>${formatNumberWithCommas(rowTotal)}</td>
         `;
               } else {
-                // แถวอื่น ๆ => เว้น 4 ช่องแรก
+                // แถวถัด ๆ ไป
                 tr.innerHTML = `
           <td>${formatDate(bookingDate)}</td>
-          <td class="text-start">${detailText} ${type}</td>
+          <td class="text-start">${detailText} (${typeText})</td>
           <td>${formatNumberWithCommas(priceVal)}</td>
+
+          ${
+            showCostProfit
+              ? `
+                 <td>${formatNumberWithCommas(costVal)}</td>
+                 <td>${formatNumberWithCommas(profitVal)}</td>
+               `
+              : ""
+          }
+
           <td>${formatNumberWithCommas(feeVal)}</td>
           <td>${unitVal}</td>
           <td>${formatNumberWithCommas(rowTotal)}</td>
@@ -510,11 +575,15 @@
               invoiceTbody.appendChild(tr);
             });
 
-            // แสดง Payment Total (optional)
+            // แสดงยอด Total เฉพาะ payment นี้
             const totalRow = document.createElement("tr");
             totalRow.innerHTML = `
-      <td colspan="9" class="text-end fw-bold">Total</td>
-      <td class="fw-bold">${formatNumberWithCommas(paymentTotal)}</td>
+      <td colspan="${showCostProfit ? 10 : 8}" class="text-end fw-bold">
+        Total
+      </td>
+      <td class="fw-bold" colspan="2">
+        ${formatNumberWithCommas(paymentTotal)}
+      </td>
     `;
             invoiceTbody.appendChild(totalRow);
           });
@@ -522,13 +591,18 @@
           // สร้างแถว GRAND TOTAL
           const grandRow = document.createElement("tr");
           grandRow.innerHTML = `
-    <td colspan="9" class="text-end fw-bold text-success">GRAND TOTAL</td>
-    <td class="fw-bold text-success">${formatNumberWithCommas(grandTotal)}</td>
+    <td colspan="${showCostProfit ? 10 : 8}"
+        class="text-end fw-bold text-success">
+      GRAND TOTAL
+    </td>
+    <td class="fw-bold text-success" colspan="2">
+      ${formatNumberWithCommas(grandTotal)}
+    </td>
   `;
           invoiceTbody.appendChild(grandRow);
 
-          // เปิดฟีเจอร์แก้ไข REF ด้วย Double-click
-          enableRefEdit();
+          // เรียกใช้ enableRefEdit() ต่อ ถ้าคุณยังต้องการฟังก์ชันแก้ไข REF
+          enableRefEdit?.();
         }
 
         const viewSelectedInvoiceBtn = document.getElementById(
@@ -662,6 +736,15 @@
             }
           });
         }
+        document
+          .getElementById("showCostProfitCheckbox")
+          ?.addEventListener("change", () => {
+            // เรียก buildInvoiceTable ใหม่ โดยใช้ paymentKeys ที่เลือกไว้ล่าสุด
+            // (สมมติว่าเรามีตัวแปร selectedPaymentKeys เก็บไว้เป็น global)
+            if (selectedPaymentKeys && selectedPaymentKeys.length > 0) {
+              buildInvoiceTable(selectedPaymentKeys);
+            }
+          });
 
         // ---------------------------------------------------------
         // ฟังก์ชัน: ผูก double-click บน REF => เปลี่ยนเป็น input
@@ -701,10 +784,36 @@
 
       function formatDate(dateStr) {
         if (!dateStr || dateStr === "-") return "-";
+
+        // โค้ดเดิม (DD/MM/YYYY)
+        // const [year, month, day] = dateStr.split("-");
+        // if (!year || !month || !day) return dateStr;
+        // return `${day}/${month}/${year}`;
+
+        // โค้ดใหม่ (DD MMM YY)
+        const months = [
+          "JAN",
+          "FEB",
+          "MAR",
+          "APR",
+          "MAY",
+          "JUN",
+          "JUL",
+          "AUG",
+          "SEP",
+          "OCT",
+          "NOV",
+          "DEC",
+        ];
         const [year, month, day] = dateStr.split("-");
         if (!year || !month || !day) return dateStr;
-        return `${day}/${month}/${year}`;
+
+        const shortYear = year.slice(2); // เอาแค่สองตัวท้ายของปี
+        const shortMonth = months[parseInt(month, 10) - 1]; // หาชื่อเดือนแบบสั้น
+
+        return `${day} ${shortMonth} ${shortYear}`;
       }
+
       const exportCsvBtn = document.getElementById("exportCsvBtn");
       if (exportCsvBtn) {
         // เริ่มต้น disabled
