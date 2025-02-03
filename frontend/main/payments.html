@@ -128,7 +128,7 @@
                   <th style="width: 80px">S.Price</th>
 
                   <!-- Profit -->
-                  <th style="width: 80px">Profit</th>
+                  <th style="width: 80px">T.Price</th>
 
                   <!-- Status -->
                   <th style="width: 100px">Status</th>
@@ -402,32 +402,29 @@
         // ฟังก์ชันคำนวณสรุป
         function updateSummary() {
           let sumTotalCost = 0;
-          let sumSellingPrice = 0;
-          let sumProfit = 0;
+          let sumCost = 0;
+          let sumTPrice = 0;
 
           const rows = bookingDetailsTable.querySelectorAll("tr");
           rows.forEach((row) => {
             const totalCostCell = row.querySelector(".totalCostCell");
-            const profitCell = row.querySelector(".profitCell");
-            const sellingPriceInput = row.querySelector(".sellingPriceInput");
-
-            if (totalCostCell && profitCell && sellingPriceInput) {
+            const tPriceCell = row.querySelector(".tPriceCell");
+            console.log(tPriceCell.textContent);
+            if (totalCostCell && tPriceCell) {
               const costValRaw = totalCostCell.textContent.replace(/,/g, "");
-              const profitValRaw = profitCell.textContent.replace(/,/g, "");
-              const sellingPriceVal =
-                parseFloat(sellingPriceInput.value.replace(/,/g, "")) || 0;
+              const tPriceValRaw = tPriceCell.textContent.replace(/,/g, "");
 
               const costVal = parseFloat(costValRaw) || 0;
-              const profitVal = parseFloat(profitValRaw) || 0;
+              const tPriceVal = parseFloat(tPriceValRaw) || 0;
 
-              sumTotalCost += costVal;
-              sumSellingPrice += sellingPriceVal;
-              sumProfit += profitVal;
+              sumCost += costVal;
+              sumTPrice += tPriceVal;
             }
           });
-
+          const sumSellingPrice = sumTPrice;
+          const sumProfit = sumTPrice - sumCost;
           // ใส่สัญลักษณ์ ฿ และ format commas
-          totalCost.textContent = "฿" + formatNumberWithCommas(sumTotalCost);
+          totalCost.textContent = "฿" + formatNumberWithCommas(sumCost);
           totalSellingPrice.textContent =
             "฿" + formatNumberWithCommas(sumSellingPrice);
           totalProfit.textContent = "฿" + formatNumberWithCommas(sumProfit);
@@ -461,10 +458,8 @@
           let quantity = Math.floor(parseFloat(booking.quantity) || 0);
           let sellingPrice = Math.floor(parseFloat(booking.sellingPrice) || 0);
 
-          // คำนวณ Profit
-          const totalCostVal = cost * quantity;
-          const profitVal = sellingPrice - totalCostVal;
-
+          const totalCostVal = cost * quantity; // ต้นทุนรวมต่อแถว
+          const tPriceVal = sellingPrice * quantity; // ราคาขายรวมต่อแถว
           // ** เพิ่ม ** ค่า default ของ Status (ถ้าไม่มี ให้เป็น 'notPaid')
           //    หรือจะกำหนดในฐานข้อมูล booking เดิมก็ได้
           let statusVal = booking.status || "notPaid"; // "paid" / "notPaid"
@@ -536,7 +531,7 @@
       >${sellingPrice}</textarea>
     </td>
 
-    <td class="numcenter profitCell">${profitVal.toLocaleString()}</td>
+    <td class="numcenter tPriceCell">${tPriceVal.toLocaleString()}</td>
 
     <!-- (ใหม่) Status -->
     <td>
@@ -574,7 +569,8 @@
           const quantityInput = row.querySelector(".quantityInput");
           const sellingPriceInput = row.querySelector(".sellingPriceInput");
           const totalCostCell = row.querySelector(".totalCostCell");
-          const profitCell = row.querySelector(".profitCell");
+          const tPriceCell = row.querySelector(".tPriceCell");
+          // const profitCell = row.querySelector(".profitCell");
           const bookingTypeSelect = row.querySelector(".bookingType");
           const removeBtn = row.querySelector(".btnRemoveBooking");
 
@@ -596,8 +592,9 @@
             quantityInput.value = newQuantity;
             sellingPriceInput.value = newSellingPrice;
 
-            const newTotalCost = newCost * newQuantity;
-            const newProfit = newSellingPrice - newTotalCost;
+            const newTotalCost = newCost * newQuantity; // ต้นทุนรวมใหม่
+            const newTPrice = newSellingPrice * newQuantity; // ขายรวมใหม่
+            // const newProfit = newSellingPrice - newTotalCost;
 
             totalCostCell.textContent = newTotalCost.toLocaleString();
             profitCell.textContent = newProfit.toLocaleString();
@@ -1010,7 +1007,7 @@
             // (ใหม่) จับ DOM status + remark + profitCell
             const statusSelect = row.querySelector(".statusSelect");
             const remarkInput = row.querySelector(".remarkInput");
-            const profitCell = row.querySelector(".profitCell");
+            // const profitCell = row.querySelector(".profitCell");
             // (ใหม่) ต้องจับ DOM .totalCostCell ด้วย
             const totalCostCell = row.querySelector(".totalCostCell");
 
@@ -1052,10 +1049,14 @@
               : costVal * quantityVal;
 
             // (ใหม่) อ่าน profit, status, remark
-            const profitVal =
-              parseInt(profitCell.textContent.replace(/,/g, ""), 10) || 0;
+            // const profitVal =
+            //   parseInt(profitCell.textContent.replace(/,/g, ""), 10) || 0;
             const statusVal = statusSelect.value;
             const remarkVal = remarkInput.value.trim();
+            const tPriceCell = row.querySelector(".tPriceCell");
+            const tPriceVal = tPriceCell
+              ? parseInt(tPriceCell.textContent.replace(/,/g, ""), 10)
+              : 0;
 
             // 6) สร้าง bookingObj
             let bookingObj = {
@@ -1072,7 +1073,8 @@
               totalCostin: totalCostVal,
 
               // (ใหม่) เก็บ profit, status, remark ด้วย
-              profit: profitVal,
+              tPrice: tPriceVal,
+              // profit: profitVal,
               status: statusVal,
               remark: remarkVal,
             };

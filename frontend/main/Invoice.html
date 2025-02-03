@@ -603,12 +603,13 @@
             let orderProfitSum = 0;
 
             bookingsArr.forEach((bk, index) => {
-              const priceVal = bk.sellingPrice ?? 0;
-              const costVal = bk.totalCostin ?? 0; // มีในโครงสร้าง
-              const profitVal = bk.profit ?? priceVal - costVal;
-              const feeVal = bk.fee ?? 0; // ถ้ายังไม่มีในโครงสร้าง ต้องไปเพิ่มเอง
               const unitVal = bk.quantity ?? 0;
-              const rowTotal = priceVal;
+              const priceVal = bk.sellingPrice;
+              const costVal = bk.totalCostin ?? 0; // มีในโครงสร้าง
+              const rowTotal = priceVal * unitVal;
+              const profitVal = rowTotal - costVal;
+              const feeVal = bk.fee ?? 0; // ถ้ายังไม่มีในโครงสร้าง ต้องไปเพิ่มเอง
+
               const detailText = bk.detail || "-";
               const typeText = bk.type || bk.bookingType || "-";
               const bookingDate = bk.tourDate || bk.transferDate || "-";
