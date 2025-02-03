@@ -1011,14 +1011,25 @@
             const remarkInput = row.querySelector(".remarkInput");
             const profitCell = row.querySelector(".profitCell");
 
-            // 3) ดึง ID, SendTo จาก td
             const cells = row.querySelectorAll("td");
-            const idText = cells[0].textContent.trim();
-            const sendToText = cells[1].textContent.trim();
+            // 3) ดึง ID, SendTo จาก td
+            // สมมติว่า cells[0] ยังเป็นคอลัมน์แรก (รวม 3 บรรทัด)
+            const bookingInfoCell = cells[0];
 
-            // 4) วันที่ (index = 2) => parseDDMMYYYY
-            const dateCell = cells[2];
-            const ddmmStr = dateCell ? dateCell.textContent.trim() : "";
+            const idText =
+              bookingInfoCell
+                .querySelector("div:nth-child(1)")
+                ?.textContent.trim() || "";
+            const sendToText =
+              bookingInfoCell
+                .querySelector("div:nth-child(2)")
+                ?.textContent.trim() || "";
+            const ddmmStr =
+              bookingInfoCell
+                .querySelector("div:nth-child(3)")
+                ?.textContent.trim() || "";
+
+            // จากนั้น parse ddmmStr => isoDate
             const isoDate = parseDDMMYYYY(ddmmStr);
 
             // 5) แปลงค่าจาก input
