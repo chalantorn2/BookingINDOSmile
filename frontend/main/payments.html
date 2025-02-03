@@ -42,14 +42,37 @@
         <h2 class="mb-3">Orders</h2>
         <div class="row justify-content-center">
           <!-- ที่ส่วนการเลือก Order -->
-          <div class="col-md-6 d-flex align-items-center">
+          <div class="col-md-6 d-flex align-items-center flex-wrap">
+            <!-- Select เดิม -->
             <select class="form-select w-100" id="orderDropdown">
               <option value="">Loading...</option>
             </select>
-            <!-- ปุ่มไปหน้า Invoice -->
-            <button class="btn btn-secondary ms-2" id="goToInvoiceBtn">
-              <i class="bi bi-file-earmark-text"></i> ไปหน้า Invoice
-            </button>
+
+            <!-- (ใหม่) ส่วนกรองวันที่ -->
+            <div class="input-group mt-3">
+              <input
+                type="date"
+                class="form-control"
+                id="startDateFilter"
+                aria-label="Start Date"
+              />
+              <input
+                type="date"
+                class="form-control"
+                id="endDateFilter"
+                aria-label="End Date"
+              />
+              <button
+                class="btn btn-primary"
+                type="button"
+                id="applyDateFilterBtn"
+              >
+                Filter
+              </button>
+              <button class="btn btn-secondary ms-2" id="goToInvoiceBtn">
+                <i class="bi bi-file-earmark-text"></i> ไปหน้า Invoice
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -72,30 +95,51 @@
         <!-- 2) ตารางแสดง Booking ที่ถูก Add -->
         <div class="mt-5 d-none" id="selectedBookingsContainer">
           <!-- <h3 class="text-center mb-3">Selected Bookings</h3> -->
+          <!-- ส่วน Container/Table เดิม -->
           <div class="table-responsive">
             <table
-              class="table table-striped table-hover text-center align-middle"
+              class="table table-sm table-striped align-middle"
+              style="min-width: 1300px"
             >
               <thead class="table-warning">
                 <tr>
-                  <th>ID</th>
-                  <th>Send To</th>
-                  <th>Date</th>
-                  <!-- เพิ่ม -->
-                  <th>Hotel</th>
-                  <!-- เพิ่ม -->
-                  <th>Details</th>
-                  <!-- เดิมเป็นข้อความ เปลี่ยนเป็น input -->
-                  <th>Type</th>
-                  <th>Cost</th>
-                  <th>Pax</th>
-                  <th>Total Cost</th>
-                  <th>Selling Price</th>
-                  <th>Profit</th>
-                  <th>Remove</th>
+                  <!-- ตัวอย่างรวม ID + SendTo + Date ในคอลัมน์เดียว -->
+                  <th style="width: 200px">Booking Info</th>
+
+                  <!-- Hotel -->
+                  <th style="width: 160px">Hotel</th>
+
+                  <!-- Details -->
+                  <th style="width: 200px">Details</th>
+
+                  <!-- Type -->
+                  <th style="width: 80px">Type</th>
+
+                  <!-- Cost -->
+                  <th style="width: 80px">Cost</th>
+
+                  <!-- Pax -->
+                  <th style="width: 60px">Pax</th>
+
+                  <!-- TotalCost -->
+                  <th style="width: 80px">T.Cost</th>
+
+                  <!-- Selling Price -->
+                  <th style="width: 80px">S.Price</th>
+
+                  <!-- Profit -->
+                  <th style="width: 80px">Profit</th>
+
+                  <!-- Status -->
+                  <th style="width: 100px">Status</th>
+
+                  <!-- Remark -->
+                  <th style="width: 180px">Remark</th>
+
+                  <!-- Remove -->
+                  <th style="width: 80px">Remove</th>
                 </tr>
               </thead>
-
               <tbody id="bookingDetailsTable">
                 <tr>
                   <td colspan="10" class="text-center">
@@ -237,7 +281,7 @@
           : {};
 
         orderDropdown.innerHTML = "<option value=''>Select an Order</option>";
-
+        let allOrdersList = [];
         Object.keys(orders).forEach((firebaseId) => {
           const order = orders[firebaseId];
           const orderId = order.id || firebaseId;
@@ -246,11 +290,9 @@
           let customerFirstName = "-";
           let customerLastName = "-";
 
+          // (โค้ดเดิม) หา booking ตัวแรกเพื่อดึง firstName/lastName
           if (allBookings.length > 0) {
-            // ดึง ID ของ booking ตัวแรกในรายการ
             const firstBookingID = allBookings[0];
-
-            // ตรวจสอบว่า Booking นี้อยู่ใน tourBookings หรือ transferBookings
             if (allTours[firstBookingID]) {
               customerFirstName = allTours[firstBookingID].tourFirstName || "-";
               customerLastName = allTours[firstBookingID].tourLastName || "-";
@@ -262,11 +304,28 @@
             }
           }
 
-          const option = document.createElement("option");
-          option.value = firebaseId;
-          option.textContent = `${customerFirstName} ${customerLastName}`;
-          orderDropdown.appendChild(option);
+          // (ใหม่) สร้าง array รวม "วันที่" ของทุก booking เพื่อตรวจสอบภายหลัง
+          let bookingDates = [];
+          allBookings.forEach((bkId) => {
+            if (allTours[bkId] && allTours[bkId].tourDate) {
+              bookingDates.push(allTours[bkId].tourDate); // "YYYY-MM-DD"
+            } else if (allTransfers[bkId] && allTransfers[bkId].transferDate) {
+              bookingDates.push(allTransfers[bkId].transferDate); // "YYYY-MM-DD"
+            }
+          });
+
+          // (ใหม่) push เข้า allOrdersList เพื่อไว้ใช้ filter
+          allOrdersList.push({
+            key: firebaseId, // key ใน firebase
+            orderId: orderId, // เช่น "INDO/REET-250121-001"
+            firstName: customerFirstName,
+            lastName: customerLastName,
+            bookingDates: bookingDates, // Array ของ string "YYYY-MM-DD"
+          });
         });
+
+        // สร้างอาร์เรย์ (หรือตัวแปร) เพื่อเก็บ Order ที่ดึงมาทั้งหมด ก่อนกรอง
+
         // เมื่อมีการเปลี่ยน Order
         orderDropdown.addEventListener("change", async () => {
           const selectedOrderKey = orderDropdown.value;
@@ -287,6 +346,58 @@
             summaryContainer.classList.add("d-none");
           }
         });
+        function populateOrderDropdown(filteredOrders) {
+          const orderDropdown = document.getElementById("orderDropdown");
+          orderDropdown.innerHTML = "";
+
+          if (!filteredOrders || filteredOrders.length === 0) {
+            orderDropdown.innerHTML =
+              '<option value="">No matching orders found</option>';
+            return;
+          }
+
+          // option แรกให้ผู้ใช้เลือก
+          const defaultOption = document.createElement("option");
+          defaultOption.value = "";
+          defaultOption.textContent = "Select an Order";
+          orderDropdown.appendChild(defaultOption);
+
+          // เติมรายการที่เหลือ
+          filteredOrders.forEach((ord) => {
+            const option = document.createElement("option");
+            option.value = ord.key; // firebaseId เดิม
+            option.textContent = `${ord.firstName} ${ord.lastName}`;
+            orderDropdown.appendChild(option);
+          });
+        }
+        populateOrderDropdown(allOrdersList);
+        function filterOrdersByDate() {
+          const startDateVal = document.getElementById("startDateFilter").value;
+          const endDateVal = document.getElementById("endDateFilter").value;
+
+          if (!startDateVal && !endDateVal) {
+            populateOrderDropdown(allOrdersList);
+            return;
+          }
+
+          const startTs = startDateVal ? new Date(startDateVal).getTime() : 0;
+          const endTs = endDateVal
+            ? new Date(endDateVal).getTime()
+            : Number.MAX_SAFE_INTEGER;
+
+          // กรอง
+          const filtered = allOrdersList.filter((ord) => {
+            // ถ้าใน ord มี bookingDates ใดๆ ที่อยู่ในช่วง => ผ่าน
+            return ord.bookingDates.every((dateStr) => {
+              const dTs = new Date(dateStr).getTime();
+              return dTs >= startTs && dTs <= endTs;
+            });
+          });
+
+          populateOrderDropdown(filtered);
+        }
+        const btnFilter = document.getElementById("applyDateFilterBtn");
+        btnFilter.addEventListener("click", filterOrdersByDate);
 
         // ฟังก์ชันคำนวณสรุป
         function updateSummary() {
@@ -334,106 +445,131 @@
         // ฟังก์ชันสร้าง <tr> ในตาราง
         function createBookingRow(booking, countSpan) {
           const isTour = booking.type === "tour";
-
-          // 1) เอา Date จาก booking (tourDate / transferDate)
           const dateRaw = isTour ? booking.tourDate : booking.transferDate;
-          // format => dd/mm/yyyy (read-only)
           const displayDate = formatToDDMMYYYY(dateRaw || "");
-
-          // 2) Hotel => เป็น input
           const hotelVal = isTour
             ? booking.tourHotel || ""
             : booking.transferHotel || "";
-
-          // 3) Details => เป็น <textarea> (หรือ input)
           const detailVal = isTour
             ? booking.tourDetail || ""
             : booking.transferDetail || "";
-
-          // ฟิลด์อื่น ๆ
           const id = isTour ? booking.tourID : booking.transferID;
           const sendTo = isTour ? booking.tourSendTo : booking.transferSendTo;
-          const bookingType = booking.bookingType || "";
+          // ... โค้ดส่วนกำหนด dateRaw, hotelVal, detailVal, id, sendTo เหมือนเดิม ...
+          const bgClass = booking.type === "tour" ? "bg-success" : "bg-primary";
           let cost = Math.floor(parseFloat(booking.cost) || 0);
           let quantity = Math.floor(parseFloat(booking.quantity) || 0);
           let sellingPrice = Math.floor(parseFloat(booking.sellingPrice) || 0);
 
+          // คำนวณ Profit
           const totalCostVal = cost * quantity;
           const profitVal = sellingPrice - totalCostVal;
 
-          // สร้าง <tr> (ปรับ thead ให้มี 12 column ตามลำดับ: ID, SendTo, Date, Hotel, Details, Type, Cost, Pax, TotalCost, SellingPrice, Profit, Remove)
+          // ** เพิ่ม ** ค่า default ของ Status (ถ้าไม่มี ให้เป็น 'notPaid')
+          //    หรือจะกำหนดในฐานข้อมูล booking เดิมก็ได้
+          let statusVal = booking.status || "notPaid"; // "paid" / "notPaid"
+
+          // ** เพิ่ม ** ค่า default ของ Remark
+          let remarkVal = booking.remark || "";
+
+          // แก้ไข row.innerHTML (ส่วน <tr>) ให้มีคอลัมน์ Status และ Remark เพิ่ม
+          // สมมติว่าตอนนี้ตารางมีคอลัมน์ (ID, SendTo, Date, Hotel, Detail, Type, Cost, Pax, TotalCost, SellingPrice, Profit, Status, Remark, Remove)
           const row = document.createElement("tr");
           row.dataset.type = booking.type;
-          row.dataset.chosenCount = 1; // เพื่อจัดการ chosenCount
+          row.dataset.chosenCount = 1;
 
           row.innerHTML = `
-    <td>${id || "-"}</td>
-    <td>${sendTo || "-"}</td>
-    
-    <!-- Date => read only (DD/MM/YYYY) -->
-    <td class="dateCell">${displayDate}</td>
-    
-    <!-- Hotel => <input> -->
+    <!-- Booking Info (รวม ID + SendTo + Date) -->
+<td>
+  <div class="fw-bold rounded-2 text-white text-center ${bgClass}">${
+            id || "-"
+          }</div>
+  <div class="fw-bold  small text-muted">${sendTo || "-"}</div>
+  <div class="text-secondary">${displayDate || "-"}</div>
+</td>
+
+
+    <!-- Hotel => <textarea> -->
     <td>
       <textarea
-        type="text"
         class="hotelInput form-control"
         style="min-width: 150px; white-space: pre-wrap;"
-        > ${hotelVal}
-      </textarea>
+      >${hotelVal}</textarea>
     </td>
-    
+
     <!-- Details => <textarea> -->
     <td>
       <textarea
-        class="detailInput form-control"
-        rows="2"
-        style="min-width: 150px; white-space: pre-wrap;"
-      >${detailVal}</textarea>
+  class="detailInput form-control form-control-sm"
+  rows="2"
+  style="min-width: 150px; white-space: pre-wrap;"
+>
+  ${detailVal}
+</textarea>
     </td>
-    
+
     <td>
       <select class="bookingType form-select">
         <option value="" ${
-          bookingType === "" ? "selected" : ""
+          booking.bookingType === "" ? "selected" : ""
         }>--Select--</option>
         <option value="ADL" ${
-          bookingType === "ADL" ? "selected" : ""
+          booking.bookingType === "ADL" ? "selected" : ""
         }>ADL</option>
         <option value="CHD" ${
-          bookingType === "CHD" ? "selected" : ""
+          booking.bookingType === "CHD" ? "selected" : ""
         }>CHD</option>
       </select>
     </td>
-    
-   <td>
-  <textarea
-    class="numcenter costInput form-control"
-  >${cost}</textarea>
-</td>
+
+    <td>
+      <textarea class="numcenter costInput form-control">${cost}</textarea>
+    </td>
+    <td>
+      <textarea class="numcenter quantityInput form-control">${quantity}</textarea>
+    </td>
+
+    <td class="numcenter totalCostCell">${totalCostVal.toLocaleString()}</td>
+
+    <td>
+      <textarea class="numcenter sellingPriceInput form-control"
+      >${sellingPrice}</textarea>
+    </td>
+
+    <td class="numcenter profitCell">${profitVal.toLocaleString()}</td>
+
+    <!-- (ใหม่) Status -->
+    <td>
+      <select class="statusSelect form-select">
+        <option value="notPaid" ${
+          statusVal === "notPaid" ? "selected" : ""
+        }>ยังไม่จ่าย</option>
+        <option value="paid" ${
+          statusVal === "paid" ? "selected" : ""
+        }>จ่ายแล้ว</option>
+      </select>
+    </td>
+
+    <!-- (ใหม่) Remark -->
+    <!-- (ใหม่) Remark textarea -->
 <td>
   <textarea
-    class="numcenter quantityInput form-control"
-  >${quantity}</textarea>
-</td>
-<td class="numcenter totalCostCell">${totalCostVal.toLocaleString()}</td>
-
-<td>
-  <textarea
-    class="numcenter sellingPriceInput form-control"
-  >${sellingPrice}</textarea>
-</td>
-<td class="numcenter profitCell">${profitVal.toLocaleString()}</td>
-
-<td>
-  <button class="btn btn-danger btnRemoveBooking">
-    <i class="bi bi-trash"></i>
-  </button>
+    class="remarkInput form-control"
+    rows="2"
+    style="min-width: 150px; white-space: pre-wrap;"
+    placeholder="Remark..."
+  >${remarkVal}</textarea>
 </td>
 
+
+    <td>
+      <button class="btn btn-danger btnRemoveBooking">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
   `;
 
-          // ผูก event update cost/quantity/sellingPrice
+          // ... โค้ดจับ DOM input เหมือนเดิม ...
           const costInput = row.querySelector(".costInput");
           const quantityInput = row.querySelector(".quantityInput");
           const sellingPriceInput = row.querySelector(".sellingPriceInput");
@@ -442,10 +578,17 @@
           const bookingTypeSelect = row.querySelector(".bookingType");
           const removeBtn = row.querySelector(".btnRemoveBooking");
 
+          // (ใหม่) จับ DOM ของ Status, Remark
+          const statusSelect = row.querySelector(".statusSelect");
+          const remarkInput = row.querySelector(".remarkInput");
+
+          // ฟังก์ชันอัปเดตค่า cost/quantity/sellingPrice/profit
           function updateRow() {
-            let newCost = Math.floor(parseFloat(costInput.value) || 0);
-            let newQuantity = Math.floor(parseFloat(quantityInput.value) || 0);
-            let newSellingPrice = Math.floor(
+            const newCost = Math.floor(parseFloat(costInput.value) || 0);
+            const newQuantity = Math.floor(
+              parseFloat(quantityInput.value) || 0
+            );
+            const newSellingPrice = Math.floor(
               parseFloat(sellingPriceInput.value) || 0
             );
 
@@ -459,13 +602,35 @@
             totalCostCell.textContent = newTotalCost.toLocaleString();
             profitCell.textContent = newProfit.toLocaleString();
 
-            updateSummary();
+            // ถ้าอยากเปลี่ยนสี StatusSelect ตามค่า:
+            //    paid => text-success
+            //    notPaid => text-danger
+            updateStatusColor();
+
+            updateSummary(); // คำนวณรวม
           }
+
+          // ฟังก์ชันเปลี่ยนสี Status ตาม value
+          function updateStatusColor() {
+            if (statusSelect.value === "paid") {
+              statusSelect.classList.remove("text-danger");
+              statusSelect.classList.add("text-success");
+            } else {
+              statusSelect.classList.remove("text-success");
+              statusSelect.classList.add("text-danger");
+            }
+          }
+
+          // เรียกใช้ครั้งแรก
+          updateStatusColor();
 
           costInput.addEventListener("input", updateRow);
           quantityInput.addEventListener("input", updateRow);
           sellingPriceInput.addEventListener("input", updateRow);
           bookingTypeSelect.addEventListener("change", updateSummary);
+
+          // (ใหม่) เมื่อสถานะเปลี่ยนก็เปลี่ยนสี
+          statusSelect.addEventListener("change", updateStatusColor);
 
           removeBtn.addEventListener("click", () => {
             row.remove();
@@ -476,16 +641,7 @@
               booking._chosenCount--;
               updateChosenCountUI(booking, countSpan);
             }
-            // ถ้าไม่มีแถว => placeholder
-            const rowsLeft = bookingDetailsTable.querySelectorAll("tr");
-            if (rowsLeft.length === 0) {
-              bookingDetailsTable.innerHTML = `
-        <tr>
-          <td colspan="12" class="text-center">ยังไม่มีการเลือก Booking</td>
-        </tr>
-      `;
-              summaryContainer.classList.add("d-none");
-            }
+            // ... โค้ดเดิมลบ booking row ...
             updateSummary();
           });
 
@@ -720,17 +876,23 @@
                   transferDate: item.transferDate || "",
                   tourHotel: item.tourHotel || "",
                   transferHotel: item.transferHotel || "",
-
                   tourSendTo: item.sendTo,
                   transferSendTo: item.sendTo,
                   tourDetail: item.detail,
                   transferDetail: item.detail,
+                  // ฯลฯ ที่มีอยู่เดิม
                   cost: item.cost,
                   quantity: item.quantity,
                   sellingPrice: item.sellingPrice,
                   bookingType: item.bookingType || "",
                   _chosenCount: item.chosenCount || 0,
                 };
+
+                // !! ตรงนี้ต้องเพิ่ม !!
+                // อ่าน Status, Remark, Profit
+                dummyBooking.status = item.status || "notPaid";
+                dummyBooking.remark = item.remark || "";
+                dummyBooking.profit = item.profit || 0;
 
                 // key = type|id
                 const key = `${item.type || ""}|${item.id || ""}`;
@@ -830,13 +992,13 @@
 
           rows.forEach((row) => {
             const removeBtn = row.querySelector(".btnRemoveBooking");
-            if (!removeBtn) return; // ข้าม placeholder
+            if (!removeBtn) return;
 
-            // 1) ดึงค่า type, chosenCount จาก row.dataset
+            // 1) ดึงค่า type, chosenCount
             const rowType = row.dataset.type || "";
             const rowChosenCount = parseInt(row.dataset.chosenCount, 10) || 1;
 
-            // 2) ดึง element inputs เช่น .hotelInput, .detailInput ฯลฯ
+            // 2) ดึง element inputs
             const hotelInput = row.querySelector(".hotelInput");
             const detailInput = row.querySelector(".detailInput");
             const bookingTypeSelect = row.querySelector(".bookingType");
@@ -844,16 +1006,20 @@
             const quantityInput = row.querySelector(".quantityInput");
             const sellingPriceInput = row.querySelector(".sellingPriceInput");
 
+            // (ใหม่) จับ DOM status + remark + profitCell
+            const statusSelect = row.querySelector(".statusSelect");
+            const remarkInput = row.querySelector(".remarkInput");
+            const profitCell = row.querySelector(".profitCell");
+
             // 3) ดึง ID, SendTo จาก td
             const cells = row.querySelectorAll("td");
             const idText = cells[0].textContent.trim();
             const sendToText = cells[1].textContent.trim();
 
-            // 4) อ่านค่า Date (read-only) จาก td (index 2) แล้ว parse
-            // สมมติ index 2 คือ dateCell => DD/MM/YYYY
+            // 4) วันที่ (index = 2) => parseDDMMYYYY
             const dateCell = cells[2];
             const ddmmStr = dateCell ? dateCell.textContent.trim() : "";
-            const isoDate = parseDDMMYYYY(ddmmStr); // "YYYY-MM-DD"
+            const isoDate = parseDDMMYYYY(ddmmStr);
 
             // 5) แปลงค่าจาก input
             const hotelVal = hotelInput ? hotelInput.value.trim() : "";
@@ -867,6 +1033,12 @@
               parseFloat(sellingPriceInput.value) || 0
             );
 
+            // (ใหม่) อ่าน profit, status, remark
+            const profitVal =
+              parseInt(profitCell.textContent.replace(/,/g, ""), 10) || 0;
+            const statusVal = statusSelect.value;
+            const remarkVal = remarkInput.value.trim();
+
             // 6) สร้าง bookingObj
             let bookingObj = {
               type: rowType,
@@ -878,15 +1050,20 @@
               sellingPrice: sellingPriceVal,
               chosenCount: rowChosenCount,
               detail: detailVal,
+
+              // (ใหม่) เก็บ profit, status, remark ด้วย
+              profit: profitVal,
+              status: statusVal,
+              remark: remarkVal,
             };
 
-            // 7) แยกเก็บ date/hotel ตามประเภท
+            // 7) แยกเก็บ date/hotel
             if (rowType === "tour") {
               bookingObj.tourDate = isoDate;
               bookingObj.tourHotel = hotelVal;
             } else if (rowType === "transfer") {
               bookingObj.transferDate = isoDate;
-              bookingObj.transferHotel = hotelVal; // ถ้าคุณไม่ต้องการ เก็บก็ลบออก
+              bookingObj.transferHotel = hotelVal;
             }
 
             bookingsArray.push(bookingObj);
