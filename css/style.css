@@ -25,6 +25,9 @@ h1 {
 .card {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
+.form-label {
+  font-weight: 600;
+}
 /* เพิ่มแอนิเมชัน */
 
 /* เมนู */

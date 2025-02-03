@@ -48,7 +48,9 @@
             value="tour"
             autocomplete="off"
           />
-          <label class="btn btn-outline-primary" for="formTour">Tour</label>
+          <label class="btn btn-outline-success" for="formTour" id="labelTour"
+            >Tour</label
+          >
 
           <input
             type="radio"
@@ -58,7 +60,10 @@
             value="transfer"
             autocomplete="off"
           />
-          <label class="btn btn-outline-primary" for="formTransfer"
+          <label
+            class="btn btn-outline-primary"
+            for="formTransfer"
+            id="labelTransfer"
             >Transfer</label
           >
         </div>
@@ -66,7 +71,7 @@
 
       <!-- ฟอร์ม Tour -->
       <div class="card shadow-sm d-none" id="tourCard">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header text-white" id="tourCardHeader">
           <h5 class="mb-0">Tour Booking Form</h5>
         </div>
         <div class="card-body">
@@ -247,7 +252,11 @@
               ></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg mt-3">
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg mt-3"
+              id="tourSubmitBtn"
+            >
               บันทึก
             </button>
           </form>
@@ -256,7 +265,7 @@
 
       <!-- ฟอร์ม Transfer -->
       <div class="card shadow-sm d-none mt-4" id="transferCard">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header text-white" id="transferCardHeader">
           <h5 class="mb-0">Transfer Booking Form</h5>
         </div>
         <div class="card-body">
@@ -421,7 +430,11 @@
               ></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg mt-3">
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg mt-3"
+              id="transferSubmitBtn"
+            >
               บันทึก
             </button>
           </form>
@@ -452,6 +465,15 @@
         const transferRadio = document.getElementById("formTransfer");
         const tourForm = document.getElementById("tourForm");
         const transferForm = document.getElementById("transferForm");
+        // ดึง label ของ Radio (ส่วนที่เราต้องการเปลี่ยนสี)
+        const labelTour = document.getElementById("labelTour");
+        const labelTransfer = document.getElementById("labelTransfer");
+        // ดึงส่วนที่เราจะเปลี่ยนสี
+        const tourCardHeader = document.getElementById("tourCardHeader");
+        const transferCardHeader =
+          document.getElementById("transferCardHeader");
+        const tourSubmitBtn = document.getElementById("tourSubmitBtn");
+        const transferSubmitBtn = document.getElementById("transferSubmitBtn");
         tourRadio.checked = true;
         // ตรวจสอบ Elements ว่าถูกต้อง
         if (!tourCard || !transferCard || !tourRadio || !transferRadio) {
@@ -461,20 +483,70 @@
           return;
         }
 
+        function setTourColors() {
+          // 1) card-header
+          tourCardHeader.className = "card-header bg-success text-white";
+          // 2) ปุ่มบันทึก
+          tourSubmitBtn.className = "btn btn-success btn-lg mt-3";
+          // 3) label, input, select หรือ element ภายใน form
+          const tourLabels = document.querySelectorAll("#tourForm label");
+          tourLabels.forEach((label) => {
+            label.classList.remove("text-primary"); // ลบเผื่อมี
+            // คุณอาจใส่ label.classList.add("text-success");
+            // หรือจะไม่ใส่เลยก็ได้ หากต้องการให้ตัวอักษรเป็นสีปกติ/ดำอยู่แล้ว
+            label.classList.add("text-success");
+          });
+
+          // ตัวอย่าง: ถ้าต้องการให้ <select> หรือ <input> มี border สีเขียว
+          // const tourInputs = document.querySelectorAll("#tourForm input, #tourForm textarea, #tourForm select");
+          // tourInputs.forEach((input) => {
+          //   input.classList.remove("border-primary");
+          //   input.classList.add("border", "border-success"); // ใส่ border-success หรือ form-control-success ตามต้องการ
+          // });
+        }
+        // ฟังก์ชันใส่สีให้ฟอร์ม Transfer
+        function setTransferColors() {
+          transferCardHeader.className = "card-header bg-primary text-white";
+          transferSubmitBtn.className = "btn btn-primary btn-lg mt-3";
+
+          const transferLabels = document.querySelectorAll(
+            "#transferForm label"
+          );
+          transferLabels.forEach((label) => {
+            label.classList.remove("text-success");
+            label.classList.add("text-primary");
+          });
+
+          // ตัวอย่าง: ถ้าต้องการให้ <select> หรือ <input> มี border สีฟ้า
+          // const transferInputs = document.querySelectorAll("#transferForm input, #transferForm textarea, #transferForm select");
+          // transferInputs.forEach((input) => {
+          //   input.classList.remove("border-success");
+          //   input.classList.add("border", "border-primary");
+          // });
+        }
         // ฟังก์ชันแสดงฟอร์ม
         function showForm(type) {
           console.log(`Switching to form: ${type}`);
           if (type === "tour") {
             tourCard.classList.remove("d-none"); // แสดง Tour Form
             transferCard.classList.add("d-none"); // ซ่อน Transfer Form
+            setTourColors();
           } else if (type === "transfer") {
+            labelTour.classList.remove("btn-outline-success");
+            labelTour.classList.add("btn-outline-success");
+
+            labelTransfer.classList.remove("btn-outline-primary");
+            labelTransfer.classList.add("btn-outline-primary");
             tourCard.classList.add("d-none"); // ซ่อน Tour Form
             transferCard.classList.remove("d-none"); // แสดง Transfer Form
+            setTransferColors();
           }
         }
 
         // แสดงฟอร์ม Tour เป็นค่าเริ่มต้น
-        showForm("tour");
+        if (tourRadio.checked) {
+          showForm("tour");
+        }
 
         // Event Listener สำหรับปุ่มเลือกประเภทฟอร์ม
         tourRadio.addEventListener("change", function () {
