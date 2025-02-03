@@ -882,6 +882,7 @@
                   transferDetail: item.detail,
                   // ฯลฯ ที่มีอยู่เดิม
                   cost: item.cost,
+                  totalCost: item.totalCost || 0, // (ใหม่)
                   quantity: item.quantity,
                   sellingPrice: item.sellingPrice,
                   bookingType: item.bookingType || "",
@@ -1010,6 +1011,8 @@
             const statusSelect = row.querySelector(".statusSelect");
             const remarkInput = row.querySelector(".remarkInput");
             const profitCell = row.querySelector(".profitCell");
+            // (ใหม่) ต้องจับ DOM .totalCostCell ด้วย
+            const totalCostCell = row.querySelector(".totalCostCell");
 
             const cells = row.querySelectorAll("td");
             // 3) ดึง ID, SendTo จาก td
@@ -1043,6 +1046,10 @@
             const sellingPriceVal = Math.floor(
               parseFloat(sellingPriceInput.value) || 0
             );
+            // (ใหม่) อ่าน totalCost จาก textContent หรือคำนวณ costVal * quantityVal
+            const totalCostVal = totalCostCell
+              ? parseInt(totalCostCell.textContent.replace(/,/g, ""), 10)
+              : costVal * quantityVal;
 
             // (ใหม่) อ่าน profit, status, remark
             const profitVal =
@@ -1061,6 +1068,8 @@
               sellingPrice: sellingPriceVal,
               chosenCount: rowChosenCount,
               detail: detailVal,
+              // (ใหม่) totalCost
+              totalCost: totalCostVal,
 
               // (ใหม่) เก็บ profit, status, remark ด้วย
               profit: profitVal,
