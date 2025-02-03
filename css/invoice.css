@@ -11,6 +11,10 @@ body {
   .no-print {
     display: none !important;
   }
+  .yes-print {
+    padding-top: -50px;
+    margin-top: -50px;
+  }
 }
 /* style สำหรับ Ref กลายเป็น input เมื่อ double-click */
 .ref-edit-input {
