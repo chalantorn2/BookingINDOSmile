@@ -4,27 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>View Orders</title>
-    <!-- Google Font -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Bootstrap CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    />
-    <!-- Bootstrap Icons -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
-    <!-- Custom CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="/css/order.css" />
   </head>
 
   <body>
-    <!-- ตัวอย่าง menu-component ถ้าของเดิมมี -->
     <menu-component></menu-component>
 
     <div class="container py-5">
@@ -33,13 +19,10 @@
         <p class="subtitle">ตรวจสอบ Orders และ Booking ที่เกี่ยวข้อง</p>
       </div>
 
-      <!-- Add และ Dashboard Buttons (หากต้องการ) -->
       <div class="d-flex justify-content-center align-items-center mb-4">
         <a href="addOrder.html" class="btn btn-primary me-2">Add Order</a>
-        <!-- <excel-export></excel-export> -->
       </div>
 
-      <!-- Filter Year/Month -->
       <div class="d-flex justify-content-center align-items-center mb-4">
         <select id="yearSelector" class="form-select w-25 me-2">
           <option value="">Select Year</option>
@@ -61,13 +44,8 @@
         </select>
       </div>
 
-      <!-- Orders List -->
       <div class="mt-4">
-        <!-- <h2 class="text-center">Orders</h2> -->
-        <p
-          id="totalOrders"
-          class="text-center bg-primary text-white p-3 rounded shadow-lg fw-bold fs-4"
-        >
+        <p id="totalOrders" class="text-center bg-primary text-white p-3 rounded shadow-lg fw-bold fs-4">
           ออเดอร์ทั้งหมด : 0
         </p>
 
@@ -77,7 +55,6 @@
       </div>
     </div>
 
-    <!-- Modal สำหรับ Add Booking เข้า Order -->
     <div
       class="modal fade"
       id="addBookingModal"
@@ -88,15 +65,8 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="addBookingModalLabel">
-              Add Booking to Order
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+            <h5 class="modal-title" id="addBookingModalLabel">Add Booking to Order</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <table class="table table-hover">
@@ -117,36 +87,21 @@
             </table>
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-primary"
-              id="addBookingConfirmBtn"
-              disabled
-            >
+            <button type="button" class="btn btn-primary" id="addBookingConfirmBtn" disabled>
               Add Selected Booking(s)
             </button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Close
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
     </div>
-    <!-- จบ Modal -->
 
-    <!-- ไฟล์ component menu (ถ้ามี) -->
     <script type="module" src="/component/menu.js"></script>
 
-    <!-- Bootstrap JS (สำหรับ modal) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- สคริปต์หลัก -->
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js'
       import {
         getDatabase,
         ref,
@@ -158,253 +113,225 @@
         set,
         remove,
         push,
-      } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
-      import { database } from "/js/firebase-config.js";
+      } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
+      import { database } from '/js/firebase-config.js'
 
-      // ----- Global Variables -----
-      let allProcessedOrders = []; // เก็บ Orders ทั้งหมด (หลัง process แล้ว)
-      let selectedOrderIdForAdd = null; // เก็บ orderId ที่กำลังจะ Add booking เข้า
-      let availableBookingsData = []; // เก็บ booking ที่ยังไม่ผูกกับ order
+      let allProcessedOrders = []
+      let selectedOrderIdForAdd = null
+      let availableBookingsData = []
 
-      // ----- DOM Elements -----
-      const ordersList = document.getElementById("ordersList");
-      const yearSelector = document.getElementById("yearSelector");
-      const monthSelector = document.getElementById("monthSelector");
+      const ordersList = document.getElementById('ordersList')
+      const yearSelector = document.getElementById('yearSelector')
+      const monthSelector = document.getElementById('monthSelector')
 
-      // Modal Add Booking
-      const addBookingModal = new bootstrap.Modal(
-        document.getElementById("addBookingModal")
-      );
-      const availableBookingsTableBody = document.getElementById(
-        "availableBookingsTable"
-      );
-      const addBookingConfirmBtn = document.getElementById(
-        "addBookingConfirmBtn"
-      );
+      const addBookingModal = new bootstrap.Modal(document.getElementById('addBookingModal'))
+      const availableBookingsTableBody = document.getElementById('availableBookingsTable')
+      const addBookingConfirmBtn = document.getElementById('addBookingConfirmBtn')
 
-      document.addEventListener("DOMContentLoaded", async () => {
-        // ตั้งค่า loading เริ่มต้น
-        ordersList.innerHTML =
-          '<li class="list-group-item text-center">Loading...</li>';
+      document.addEventListener('DOMContentLoaded', async () => {
+        ordersList.innerHTML = '<li class="list-group-item text-center">Loading...</li>'
 
-        // สร้างตัวเลือกปี
-        const currentYear = new Date().getFullYear();
-        populateYearOptions(yearSelector, currentYear - 2, currentYear + 3);
+        const currentDate = new Date()
+        const currentYear = currentDate.getFullYear()
+        const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0')
+
+        populateYearOptions(yearSelector, currentYear - 2, currentYear + 3)
+
+        yearSelector.value = currentYear
+        monthSelector.value = currentMonth
+
+        yearSelector.addEventListener('change', fetchOrdersByFilter)
+        monthSelector.addEventListener('change', fetchOrdersByFilter)
 
         try {
-          // ดึงข้อมูล orders ทั้งหมด
-          const ordersRef = ref(database, "orders");
-          const ordersSnapshot = await get(ordersRef);
+          availableBookingsData = await loadAvailableBookings()
+        } catch (err) {
+          console.error('Error fetching available bookings:', err)
+        }
+
+        fetchOrdersByFilter()
+      })
+
+      async function fetchOrdersByFilter() {
+        const selectedYear = yearSelector.value
+        const selectedMonth = monthSelector.value
+
+        if (!selectedYear || !selectedMonth) {
+          ordersList.innerHTML = '<li class="list-group-item text-center">กรุณาเลือกปีและเดือนก่อน</li>'
+          return
+        }
+
+        try {
+          ordersList.innerHTML = '<li class="list-group-item text-center">Loading...</li>'
+
+          const ordersRef = ref(database, 'orders')
+          const ordersSnapshot = await get(ordersRef)
 
           if (!ordersSnapshot.exists()) {
-            ordersList.innerHTML =
-              '<li class="list-group-item text-center">No orders found</li>';
-            return;
+            ordersList.innerHTML = '<li class="list-group-item text-center">ไม่พบออเดอร์ในช่วงเวลาที่เลือก</li>'
+            return
           }
-          const orders = ordersSnapshot.val();
 
-          // ประมวลผล Orders -> ดึง bookingDetails แต่ละอัน
-          allProcessedOrders = await processOrders(orders);
+          const orders = ordersSnapshot.val()
 
-          // แสดงผล Orders ทั้งหมด
-          renderOrders(allProcessedOrders);
+          allProcessedOrders = await processOrders(orders)
 
-          // ผูก Event Listener ให้กับ year/month selector
-          yearSelector.addEventListener("change", filterOrders);
-          monthSelector.addEventListener("change", filterOrders);
+          const filteredOrders = allProcessedOrders.filter(({ earliestDate }) => {
+            if (!earliestDate) return false
+            const year = String(earliestDate.getFullYear())
+            const month = String(earliestDate.getMonth() + 1).padStart(2, '0')
+            return selectedYear === year && selectedMonth === month
+          })
 
-          // โหลด availableBookings ไว้ก่อน (ที่ยังไม่มี orderId)
-          availableBookingsData = await loadAvailableBookings();
+          renderOrders(filteredOrders)
         } catch (err) {
-          console.error("Error fetching orders:", err);
+          console.error('Error fetching orders:', err)
           ordersList.innerHTML =
-            '<li class="list-group-item text-center text-danger">Failed to load orders</li>';
-        }
-      });
-
-      // ----- ฟังก์ชันโหลด Booking ที่ยังไม่ถูกผูกกับ Order -----
-      async function loadAvailableBookings() {
-        console.log("Loading available bookings...");
-
-        // ดึงข้อมูลจาก Firebase โดยอิงตาม orderId ที่ควรเป็น null หรือว่าง
-        const toursQuery = query(
-          ref(database, "tourBookings"),
-          orderByChild("orderId")
-        );
-
-        const transfersQuery = query(
-          ref(database, "transferBookings"),
-          orderByChild("orderId")
-        );
-
-        try {
-          // ดึงข้อมูลจาก tourBookings และ transferBookings พร้อมกัน
-          const [toursSnapshot, transfersSnapshot] = await Promise.all([
-            get(toursQuery),
-            get(transfersQuery),
-          ]);
-
-          console.log(
-            "Tour Bookings:",
-            toursSnapshot.exists() ? toursSnapshot.val() : "No data"
-          );
-          console.log(
-            "Transfer Bookings:",
-            transfersSnapshot.exists() ? transfersSnapshot.val() : "No data"
-          );
-
-          const results = [];
-
-          // ประมวลผลข้อมูล Tour Bookings
-          if (toursSnapshot.exists()) {
-            toursSnapshot.forEach((snap) => {
-              const data = snap.val();
-              if (
-                !data.orderId ||
-                data.orderId === "" ||
-                data.orderId === null
-              ) {
-                results.push({
-                  dbKey: snap.key,
-                  agent: data.tourAgent || "-",
-                  name: `${data.tourFirstName || ""} ${
-                    data.tourLastName || ""
-                  }`.trim(),
-                  type: "Tour",
-                  date: data.tourDate || "-",
-                  time: data.tourPickUpTime || "00:00",
-                  sendTo: data.tourSendTo || "-",
-                  hotel: data.tourHotel || "-",
-                });
-              }
-            });
-          }
-
-          // ประมวลผลข้อมูล Transfer Bookings
-          if (transfersSnapshot.exists()) {
-            transfersSnapshot.forEach((snap) => {
-              const data = snap.val();
-              if (
-                !data.orderId ||
-                data.orderId === "" ||
-                data.orderId === null
-              ) {
-                results.push({
-                  dbKey: snap.key,
-                  agent: data.transferAgent || "-",
-                  name: `${data.transferFirstName || ""} ${
-                    data.transferLastName || ""
-                  }`.trim(),
-                  type: "Transfer",
-                  date: data.transferDate || "-",
-                  time: data.transferPickUpTime || "00:00",
-                  sendTo: data.transferSendTo || "-",
-                });
-              }
-            });
-          }
-
-          console.log("Filtered Available Bookings Data:", results);
-
-          // ส่งผลลัพธ์ที่ได้กลับไปใช้ต่อในแอป
-          return results;
-        } catch (err) {
-          console.error("Error fetching available bookings:", err);
-          return [];
+            '<li class="list-group-item text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</li>'
         }
       }
 
-      // ----- ฟังก์ชันประมวลผล Order -----
+      async function loadAvailableBookings() {
+        console.log('Loading available bookings...')
+
+        const toursQuery = query(ref(database, 'tourBookings'), orderByChild('orderId'))
+
+        const transfersQuery = query(ref(database, 'transferBookings'), orderByChild('orderId'))
+
+        try {
+          const [toursSnapshot, transfersSnapshot] = await Promise.all([get(toursQuery), get(transfersQuery)])
+
+          console.log('Tour Bookings:', toursSnapshot.exists() ? toursSnapshot.val() : 'No data')
+          console.log('Transfer Bookings:', transfersSnapshot.exists() ? transfersSnapshot.val() : 'No data')
+
+          const results = []
+
+          if (toursSnapshot.exists()) {
+            toursSnapshot.forEach(snap => {
+              const data = snap.val()
+              if (!data.orderId || data.orderId === '' || data.orderId === null) {
+                results.push({
+                  dbKey: snap.key,
+                  agent: data.tourAgent || '-',
+                  name: `${data.tourFirstName || ''} ${data.tourLastName || ''}`.trim(),
+                  type: 'Tour',
+                  date: data.tourDate || '-',
+                  time: data.tourPickUpTime || '00:00',
+                  sendTo: data.tourSendTo || '-',
+                  hotel: data.tourHotel || '-',
+                })
+              }
+            })
+          }
+
+          if (transfersSnapshot.exists()) {
+            transfersSnapshot.forEach(snap => {
+              const data = snap.val()
+              if (!data.orderId || data.orderId === '' || data.orderId === null) {
+                results.push({
+                  dbKey: snap.key,
+                  agent: data.transferAgent || '-',
+                  name: `${data.transferFirstName || ''} ${data.transferLastName || ''}`.trim(),
+                  type: 'Transfer',
+                  date: data.transferDate || '-',
+                  time: data.transferPickUpTime || '00:00',
+                  sendTo: data.transferSendTo || '-',
+                })
+              }
+            })
+          }
+
+          console.log('Filtered Available Bookings Data:', results)
+
+          return results
+        } catch (err) {
+          console.error('Error fetching available bookings:', err)
+          return []
+        }
+      }
+
       async function processOrders(orders) {
-        const processedOrders = [];
+        const processedOrders = []
 
         for (const orderId of Object.keys(orders)) {
-          const order = orders[orderId];
-          const bookings = order.bookings || [];
-          let bookingDetails = [];
-          let customerName = "Unknown Name";
+          const order = orders[orderId]
+          const bookings = order.bookings || []
+          let bookingDetails = []
+          let customerName = 'Unknown Name'
 
-          const bookingPromises = bookings.map(async (bkId) => {
-            const tourRef = ref(database, `tourBookings/${bkId}`);
-            const transferRef = ref(database, `transferBookings/${bkId}`);
+          const bookingPromises = bookings.map(async bkId => {
+            const tourRef = ref(database, `tourBookings/${bkId}`)
+            const transferRef = ref(database, `transferBookings/${bkId}`)
 
-            const tourSnap = await get(tourRef);
+            const tourSnap = await get(tourRef)
             if (tourSnap.exists()) {
-              const bData = tourSnap.val();
-              customerName = `${bData.tourFirstName || ""} ${
-                bData.tourLastName || ""
-              }`.trim();
+              const bData = tourSnap.val()
+              customerName = `${bData.tourFirstName || ''} ${bData.tourLastName || ''}`.trim()
               bookingDetails.push({
                 dbKey: bkId,
-                date: bData.tourDate || "Unknown Date",
-                time: bData.tourPickUpTime || "00:00",
-                type: "Tour",
-                sendTo: bData.tourSendTo || "-",
+                date: bData.tourDate || 'Unknown Date',
+                time: bData.tourPickUpTime || '00:00',
+                type: 'Tour',
+                sendTo: bData.tourSendTo || '-',
                 id: bData.tourID || bkId,
-                firstName: bData.tourFirstName || "-",
-                lastName: bData.tourLastName || "-",
-                detail: bData.tourDetail || "-",
-                pax: bData.tourPax || "-",
-                fee: bData.tourFee || "-",
-                meal: bData.tourMeal || "-",
-                hotel: bData.tourHotel || "-",
-                roomNo: bData.tourRoomNo || "-",
-                contactNo: bData.tourContactNo || "-",
-                note: bData.tourNote || "-",
-                agent: bData.tourAgent || "-",
-                status: bData.status || "-",
-              });
-              // console.log("Tour Data:", tourSnap.val());
+                firstName: bData.tourFirstName || '-',
+                lastName: bData.tourLastName || '-',
+                detail: bData.tourDetail || '-',
+                pax: bData.tourPax || '-',
+                fee: bData.tourFee || '-',
+                meal: bData.tourMeal || '-',
+                hotel: bData.tourHotel || '-',
+                roomNo: bData.tourRoomNo || '-',
+                contactNo: bData.tourContactNo || '-',
+                note: bData.tourNote || '-',
+                agent: bData.tourAgent || '-',
+                status: bData.status || '-',
+              })
             } else {
-              const transferSnap = await get(transferRef);
+              const transferSnap = await get(transferRef)
               if (transferSnap.exists()) {
-                const bData = transferSnap.val();
-                customerName = `${bData.transferFirstName || ""} ${
-                  bData.transferLastName || ""
-                }`.trim();
+                const bData = transferSnap.val()
+                customerName = `${bData.transferFirstName || ''} ${bData.transferLastName || ''}`.trim()
                 bookingDetails.push({
                   dbKey: bkId,
-                  date: bData.transferDate || "Unknown Date",
-                  time: bData.transferPickUpTime || "00:00",
-                  type: "Transfer",
-                  sendTo: bData.transferSendTo || "-",
+                  date: bData.transferDate || 'Unknown Date',
+                  time: bData.transferPickUpTime || '00:00',
+                  type: 'Transfer',
+                  sendTo: bData.transferSendTo || '-',
                   id: bData.transferID || bkId,
-                  firstName: bData.transferFirstName || "-",
-                  lastName: bData.transferLastName || "-",
-                  detail: bData.transferDetail || "-",
-                  pax: bData.transferPax || "-",
-                  flight: bData.transferFlight || "-",
-                  pickupFrom: bData.transferPickupFrom || "-",
-                  dropTo: bData.transferDropTo || "-",
-                  note: bData.transferNote || "-",
-                  agent: bData.transferAgent || "-",
-                  status: bData.status || "-",
-                });
-                // console.log("Transfer Data:", transferSnap.val());
+                  firstName: bData.transferFirstName || '-',
+                  lastName: bData.transferLastName || '-',
+                  detail: bData.transferDetail || '-',
+                  pax: bData.transferPax || '-',
+                  flight: bData.transferFlight || '-',
+                  pickupFrom: bData.transferPickupFrom || '-',
+                  dropTo: bData.transferDropTo || '-',
+                  note: bData.transferNote || '-',
+                  agent: bData.transferAgent || '-',
+                  status: bData.status || '-',
+                })
               }
             }
-          });
+          })
 
-          await Promise.all(bookingPromises);
+          await Promise.all(bookingPromises)
 
-          // จัดเรียง bookingDetails
           bookingDetails.sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            if (dateA - dateB !== 0) return dateA - dateB;
-            return a.time.localeCompare(b.time);
-          });
+            const dateA = new Date(a.date)
+            const dateB = new Date(b.date)
+            if (dateA - dateB !== 0) return dateA - dateB
+            return a.time.localeCompare(b.time)
+          })
 
-          // หา earliestDate และ latestDate
           const earliestDate = bookingDetails.reduce((earliest, bk) => {
-            const cDate = new Date(bk.date);
-            return !earliest || cDate < earliest ? cDate : earliest;
-          }, null);
+            const cDate = new Date(bk.date)
+            return !earliest || cDate < earliest ? cDate : earliest
+          }, null)
 
           const latestDate = bookingDetails.reduce((latest, bk) => {
-            const cDate = new Date(bk.date);
-            return !latest || cDate > latest ? cDate : latest;
-          }, null);
+            const cDate = new Date(bk.date)
+            return !latest || cDate > latest ? cDate : latest
+          }, null)
 
           processedOrders.push({
             orderId,
@@ -413,50 +340,37 @@
             earliestDate,
             latestDate,
             bookingDetails,
-          });
+          })
         }
 
-        return processedOrders;
+        return processedOrders
       }
 
-      // ----- ฟังก์ชัน render Orders -----
       function renderOrders(orderData) {
-        const totalOrdersElement = document.getElementById("totalOrders");
+        const totalOrdersElement = document.getElementById('totalOrders')
 
-        ordersList.innerHTML = "";
+        ordersList.innerHTML = ''
 
         if (orderData.length === 0) {
-          ordersList.innerHTML =
-            '<li class="list-group-item text-center">No orders found</li>';
-          totalOrdersElement.textContent = "ออเดอร์ทั้งหมด : 0";
-          return;
+          ordersList.innerHTML = '<li class="list-group-item text-center">No orders found</li>'
+          totalOrdersElement.textContent = 'ออเดอร์ทั้งหมด : 0'
+          return
         }
 
-        // อัปเดตจำนวน Order ทั้งหมด
-        totalOrdersElement.textContent = `ออเดอร์ทั้งหมด : ${orderData.length}`;
+        totalOrdersElement.textContent = `ออเดอร์ทั้งหมด : ${orderData.length}`
 
-        orderData.forEach(
-          ({
-            orderId,
-            order,
-            customerName,
-            earliestDate,
-            latestDate,
-            bookingDetails,
-          }) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
+        orderData.forEach(({ orderId, order, customerName, earliestDate, latestDate, bookingDetails }) => {
+          const li = document.createElement('li')
+          li.className = 'list-group-item'
 
-            li.innerHTML = `
+          li.innerHTML = `
   <div class="card mb-1">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center">
         <div>
           <h6 class="mb-1">
-            <strong>${order.id || "No ID"}</strong>
-            <span > / ${
-              bookingDetails.length
-            } </span> <i class="bi bi-calendar2-check"></i>
+            <strong>${order.id || 'No ID'}</strong>
+            <span > / ${bookingDetails.length} </span> <i class="bi bi-calendar2-check"></i>
           </h6>
           <p class="mb-0 text-muted">
             <span class="badge" style="background-color: #094cb0; color: white;">${customerName}</span> | 
@@ -489,115 +403,95 @@
     </div>
     <ul class="list-group mt-3 d-none" id="details-${orderId}"></ul>
   </div>
-`;
+`
 
-            // Event ลบ Order
-            const deleteOrderBtn = li.querySelector(".delete-order");
-            deleteOrderBtn.addEventListener("click", async () => {
-              if (
-                confirm(
-                  `Are you sure you want to delete Order ID: ${order.id}?`
-                )
-              ) {
-                try {
-                  // ดึงข้อมูล order จาก Firebase
-                  const orderRef = ref(database, `orders/${orderId}`);
-                  const orderSnap = await get(orderRef);
+          const deleteOrderBtn = li.querySelector('.delete-order')
+          deleteOrderBtn.addEventListener('click', async () => {
+            if (confirm(`Are you sure you want to delete Order ID: ${order.id}?`)) {
+              try {
+                const orderRef = ref(database, `orders/${orderId}`)
+                const orderSnap = await get(orderRef)
 
-                  if (orderSnap.exists()) {
-                    const orderData = orderSnap.val();
-                    const bookingIds = orderData.bookings || [];
+                if (orderSnap.exists()) {
+                  const orderData = orderSnap.val()
+                  const bookingIds = orderData.bookings || []
 
-                    // ลบ order จาก bookings แต่ละรายการ
-                    const updates = {};
-                    bookingIds.forEach((bkId) => {
-                      updates[`tourBookings/${bkId}/orderId`] = null;
-                      updates[`transferBookings/${bkId}/orderId`] = null;
-                    });
+                  const updates = {}
+                  bookingIds.forEach(bkId => {
+                    updates[`tourBookings/${bkId}/orderId`] = null
+                    updates[`transferBookings/${bkId}/orderId`] = null
+                  })
 
-                    // ลบ order จากฐานข้อมูล
-                    updates[`orders/${orderId}`] = null;
+                  updates[`orders/${orderId}`] = null
 
-                    // อัปเดตข้อมูลใน Firebase
-                    await update(ref(database), updates);
+                  await update(ref(database), updates)
 
-                    alert(`Order ID: ${order.id} deleted successfully!`);
-                    li.remove(); // ลบออกจาก UI
-                  } else {
-                    alert("Order not found!");
-                  }
-                } catch (error) {
-                  console.error("Error deleting order:", error);
-                  alert("Failed to delete the order. Please try again.");
+                  alert(`Order ID: ${order.id} deleted successfully!`)
+                  li.remove()
+                } else {
+                  alert('Order not found!')
                 }
+              } catch (error) {
+                console.error('Error deleting order:', error)
+                alert('Failed to delete the order. Please try again.')
               }
-            });
+            }
+          })
 
-            ordersList.appendChild(li);
+          ordersList.appendChild(li)
 
-            // จัดการปุ่ม Add Booking
-            const addBtn = li.querySelector(".add-booking-to-order");
-            addBtn.addEventListener("click", () => {
-              selectedOrderIdForAdd = orderId;
-              renderAvailableBookingsTable();
-              addBookingModal.show();
-            });
+          const addBtn = li.querySelector('.add-booking-to-order')
+          addBtn.addEventListener('click', () => {
+            selectedOrderIdForAdd = orderId
+            renderAvailableBookingsTable()
+            addBookingModal.show()
+          })
 
-            // จัดการปุ่ม Toggle Details
-            const toggleButton = li.querySelector(".toggle-details");
-            const detailsList = li.querySelector(`#details-${orderId}`);
+          const toggleButton = li.querySelector('.toggle-details')
+          const detailsList = li.querySelector(`#details-${orderId}`)
 
-            toggleButton.addEventListener("click", () => {
-              if (detailsList.classList.contains("d-none")) {
-                if (detailsList.innerHTML === "") {
-                  if (bookingDetails.length === 0) {
-                    // แสดงข้อความ No bookings พร้อมปุ่ม Delete
-                    detailsList.innerHTML = `
+          toggleButton.addEventListener('click', () => {
+            if (detailsList.classList.contains('d-none')) {
+              if (detailsList.innerHTML === '') {
+                if (bookingDetails.length === 0) {
+                  detailsList.innerHTML = `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   <span>No bookings</span>
                   <button class="btn btn-danger btn-sm delete-order" data-order-id="${orderId}">
                     <i class="bi bi-trash"></i> Delete
                   </button>
                 </li>
-              `;
+              `
 
-                    // ผูก Event ให้ปุ่ม Delete
-                    const deleteButton =
-                      detailsList.querySelector(".delete-order");
-                    deleteButton.addEventListener("click", async () => {
-                      if (
-                        confirm(
-                          `Are you sure you want to delete order ${orderId}?`
-                        )
-                      ) {
-                        await deleteOrder(orderId);
-                        li.remove(); // ลบ Order ออกจาก DOM
-                      }
-                    });
-                  } else {
-                    // แสดง Booking Details
-                    bookingDetails.forEach((bk, idx) => {
-                      const item = document.createElement("li");
-                      item.className =
-                        "list-group-item d-flex justify-content-between align-items-center";
+                  const deleteButton = detailsList.querySelector('.delete-order')
+                  deleteButton.addEventListener('click', async () => {
+                    if (confirm(`Are you sure you want to delete order ${orderId}?`)) {
+                      await deleteOrder(orderId)
+                      li.remove()
+                    }
+                  })
+                } else {
+                  bookingDetails.forEach((bk, idx) => {
+                    const item = document.createElement('li')
+                    item.className = 'list-group-item d-flex justify-content-between align-items-center'
 
-                      item.innerHTML = `
+                    item.innerHTML = `
   <div class="d-flex justify-content-between align-items-start w-100">
     <div class="flex-grow-1">
       <small class="d-block d-inline-block text-wrap" style="max-width: 90%;">
       <strong>${idx + 1}. ${bk.type}</strong>
               <span class="text-muted">Date:</span> ${formatDate(bk.date)} |
-        <span class="text-muted">Time:</span> ${bk.time || "-"} |
-        <span class="text-muted">Send To:</span> ${bk.sendTo || "-"}
+        <span class="text-muted">Time:</span> ${bk.time || '-'} |
+        <span class="text-muted">Send To:</span> ${bk.sendTo || '-'}
         <span class="text-muted">Name:</span> ${bk.firstName} ${bk.lastName}
         <br> 
-        <span class="text-muted ">Detail:</span> ${bk.detail || "-"} 
+        <span class="text-muted ">Detail:</span> ${bk.detail || '-'} 
       </small>
     </div>
 
     <div class="d-flex align-items-center">
       <button id="badgeID" class="badge ${
-        bk.type === "Tour" ? "bg-success" : "bg-primary"
+        bk.type === 'Tour' ? 'bg-success' : 'bg-primary'
       } booking-badge me-2" data-id="${bk.id}" data-type="${bk.type}">
         ${bk.id}
       </button>
@@ -611,352 +505,280 @@
       </button>
     </div>
   </div>
-`;
+`
 
-                      detailsList.appendChild(item);
-                      // ผูก Event ปุ่ม Remove Booking
-                      item
-                        .querySelector(".remove-booking")
-                        .addEventListener("click", async (e) => {
-                          const bookingKey =
-                            e.target.closest("button").dataset.bookingKey;
-                          const oKey =
-                            e.target.closest("button").dataset.orderKey;
-                          const bType =
-                            e.target.closest("button").dataset.bookingType;
-                          await removeBookingFromOrder(bookingKey, bType, oKey);
-                        });
+                    detailsList.appendChild(item)
 
-                      detailsList.appendChild(item);
-                    });
-                  }
+                    item.querySelector('.remove-booking').addEventListener('click', async e => {
+                      const bookingKey = e.target.closest('button').dataset.bookingKey
+                      const oKey = e.target.closest('button').dataset.orderKey
+                      const bType = e.target.closest('button').dataset.bookingType
+                      await removeBookingFromOrder(bookingKey, bType, oKey)
+                    })
+
+                    detailsList.appendChild(item)
+                  })
                 }
-                detailsList.classList.remove("d-none");
-                toggleButton.innerHTML = '<i class="bi bi-caret-up"></i>';
-              } else {
-                detailsList.classList.add("d-none");
-                toggleButton.innerHTML = '<i class="bi bi-caret-down"></i>';
               }
-            });
-          }
-        );
+              detailsList.classList.remove('d-none')
+              toggleButton.innerHTML = '<i class="bi bi-caret-up"></i>'
+            } else {
+              detailsList.classList.add('d-none')
+              toggleButton.innerHTML = '<i class="bi bi-caret-down"></i>'
+            }
+          })
+        })
       }
-      // ฟังก์ชันลบ Order จาก Firebase
+
       async function deleteOrder(orderId) {
-        const orderRef = ref(database, `orders/${orderId}`);
+        const orderRef = ref(database, `orders/${orderId}`)
         try {
-          await set(orderRef, null);
-          console.log(`Order ${orderId} deleted successfully.`);
+          await set(orderRef, null)
+          console.log(`Order ${orderId} deleted successfully.`)
         } catch (error) {
-          console.error(`Failed to delete order ${orderId}:`, error);
+          console.error(`Failed to delete order ${orderId}:`, error)
         }
       }
 
-      // ----- ฟังก์ชัน Filter Orders ตามปี/เดือน -----
       function filterOrders() {
-        const selectedYear = yearSelector.value;
-        const selectedMonth = monthSelector.value;
+        const selectedYear = yearSelector.value
+        const selectedMonth = monthSelector.value
 
         const filtered = allProcessedOrders.filter(({ earliestDate }) => {
-          if (!earliestDate) return false;
-          const year = String(earliestDate.getFullYear());
-          const month = String(earliestDate.getMonth() + 1).padStart(2, "0");
+          if (!earliestDate) return false
+          const year = String(earliestDate.getFullYear())
+          const month = String(earliestDate.getMonth() + 1).padStart(2, '0')
 
-          return (
-            (!selectedYear || selectedYear === year) &&
-            (!selectedMonth || selectedMonth === month)
-          );
-        });
-        renderOrders(filtered);
+          return (!selectedYear || selectedYear === year) && (!selectedMonth || selectedMonth === month)
+        })
+        renderOrders(filtered)
       }
 
-      // ----- ฟังก์ชัน Remove Booking -----
       async function removeBookingFromOrder(bookingKey, bookingType, orderKey) {
         try {
-          // 1) ดึง order ปัจจุบันจาก Firebase
-          const orderRef = ref(database, `orders/${orderKey}`);
-          const orderSnap = await get(orderRef);
+          const orderRef = ref(database, `orders/${orderKey}`)
+          const orderSnap = await get(orderRef)
 
           if (!orderSnap.exists()) {
-            alert("Order does not exist or has been removed.");
-            return;
+            alert('Order does not exist or has been removed.')
+            return
           }
 
-          const orderData = orderSnap.val();
-          const bookingIds = orderData.bookings || [];
+          const orderData = orderSnap.val()
+          const bookingIds = orderData.bookings || []
 
-          // ตรวจสอบประเภท booking และดึง ID ตามที่ต้องการ
-          let bookingPath = "";
-          let bookingId = bookingKey; // ใช้ค่าเริ่มต้นเป็น bookingKey
-          if (bookingType === "Tour") {
-            bookingPath = `tourBookings/${bookingKey}`;
-          } else if (bookingType === "Transfer") {
-            bookingPath = `transferBookings/${bookingKey}`;
+          let bookingPath = ''
+          let bookingId = bookingKey
+          if (bookingType === 'Tour') {
+            bookingPath = `tourBookings/${bookingKey}`
+          } else if (bookingType === 'Transfer') {
+            bookingPath = `transferBookings/${bookingKey}`
           }
 
-          const bookingRef = ref(database, bookingPath);
-          const bookingSnap = await get(bookingRef);
+          const bookingRef = ref(database, bookingPath)
+          const bookingSnap = await get(bookingRef)
 
           if (bookingSnap.exists()) {
-            const bookingData = bookingSnap.val();
-            bookingId =
-              bookingData.tourID || bookingData.transferID || bookingKey;
+            const bookingData = bookingSnap.val()
+            bookingId = bookingData.tourID || bookingData.transferID || bookingKey
           }
 
-          // แสดง popup ยืนยันก่อนลบ
-          const confirmation = confirm(
-            `Are you sure you want to remove Booking ID: ${bookingId}?`
-          );
-          if (!confirmation) return;
+          const confirmation = confirm(`Are you sure you want to remove Booking ID: ${bookingId}?`)
+          if (!confirmation) return
 
-          // เอา bookingKey ออกจาก array ของ order
-          const newBookingsArray = bookingIds.filter((bk) => bk !== bookingKey);
+          const newBookingsArray = bookingIds.filter(bk => bk !== bookingKey)
 
-          // อัปเดต order ด้วยรายการ bookings ใหม่
-          await update(orderRef, { bookings: newBookingsArray });
+          await update(orderRef, { bookings: newBookingsArray })
 
-          // ล้างค่า orderId ใน booking ที่ลบออก
-          await update(bookingRef, { orderId: null });
+          await update(bookingRef, { orderId: null })
 
-          alert(`Booking ID: ${bookingId} removed from Order!`);
-          location.reload(); // reload หน้าเพื่ออัปเดตข้อมูล
+          alert(`Booking ID: ${bookingId} removed from Order!`)
+          location.reload()
         } catch (err) {
-          console.error("Error removing booking:", err);
-          alert("Failed to remove booking. See console.");
+          console.error('Error removing booking:', err)
+          alert('Failed to remove booking. See console.')
         }
       }
 
-      // ----- ฟังก์ชัน Render ตาราง Booking ที่ว่างใน Modal -----
       function renderAvailableBookingsTable() {
-        // ดึง availableBookingsData มาแสดง
         if (!availableBookingsData || availableBookingsData.length === 0) {
           availableBookingsTableBody.innerHTML = `
             <tr>
               <td colspan="5" class="text-center">No available bookings</td>
             </tr>
-          `;
-          return;
+          `
+          return
         }
 
-        availableBookingsTableBody.innerHTML = "";
-        availableBookingsData.forEach((bk) => {
-          const tr = document.createElement("tr");
+        availableBookingsTableBody.innerHTML = ''
+        availableBookingsData.forEach(bk => {
+          const tr = document.createElement('tr')
           tr.innerHTML = `
-            <td><input type="checkbox" class="chk-booking" data-dbkey="${
-              bk.dbKey
-            }" data-type="${bk.type}" /></td>
+            <td><input type="checkbox" class="chk-booking" data-dbkey="${bk.dbKey}" data-type="${bk.type}" /></td>
             <td>${bk.agent}</td>
             <td>${bk.type}</td>
             <td>${bk.name}</td>
             <td>${formatDate(bk.date)}</td>
-          `;
-          availableBookingsTableBody.appendChild(tr);
-        });
+          `
+          availableBookingsTableBody.appendChild(tr)
+        })
 
-        // ผูก event ให้ checkbox
-        document.querySelectorAll(".chk-booking").forEach((el) => {
-          el.addEventListener("change", () => {
-            // ถ้ามี checkbox ติ๊กอย่างน้อย 1 ตัว -> ปุ่ม AddBookingConfirm Active
-            const anyChecked =
-              document.querySelectorAll(".chk-booking:checked").length > 0;
-            addBookingConfirmBtn.disabled = !anyChecked;
-          });
-        });
+        document.querySelectorAll('.chk-booking').forEach(el => {
+          el.addEventListener('change', () => {
+            const anyChecked = document.querySelectorAll('.chk-booking:checked').length > 0
+            addBookingConfirmBtn.disabled = !anyChecked
+          })
+        })
       }
 
-      // ----- Event กดปุ่ม AddBookingConfirm ใน Modal -----
-      addBookingConfirmBtn.addEventListener("click", async () => {
-        const selectedCheckboxes = document.querySelectorAll(
-          ".chk-booking:checked"
-        );
-        if (selectedCheckboxes.length === 0) return;
+      addBookingConfirmBtn.addEventListener('click', async () => {
+        const selectedCheckboxes = document.querySelectorAll('.chk-booking:checked')
+        if (selectedCheckboxes.length === 0) return
 
         try {
-          // 1) ดึงข้อมูล order ปัจจุบัน
-          const orderRef = ref(database, `orders/${selectedOrderIdForAdd}`);
-          const orderSnap = await get(orderRef);
+          const orderRef = ref(database, `orders/${selectedOrderIdForAdd}`)
+          const orderSnap = await get(orderRef)
           if (!orderSnap.exists()) {
-            alert("Order does not exist or has been removed.");
-            return;
+            alert('Order does not exist or has been removed.')
+            return
           }
-          const orderData = orderSnap.val();
-          const currentBookings = orderData.bookings || [];
+          const orderData = orderSnap.val()
+          const currentBookings = orderData.bookings || []
 
-          // 2) อัปเดต orderId ใน booking ที่เลือก
-          const updates = {};
-          selectedCheckboxes.forEach((chk) => {
-            const bKey = chk.dataset.dbkey;
-            const bType = chk.dataset.type;
-            // เพิ่ม bookingKey เข้าในอาเรย์
+          const updates = {}
+          selectedCheckboxes.forEach(chk => {
+            const bKey = chk.dataset.dbkey
+            const bType = chk.dataset.type
+
             if (!currentBookings.includes(bKey)) {
-              currentBookings.push(bKey);
+              currentBookings.push(bKey)
             }
-            if (bType === "Tour") {
-              updates[`tourBookings/${bKey}/orderId`] = orderData.id; // id จาก field 'id' ใน order
-            } else if (bType === "Transfer") {
-              updates[`transferBookings/${bKey}/orderId`] = orderData.id;
+            if (bType === 'Tour') {
+              updates[`tourBookings/${bKey}/orderId`] = orderData.id
+            } else if (bType === 'Transfer') {
+              updates[`transferBookings/${bKey}/orderId`] = orderData.id
             }
-          });
+          })
 
-          // 3) อัปเดตอาเรย์ bookings ใน order
-          updates[`orders/${selectedOrderIdForAdd}/bookings`] = currentBookings;
+          updates[`orders/${selectedOrderIdForAdd}/bookings`] = currentBookings
 
-          // 4) update ทั้งหมดในครั้งเดียว
-          await update(ref(database), updates);
+          await update(ref(database), updates)
 
-          alert(
-            `Successfully added ${selectedCheckboxes.length} booking(s) to this order!`
-          );
-          addBookingModal.hide();
-          location.reload(); // reload เพื่ออัปเดต
+          alert(`Successfully added ${selectedCheckboxes.length} booking(s) to this order!`)
+          addBookingModal.hide()
+          location.reload()
         } catch (err) {
-          console.error("Error adding booking to order:", err);
-          alert("Failed to add booking(s). See console.");
+          console.error('Error adding booking to order:', err)
+          alert('Failed to add booking(s). See console.')
         }
-      });
+      })
 
-      // ----- ฟังก์ชันช่วยต่าง ๆ -----
       function populateYearOptions(selectEl, startYear, endYear) {
         for (let y = startYear; y <= endYear; y++) {
-          const opt = document.createElement("option");
-          opt.value = y;
-          opt.textContent = y;
-          selectEl.appendChild(opt);
+          const opt = document.createElement('option')
+          opt.value = y
+          opt.textContent = y
+          selectEl.appendChild(opt)
         }
       }
 
       function formatDate(dateInput) {
-        if (!dateInput) return "Unknown Date";
+        if (!dateInput) return 'Unknown Date'
 
-        // ถ้ามาเป็น string แล้ว cast ก็ได้
-        const d = new Date(dateInput);
+        const d = new Date(dateInput)
         if (isNaN(d.getTime())) {
-          // เผื่อมีกรณีมาเป็น YYYY-MM-DD ให้ลอง parse อีกแบบ
-          const parts = dateInput.split("-");
+          const parts = dateInput.split('-')
           if (parts.length === 3) {
-            const [year, month, day] = parts;
-            return `${day}/${month}/${year}`;
+            const [year, month, day] = parts
+            return `${day}/${month}/${year}`
           }
-          return dateInput;
+          return dateInput
         }
 
-        const day = String(d.getDate()).padStart(2, "0");
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const year = d.getFullYear();
-        return `${day}/${month}/${year}`;
+        const day = String(d.getDate()).padStart(2, '0')
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const year = d.getFullYear()
+        return `${day}/${month}/${year}`
       }
 
-      /* =========================================
-   1) โค้ดฟังก์ชัน showPopup(data, type)
-   ========================================= */
       function showPopup(data, type) {
-        // ---------------------------------------------------------------------
-        // 1) กำหนดฟิลด์ที่ต้องการแสดงใน Modal ตามประเภท (tour / transfer)
-        //    ให้ตรงกับโครงสร้าง bookingDetails.push(...) ที่คุณใช้อยู่
-        // ---------------------------------------------------------------------
-        // ตัวอย่างการจับคู่ฟิลด์ใน "Tour":
-        //   bookingDetails.push({
-        //     id, date, time, sendTo, hotel, roomNo, fee, meal, contactNo, note, status
-        //   })
-        //
-        // ส่วน "Transfer":
-        //   bookingDetails.push({
-        //     id, date, time, sendTo, carModel, licensePlate, driverName, phoneNumber, note, status
-        //   })
-        //
-        // แยกเป็น 2 คอลัมน์ต่อแถวเหมือนตัวอย่าง Layout ที่ให้มา
-        // (ปรับเพิ่ม/ลดตามต้องการ)
         const fieldOrder = {
           tour: [
-            "id",
-            "date",
-            "time",
-            "sendTo",
-            "firstName",
-            "lastName",
-            "detail",
-            "pax",
-            "hotel",
-            "roomNo",
-            "fee",
-            "meal",
-            "contactNo",
-            "note",
-            "agent",
-            // "status" will be displayed via Select dropdown
+            'id',
+            'date',
+            'time',
+            'sendTo',
+            'firstName',
+            'lastName',
+            'detail',
+            'pax',
+            'hotel',
+            'roomNo',
+            'fee',
+            'meal',
+            'contactNo',
+            'note',
+            'agent',
           ],
           transfer: [
-            "id",
-            "date",
-            "time",
-            "sendTo",
-            "firstName",
-            "lastName",
-            "detail",
-            "pax",
-            "flight",
-            "pickupFrom",
-            "dropTo",
-            "note",
-            "agent",
-            // "status" will be displayed via Select dropdown
+            'id',
+            'date',
+            'time',
+            'sendTo',
+            'firstName',
+            'lastName',
+            'detail',
+            'pax',
+            'flight',
+            'pickupFrom',
+            'dropTo',
+            'note',
+            'agent',
           ],
-        };
-
-        // ---------------------------------------------------------------------
-        // 2) Label Map กำหนดว่าจะให้แสดงชื่อฟิลด์ว่าอะไรใน Modal
-        // ---------------------------------------------------------------------
-        const labelMap = {
-          orderId: "Order ID",
-          id: "Booking ID",
-          firstName: "ชื่อ",
-          lastName: "นามสกุล",
-          sendTo: "ส่งให้",
-          agent: "Agent",
-          type: "ประเภท",
-          detail: "รายละเอียด",
-          pax: "จำนวน",
-          fee: "ค่าอุทยาน",
-          meal: "อาหาร",
-          date: "วันที่",
-          hotel: "โรงแรม",
-          roomNo: "หมายเลขห้อง",
-          contactNo: "เบอร์ติดต่อ",
-          time: "เวลา",
-          pickUpTime: "เวลารับ",
-          pickupFrom: "สถานที่รับ",
-          dropTo: "สถานที่ส่ง",
-          flight: "เที่ยวบิน",
-          note: "หมายเหตุ",
-          timestamp: "ตราประทับ",
-        };
-
-        // ---------------------------------------------------------------------
-        // 3) ฟังก์ชันตัวอย่างแปลงวันที่ (ถ้าคุณมีของเดิมอยู่แล้วใช้ได้เลย)
-        // ---------------------------------------------------------------------
-        function formatDate(value) {
-          if (!value) return "-";
-          // สมมติ value มาเป็น "YYYY-MM-DD"
-          const parts = value.split("-");
-          if (parts.length === 3) {
-            const [year, month, day] = parts;
-            return `${day}/${month}/${year}`;
-          }
-          return value; // fallback ถ้า parse ไม่ได้
         }
 
-        // ---------------------------------------------------------------------
-        // 4) สร้าง element Modal (Bootstrap)
-        // ---------------------------------------------------------------------
-        const popup = document.createElement("div");
-        popup.className = "modal fade";
-        popup.id = "detailPopup";
-        popup.tabIndex = "-1";
-        popup.setAttribute("role", "dialog");
+        const labelMap = {
+          orderId: 'Order ID',
+          id: 'Booking ID',
+          firstName: 'ชื่อ',
+          lastName: 'นามสกุล',
+          sendTo: 'ส่งให้',
+          agent: 'Agent',
+          type: 'ประเภท',
+          detail: 'รายละเอียด',
+          pax: 'จำนวน',
+          fee: 'ค่าอุทยาน',
+          meal: 'อาหาร',
+          date: 'วันที่',
+          hotel: 'โรงแรม',
+          roomNo: 'หมายเลขห้อง',
+          contactNo: 'เบอร์ติดต่อ',
+          time: 'เวลา',
+          pickUpTime: 'เวลารับ',
+          pickupFrom: 'สถานที่รับ',
+          dropTo: 'สถานที่ส่ง',
+          flight: 'เที่ยวบิน',
+          note: 'หมายเหตุ',
+          timestamp: 'ตราประทับ',
+        }
 
-        // ---------------------------------------------------------------------
-        // 5) สร้าง Select สถานะ (เพิ่มตัวเลือก "ยกเลิก" ไว้ด้วย)
-        // ---------------------------------------------------------------------
+        function formatDate(value) {
+          if (!value) return '-'
+
+          const parts = value.split('-')
+          if (parts.length === 3) {
+            const [year, month, day] = parts
+            return `${day}/${month}/${year}`
+          }
+          return value
+        }
+
+        const popup = document.createElement('div')
+        popup.className = 'modal fade'
+        popup.id = 'detailPopup'
+        popup.tabIndex = '-1'
+        popup.setAttribute('role', 'dialog')
+
         const statusOptions = `
     <div class="row g-3 mb-3">
       <div class="col-md-6">
@@ -970,71 +792,44 @@
         </select>
       </div>
     </div>
-  `;
+  `
 
-        // ---------------------------------------------------------------------
-        // 6) ฟิลด์เพิ่มเติมสำหรับ Transfer เช่น carModel, licensePlate ฯลฯ
-        //    (ตามตัวอย่าง Layout)
-        // ---------------------------------------------------------------------
-        // จะโชว์/ซ่อนเมื่อสถานะเป็น [จองแล้ว, ดำเนินการอยู่, เสร็จสมบูรณ์]
-        // *หมายเหตุ* ถ้าอยากให้โชว์ทุกสถานะก็ปรับ logic ได้
         const additionalTransferFields = `
     <div id="additionalTransferFields" class="row g-3 mb-3 ${
-      ["จองแล้ว", "ดำเนินการอยู่", "เสร็จสมบูรณ์"].includes(data.status)
-        ? ""
-        : "d-none"
+      ['จองแล้ว', 'ดำเนินการอยู่', 'เสร็จสมบูรณ์'].includes(data.status) ? '' : 'd-none'
     }">
       <div class="col-md-6">
         <label class="form-label font-weight-bold">Car Model</label>
-        <input type="text" class="form-control" value="${
-          data.carModel || "-"
-        }" disabled />
+        <input type="text" class="form-control" value="${data.carModel || '-'}" disabled />
       </div>
       <div class="col-md-6">
         <label class="form-label font-weight-bold">License Plate</label>
-        <input type="text" class="form-control" value="${
-          data.licensePlate || "-"
-        }" disabled />
+        <input type="text" class="form-control" value="${data.licensePlate || '-'}" disabled />
       </div>
       <div class="col-md-6">
         <label class="form-label font-weight-bold">Driver Name</label>
-        <input type="text" class="form-control" value="${
-          data.driverName || "-"
-        }" disabled />
+        <input type="text" class="form-control" value="${data.driverName || '-'}" disabled />
       </div>
       <div class="col-md-6">
         <label class="form-label font-weight-bold">Driver Phone</label>
-        <input type="text" class="form-control" value="${
-          data.phoneNumber || "-"
-        }" disabled />
+        <input type="text" class="form-control" value="${data.phoneNumber || '-'}" disabled />
       </div>
     </div>
-  `;
+  `
 
-        // ---------------------------------------------------------------------
-        // 7) ฟังก์ชันสร้าง "แถว" สำหรับ 2 ฟิลด์/แถว (คอลัมน์ซ้าย-ขวา)
-        // ---------------------------------------------------------------------
         const createFieldRow = (field1, field2) => {
-          // สร้าง HTML ของฟิลด์ย่อย
-          const createFieldHtml = (fieldName) => {
-            // ถ้าว่างหรือไม่มีฟิลด์ ให้ return "" (เผื่อบางแถวใช้ฟิลด์เดียว)
-            if (!fieldName) return "";
+          const createFieldHtml = fieldName => {
+            if (!fieldName) return ''
 
-            // ดึงค่าจาก data
-            let value = data[fieldName] || "-";
+            let value = data[fieldName] || '-'
 
-            // ถ้าเป็น date ให้ format
-            if (fieldName === "date") {
-              value = formatDate(value);
+            if (fieldName === 'date') {
+              value = formatDate(value)
             }
 
-            // สร้าง input (disabled) ในรูปแบบ text หรือ textarea (ถ้าคุณต้องการ)
-            // แต่กรณีนี้ input อย่างเดียวก็พอ
             return `
         <div class="col-md-6">
-          <label class="form-label font-weight-bold">${
-            labelMap[fieldName] || fieldName
-          }</label>
+          <label class="form-label font-weight-bold">${labelMap[fieldName] || fieldName}</label>
           <input
             type="text"
             class="form-control"
@@ -1043,44 +838,33 @@
             style="background-color: #f8f9fa;"
           />
         </div>
-      `;
-          };
-
-          const fieldHtml1 = createFieldHtml(field1);
-          const fieldHtml2 = createFieldHtml(field2);
-
-          return `<div class="row g-3 mb-3">${fieldHtml1}${fieldHtml2}</div>`;
-        };
-
-        // ---------------------------------------------------------------------
-        // 8) สร้างโค้ด HTML ฟิลด์ทั้งหมด โดยจับคู่ 2 ฟิลด์ต่อ 1 แถว
-        // ---------------------------------------------------------------------
-        const fields = fieldOrder[type] || [];
-        const generateFields = (() => {
-          const rows = [];
-          for (let i = 0; i < fields.length; i += 2) {
-            rows.push(createFieldRow(fields[i], fields[i + 1]));
+      `
           }
-          return rows.join("");
-        })();
 
-        // รวมฟิลด์หลัก + Select สถานะ + ฟิลด์รถ (เฉพาะ Transfer)
+          const fieldHtml1 = createFieldHtml(field1)
+          const fieldHtml2 = createFieldHtml(field2)
+
+          return `<div class="row g-3 mb-3">${fieldHtml1}${fieldHtml2}</div>`
+        }
+
+        const fields = fieldOrder[type] || []
+        const generateFields = (() => {
+          const rows = []
+          for (let i = 0; i < fields.length; i += 2) {
+            rows.push(createFieldRow(fields[i], fields[i + 1]))
+          }
+          return rows.join('')
+        })()
+
         const generateFieldsWithStatus =
-          generateFields +
-          statusOptions +
-          (type === "transfer" ? additionalTransferFields : "");
+          generateFields + statusOptions + (type === 'transfer' ? additionalTransferFields : '')
 
-        // ---------------------------------------------------------------------
-        // 9) สร้างเนื้อหา Modal (รักษา Layout เหมือนต้นฉบับ)
-        // ---------------------------------------------------------------------
         const content = `
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content border-0 shadow-lg rounded-3">
-        <div class="modal-header ${
-          type === "tour" ? "bg-success" : "bg-primary"
-        } text-white">
+        <div class="modal-header ${type === 'tour' ? 'bg-success' : 'bg-primary'} text-white">
           <h5 class="modal-title fw-bold">
-            ${type === "tour" ? "Tour Details" : "Transfer Details"}
+            ${type === 'tour' ? 'Tour Details' : 'Transfer Details'}
           </h5>
           <button type="button" class="btn-close btn-light" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -1092,89 +876,63 @@
           </div>
         </div>
         <div class="modal-footer d-flex justify-content-between">
-          <!-- ปุ่มลบข้อมูล (Disable เพื่อไม่ให้ทำงานจริง) -->
-          <button type="button" class="btn btn-outline-danger delete-btn" disabled>
+                    <button type="button" class="btn btn-outline-danger delete-btn" disabled>
             <i class="bi bi-trash me-1"></i>ลบข้อมูล
           </button>
           <div>
-            <!-- ปุ่มปิด -->
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               <i class="bi bi-x me-1"></i>ปิด
             </button>
-            <!-- ปุ่มบันทึกข้อมูล (Disable) -->
-            <button type="button" class="btn ${
-              type === "tour" ? "btn-success" : "btn-primary"
-            } save-btn" disabled>
+                        <button type="button" class="btn ${
+                          type === 'tour' ? 'btn-success' : 'btn-primary'
+                        } save-btn" disabled>
               <i class="bi bi-save me-1"></i>บันทึกข้อมูล
             </button>
           </div>
         </div>
       </div>
     </div>
-  `;
+  `
 
-        // ใส่เนื้อหา content ลงไปใน popup
-        popup.innerHTML = content;
-        document.body.appendChild(popup);
+        popup.innerHTML = content
+        document.body.appendChild(popup)
 
-        // สร้างตัว Modal ด้วย Bootstrap
-        const modal = new bootstrap.Modal(popup);
-        modal.show();
+        const modal = new bootstrap.Modal(popup)
+        modal.show()
 
-        // ---------------------------------------------------------------------
-        // 10) จัดการ Event เปลี่ยนสถานะ -> โชว์/ซ่อนฟิลด์รถ (เฉพาะ Transfer)
-        // ---------------------------------------------------------------------
-        const statusField = popup.querySelector("#field-status");
-        // กำหนด value ของสถานะเริ่มต้น
-        statusField.value = data.status || "รอดำเนินการ";
+        const statusField = popup.querySelector('#field-status')
 
-        statusField.addEventListener("change", () => {
-          if (type === "transfer") {
-            const additionalFields = popup.querySelector(
-              "#additionalTransferFields"
-            );
-            if (
-              ["จองแล้ว", "ดำเนินการอยู่", "เสร็จสมบูรณ์"].includes(
-                statusField.value
-              )
-            ) {
-              additionalFields.classList.remove("d-none");
+        statusField.value = data.status || 'รอดำเนินการ'
+
+        statusField.addEventListener('change', () => {
+          if (type === 'transfer') {
+            const additionalFields = popup.querySelector('#additionalTransferFields')
+            if (['จองแล้ว', 'ดำเนินการอยู่', 'เสร็จสมบูรณ์'].includes(statusField.value)) {
+              additionalFields.classList.remove('d-none')
             } else {
-              additionalFields.classList.add("d-none");
+              additionalFields.classList.add('d-none')
             }
           }
-        });
+        })
 
-        // ---------------------------------------------------------------------
-        // 11) เมื่อปิด Popup -> ลบ Element ทิ้ง (cleanup)
-        // ---------------------------------------------------------------------
-        popup.addEventListener("hidden.bs.modal", () => {
-          document.body.removeChild(popup);
-        });
+        popup.addEventListener('hidden.bs.modal', () => {
+          document.body.removeChild(popup)
+        })
       }
 
-      /* =========================================
-   2) โค้ด Event Listener คลิกที่ badge
-   ========================================= */
-      document.addEventListener("click", (event) => {
-        // เช็คว่าคลิกที่ element ที่มี id เป็น 'badgeID' หรือไม่
-        if (event.target.id === "badgeID") {
-          // เอาข้อความบน badge นั้นมาเป็น bookingId
-          const bookingId = event.target.textContent.trim();
+      document.addEventListener('click', event => {
+        if (event.target.id === 'badgeID') {
+          const bookingId = event.target.textContent.trim()
 
-          // หา booking ที่มี .id ตรงกับ badge นี้
-          const booking = allProcessedOrders
-            .flatMap((order) => order.bookingDetails)
-            .find((bk) => bk.id === bookingId);
+          const booking = allProcessedOrders.flatMap(order => order.bookingDetails).find(bk => bk.id === bookingId)
 
           if (booking) {
-            // ถ้าพบ booking => เรียก popup โดยส่ง booking object + ประเภท (tour/transfer)
-            showPopup(booking, booking.type.toLowerCase());
+            showPopup(booking, booking.type.toLowerCase())
           } else {
-            alert("ไม่พบข้อมูลการจอง");
+            alert('ไม่พบข้อมูลการจอง')
           }
         }
-      });
+      })
     </script>
     <script type="module" src="/component/excel_export.js"></script>
   </body>

@@ -4,22 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add Order</title>
-    <!-- Google Font -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Bootstrap CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    />
-    <!-- Bootstrap Icons -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
-    <!-- Custom CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="/css/style.css" />
   </head>
 
@@ -32,30 +19,20 @@
         <p class="subtitle">เลือก Booking ที่ต้องการรวมเป็น Order</p>
       </div>
 
-      <!-- Add and View Buttons -->
       <div class="d-flex justify-content-center mb-4">
         <a href="viewOrder.html" class="btn btn-primary">View Orders</a>
       </div>
 
-      <!-- Table for Selecting Bookings -->
       <div class="mt-4">
         <h2 class="text-center">Available Bookings</h2>
         <table class="table table-bordered mt-3">
           <thead class="table-light">
             <tr>
               <th>Select</th>
-              <th class="sortable" data-sort="agent">
-                Agent <i class="bi bi-arrow-down-up"></i>
-              </th>
-              <th class="sortable" data-sort="type">
-                Type <i class="bi bi-arrow-down-up"></i>
-              </th>
-              <th class="sortable" data-sort="name">
-                Name <i class="bi bi-arrow-down-up"></i>
-              </th>
-              <th class="sortable" data-sort="date">
-                Date <i class="bi bi-arrow-down-up"></i>
-              </th>
+              <th class="sortable" data-sort="agent">Agent <i class="bi bi-arrow-down-up"></i></th>
+              <th class="sortable" data-sort="type">Type <i class="bi bi-arrow-down-up"></i></th>
+              <th class="sortable" data-sort="name">Name <i class="bi bi-arrow-down-up"></i></th>
+              <th class="sortable" data-sort="date">Date <i class="bi bi-arrow-down-up"></i></th>
             </tr>
           </thead>
           <tbody id="availableBookingsTable">
@@ -65,16 +42,14 @@
           </tbody>
         </table>
         <div class="text-center mt-4">
-          <button id="createOrderBtn" class="btn btn-success" disabled>
-            Create Order
-          </button>
+          <button id="createOrderBtn" class="btn btn-success" disabled>Create Order</button>
         </div>
       </div>
     </div>
 
     <script type="module" src="/component/menu.js"></script>
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js'
       import {
         getDatabase,
         ref,
@@ -85,212 +60,190 @@
         update,
         push,
         set,
-      } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+        runTransaction,
+      } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
 
-      import { database } from "/js/firebase-config.js";
+      import { database } from '/js/firebase-config.js'
 
-      document.addEventListener("DOMContentLoaded", async () => {
-        const tableBody = document.getElementById("availableBookingsTable");
-        const createOrderBtn = document.getElementById("createOrderBtn");
-        let currentSortKey = null;
-        let currentSortDirection = "asc";
+      document.addEventListener('DOMContentLoaded', async () => {
+        const tableBody = document.getElementById('availableBookingsTable')
+        const createOrderBtn = document.getElementById('createOrderBtn')
+        let currentSortKey = null
+        let currentSortDirection = 'asc'
 
-        // ข้อความเริ่มต้นแสดงในตารางขณะโหลดข้อมูล
-        tableBody.innerHTML =
-          "<tr><td colspan='5' class='text-center'>Loading...</td></tr>";
+        tableBody.innerHTML = "<tr><td colspan='5' class='text-center'>Loading...</td></tr>"
 
-        // ฟังก์ชันแปลงวันที่จาก YYYY-MM-DD เป็น DD/MM/YYYY
         function formatDate(date) {
-          if (!date) return "-";
-          const [year, month, day] = date.split("-");
-          return `${day}/${month}/${year}`;
+          if (!date) return '-'
+          const [year, month, day] = date.split('-')
+          return `${day}/${month}/${year}`
         }
 
-        // ฟังก์ชันจัดเรียงข้อมูลตามคีย์
         function sortTable(data, key) {
-          const direction = currentSortDirection === "asc" ? 1 : -1;
+          const direction = currentSortDirection === 'asc' ? 1 : -1
           return data.sort((a, b) => {
-            if (key === "date") {
-              const dateA = new Date(a[key].split("/").reverse().join("/"));
-              const dateB = new Date(b[key].split("/").reverse().join("/"));
-              return (dateA - dateB) * direction;
+            if (key === 'date') {
+              const dateA = new Date(a[key].split('/').reverse().join('/'))
+              const dateB = new Date(b[key].split('/').reverse().join('/'))
+              return (dateA - dateB) * direction
             }
-            return a[key].localeCompare(b[key]) * direction;
-          });
+            return a[key].localeCompare(b[key]) * direction
+          })
         }
 
-        // อัปเดตไอคอนการจัดเรียงบนหัวตาราง
         function updateSortIcons() {
-          document.querySelectorAll(".sortable i").forEach((icon) => {
-            icon.className = "bi bi-arrow-down-up";
-          });
-          const activeHeader = document.querySelector(
-            `.sortable[data-sort="${currentSortKey}"] i`
-          );
+          document.querySelectorAll('.sortable i').forEach(icon => {
+            icon.className = 'bi bi-arrow-down-up'
+          })
+          const activeHeader = document.querySelector(`.sortable[data-sort="${currentSortKey}"] i`)
           if (activeHeader) {
-            activeHeader.className =
-              currentSortDirection === "asc"
-                ? "bi bi-arrow-up"
-                : "bi bi-arrow-down";
+            activeHeader.className = currentSortDirection === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down'
           }
         }
 
-        // ฟังก์ชันเรนเดอร์ตาราง
         function renderTable(data) {
-          tableBody.innerHTML = "";
-          data.forEach((booking) => {
-            const bookingType = booking.type || "-"; // กำหนดประเภท (Tour/Transfer)
-            const row = document.createElement("tr");
+          tableBody.innerHTML = ''
+          data.forEach(booking => {
+            const bookingType = booking.type || '-'
+            const row = document.createElement('tr')
             row.innerHTML = `
-        <td><input type="checkbox" class="booking-select" data-id="${
-          booking.id
-        }" /></td>
-        <td>${booking.agent || "-"}</td>
+        <td><input type="checkbox" class="booking-select" data-id="${booking.id}" /></td>
+        <td>${booking.agent || '-'}</td>
         <td>${bookingType}</td>
-        <td>${booking.name || "-"}</td>
-        <td>${booking.date || "-"}</td>
-      `;
-            tableBody.appendChild(row);
-          });
+        <td>${booking.name || '-'}</td>
+        <td>${booking.date || '-'}</td>
+      `
+            tableBody.appendChild(row)
+          })
 
-          // อัปเดตสถานะปุ่มเมื่อมีการเลือก
-          document.querySelectorAll(".booking-select").forEach((checkbox) => {
-            checkbox.addEventListener("change", () => {
-              const selected =
-                document.querySelectorAll(".booking-select:checked").length > 0;
-              createOrderBtn.disabled = !selected;
-            });
-          });
+          document.querySelectorAll('.booking-select').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+              const selected = document.querySelectorAll('.booking-select:checked').length > 0
+              createOrderBtn.disabled = !selected
+            })
+          })
         }
 
-        // ฟังก์ชันสร้าง Order ID
-        function generateOrderID(agent, count) {
-          const today = new Date();
-          const yy = today.getFullYear().toString().slice(-2);
-          const mm = String(today.getMonth() + 1).padStart(2, "0");
-          const dd = String(today.getDate()).padStart(2, "0");
-          return `${agent}-${yy}${mm}${dd}-${String(count).padStart(3, "0")}`;
+        async function generateOrderID(agent) {
+          const today = new Date()
+          const yy = today.getFullYear().toString().slice(-2)
+          const mm = String(today.getMonth() + 1).padStart(2, '0')
+          const dd = String(today.getDate()).padStart(2, '0')
+
+          const monthKey = `${yy}${mm}`
+          const sequenceRef = ref(database, `sequences_order/${monthKey}`)
+
+          try {
+            const result = await runTransaction(sequenceRef, currentValue => {
+              return (currentValue || 0) + 1
+            })
+
+            const sequence = result.snapshot.val()
+
+            return `${agent}-${yy}${mm}${dd}-${String(sequence).padStart(3, '0')}`
+          } catch (error) {
+            console.error('Error generating Order ID:', error)
+            throw new Error('Failed to generate Order ID')
+          }
         }
 
         try {
-          const toursRef = ref(database, "tourBookings");
-          const transfersRef = ref(database, "transferBookings");
+          const toursRef = ref(database, 'tourBookings')
+          const transfersRef = ref(database, 'transferBookings')
 
-          // ดึงข้อมูลจาก Firebase
-          const [toursSnapshot, transfersSnapshot] = await Promise.all([
-            get(toursRef),
-            get(transfersRef),
-          ]);
+          const [toursSnapshot, transfersSnapshot] = await Promise.all([get(toursRef), get(transfersRef)])
 
-          let availableBookings = [];
+          let availableBookings = []
 
-          // กรองข้อมูล Tour ที่ไม่มี orderId
           if (toursSnapshot.exists()) {
-            toursSnapshot.forEach((snap) => {
-              const data = snap.val();
+            toursSnapshot.forEach(snap => {
+              const data = snap.val()
               if (!data.orderId) {
                 availableBookings.push({
                   id: snap.key,
-                  agent: data.tourAgent || "-",
-                  name: `${data.tourFirstName || ""} ${
-                    data.tourLastName || ""
-                  }`.trim(),
-                  type: "Tour",
+                  agent: data.tourAgent || '-',
+                  name: `${data.tourFirstName || ''} ${data.tourLastName || ''}`.trim(),
+                  type: 'Tour',
                   date: formatDate(data.tourDate),
-                });
+                })
               }
-            });
+            })
           }
 
-          // กรองข้อมูล Transfer ที่ไม่มี orderId
           if (transfersSnapshot.exists()) {
-            transfersSnapshot.forEach((snap) => {
-              const data = snap.val();
+            transfersSnapshot.forEach(snap => {
+              const data = snap.val()
               if (!data.orderId) {
                 availableBookings.push({
                   id: snap.key,
-                  agent: data.transferAgent || "-",
-                  name: `${data.transferFirstName || ""} ${
-                    data.transferLastName || ""
-                  }`.trim(),
-                  type: "Transfer",
+                  agent: data.transferAgent || '-',
+                  name: `${data.transferFirstName || ''} ${data.transferLastName || ''}`.trim(),
+                  type: 'Transfer',
                   date: formatDate(data.transferDate),
-                });
+                })
               }
-            });
+            })
           }
 
-          // ตรวจสอบว่ามีข้อมูลหรือไม่
           if (availableBookings.length === 0) {
-            tableBody.innerHTML =
-              "<tr><td colspan='5' class='text-center'>No available bookings</td></tr>";
+            tableBody.innerHTML = "<tr><td colspan='5' class='text-center'>No available bookings</td></tr>"
           } else {
-            renderTable(availableBookings);
+            renderTable(availableBookings)
           }
 
-          // จัดการการคลิกเพื่อจัดเรียงข้อมูลในตาราง
-          document.querySelectorAll(".sortable").forEach((header) => {
-            header.addEventListener("click", () => {
-              const sortKey = header.dataset.sort;
+          document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', () => {
+              const sortKey = header.dataset.sort
               if (currentSortKey === sortKey) {
-                currentSortDirection =
-                  currentSortDirection === "asc" ? "desc" : "asc";
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc'
               } else {
-                currentSortKey = sortKey;
-                currentSortDirection = "asc";
+                currentSortKey = sortKey
+                currentSortDirection = 'asc'
               }
-              availableBookings = sortTable(availableBookings, sortKey);
-              updateSortIcons();
-              renderTable(availableBookings);
-            });
-          });
+              availableBookings = sortTable(availableBookings, sortKey)
+              updateSortIcons()
+              renderTable(availableBookings)
+            })
+          })
 
-          // ฟังก์ชันสร้าง Order
-          createOrderBtn.addEventListener("click", async () => {
-            const selectedBookings = Array.from(
-              document.querySelectorAll(".booking-select:checked")
-            ).map((checkbox) => checkbox.dataset.id);
+          createOrderBtn.addEventListener('click', async () => {
+            const selectedBookings = Array.from(document.querySelectorAll('.booking-select:checked')).map(
+              checkbox => checkbox.dataset.id
+            )
 
             if (selectedBookings.length === 0) {
-              alert("Please select at least one booking to create an order.");
-              return;
+              alert('Please select at least one booking to create an order.')
+              return
             }
 
-            const agent = availableBookings.find(
-              (booking) => booking.id === selectedBookings[0]
-            ).agent;
-            const ordersRef = ref(database, "orders");
-            const ordersSnapshot = await get(ordersRef);
-            const orderCount = ordersSnapshot.exists()
-              ? Object.keys(ordersSnapshot.val()).length + 1
-              : 1;
+            const agent = availableBookings.find(booking => booking.id === selectedBookings[0]).agent
+            const ordersRef = ref(database, 'orders')
 
-            const orderId = generateOrderID(agent, orderCount);
+            const orderId = await generateOrderID(agent)
 
-            const updates = {};
+            const updates = {}
 
-            selectedBookings.forEach((bookingId) => {
-              const booking = availableBookings.find((b) => b.id === bookingId);
-              if (booking.type === "Tour") {
-                updates[`/tourBookings/${bookingId}/orderId`] = orderId;
-              } else if (booking.type === "Transfer") {
-                updates[`/transferBookings/${bookingId}/orderId`] = orderId;
+            selectedBookings.forEach(bookingId => {
+              const booking = availableBookings.find(b => b.id === bookingId)
+              if (booking.type === 'Tour') {
+                updates[`/tourBookings/${bookingId}/orderId`] = orderId
+              } else if (booking.type === 'Transfer') {
+                updates[`/transferBookings/${bookingId}/orderId`] = orderId
               }
-            });
+            })
 
-            const newOrderRef = push(ordersRef);
-            await set(newOrderRef, { id: orderId, bookings: selectedBookings });
-            await update(ref(database), updates);
+            const newOrderRef = push(ordersRef)
+            await set(newOrderRef, { id: orderId, bookings: selectedBookings })
+            await update(ref(database), updates)
 
-            alert(`Order ${orderId} created successfully!`);
-            location.reload();
-          });
+            alert(`Order ${orderId} created successfully!`)
+            location.reload()
+          })
         } catch (error) {
-          console.error("Error fetching data or creating order:", error);
-          tableBody.innerHTML =
-            "<tr><td colspan='5' class='text-center text-danger'>Failed to load data</td></tr>";
+          console.error('Error fetching data or creating order:', error)
+          tableBody.innerHTML = "<tr><td colspan='5' class='text-center text-danger'>Failed to load data</td></tr>"
         }
-      });
+      })
     </script>
   </body>
 </html>

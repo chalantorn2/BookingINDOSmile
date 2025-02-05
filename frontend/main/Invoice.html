@@ -3,97 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <title>Invoice</title>
-    <!-- Google Font -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Bootstrap CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    />
-    <!-- Bootstrap Icons -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="/css/invoice.css" />
   </head>
   <body>
     <menu-component class="no-print"></menu-component>
     <div class="container py-4">
-      <!-- Title Invoice -->
       <div class="no-print text-center mb-3">
         <h2 class="invoice-title">Invoice</h2>
         <p class="text-muted">รายละเอียด Order / Payment ทั้งหมด</p>
       </div>
 
-      <!-- ปุ่มต่าง ๆ (Select Payment, Save Invoice, Print, กลับ) -->
       <div class="text-center mb-4 no-print">
-        <!-- ปุ่มเดิม: Select Payments -->
         <button class="btn btn-warning me-2" id="selectPaymentsBtn">
           <i class="bi bi-check-all"></i> Select Payments
         </button>
 
-        <!-- ปุ่มเดิม: Save Invoice -->
-        <button class="btn btn-success me-2" id="saveInvoiceBtn">
-          <i class="bi bi-save"></i> บันทึก Invoice
-        </button>
+        <button class="btn btn-success me-2" id="saveInvoiceBtn"><i class="bi bi-save"></i> บันทึก Invoice</button>
 
-        <!-- ปุ่มใหม่: Export CSV (แทน Print) -->
         <button class="btn btn-primary me-2" id="exportCsvBtn" disabled>
-          <!-- ไอคอนเปลี่ยนตามชอบ เช่น bi bi-file-earmark-spreadsheet -->
           <i class="bi bi-file-earmark-spreadsheet"></i> Export ข้อมูล
         </button>
 
-        <!-- ปุ่มใหม่: View Invoice -->
-        <!-- ปุ่มอื่น ๆ -->
-        <button class="btn btn-info me-2" id="viewInvoiceBtn">
-          <i class="bi bi-eye"></i> View Invoice
-        </button>
+        <button class="btn btn-info me-2" id="viewInvoiceBtn"><i class="bi bi-eye"></i> View Invoice</button>
 
-        <!-- ปุ่ม Back to Payments -->
-        <button
-          class="btn btn-secondary"
-          onclick="window.location.href='/frontend/main/payments.html'"
-        >
+        <button class="btn btn-secondary" onclick="window.location.href='/frontend/main/payments.html'">
           <i class="bi bi-arrow-left"></i> กลับไปหน้า Payments
         </button>
       </div>
 
-      <!-- เพิ่ม Checkbox ตรงนี้ -->
       <div class="text-center align-middle mb-4">
         <div class="no-print form-check d-inline-block">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="showCostProfitCheckbox"
-          />
-          <label class="form-check-label" for="showCostProfitCheckbox">
-            แสดงต้นทุน (Cost) และกำไร (Profit)
-          </label>
+          <input class="form-check-input" type="checkbox" id="showCostProfitCheckbox" />
+          <label class="form-check-label" for="showCostProfitCheckbox"> แสดงต้นทุน (Cost) และกำไร (Profit) </label>
         </div>
       </div>
 
-      <!-- ใส่เหนือตาราง Invoice -->
       <div class="yes-print row mb-3">
-        <!-- ฝั่งซ้าย: Banner -->
         <div class="col-8 text-start">
-          <!-- สอนการวางรูป:
-      - ถ้ารูปอยู่ในโฟลเดอร์โปรเจค ให้ใช้ src="/images/myBanner.jpg"
-      - ถ้ารูปอยู่ในเครื่องแต่ยังไม่อัพโหลด ต้องอัพไฟล์ไป server ก่อน
-      - หรือใส่เป็น URL เต็ม (เช่น https://... ) ก็ได้
-    -->
-          <img
-            id="bannerImage"
-            src="/images/logo-banner.png"
-            alt="Banner"
-            style="max-width: 100%"
-          />
+          <img id="bannerImage" src="/images/logo-banner.png" alt="Banner" style="max-width: 100%" />
         </div>
 
-        <!-- ฝั่งขวา: INVOICE / รอข้อความ / รอข้อความ / DATE -->
         <div class="col-4 text-end fs-6">
           <h1 class="mb-1 fw-bold">INVOICE</h1>
           <div class="mb-1">ATTN : ACCOUNTING DEPT.</div>
@@ -111,12 +63,8 @@
         </div>
       </div>
 
-      <!-- ส่วนตาราง Invoice -->
       <div class="table-responsive">
-        <table
-          class="table table-bordered text-center align-middle"
-          id="invoiceTable"
-        >
+        <table class="table table-bordered text-center align-middle" id="invoiceTable">
           <thead class="table-light text-center align-middle">
             <tr>
               <th>Item</th>
@@ -131,9 +79,7 @@
               <th>TOTAL</th>
             </tr>
           </thead>
-          <tbody>
-            <!-- จะเติมข้อมูลด้วย JavaScript -->
-          </tbody>
+          <tbody></tbody>
         </table>
       </div>
       <div class="row mt-2">
@@ -142,13 +88,10 @@
           <p class="mb-1">KRUNGSRI 6641121789</p>
           <p class="mb-1">ACCT : TAWEE WONGPIENKIT</p>
         </div>
-        <!-- ด้านขวาเว้นไว้ให้ TOTAL / GRAND TOTAL อยู่ตามเดิม -->
       </div>
 
-      <!-- แสดง GRAND TOTAL -->
       <div class="text-end mt-3 fs-5 fw-bold" id="grandTotalDisplay"></div>
     </div>
-    <!-- วางไว้ใต้ตาราง Invoice หรือจุดที่คุณต้องการ -->
     <div id="summaryCostProfitContainer" style="display: none">
       <div class="row text-center mt-4">
         <div class="col-md-4 mb-3">
@@ -160,9 +103,7 @@
         <div class="col-md-4 mb-3">
           <p>
             <strong>รวมราคาขายทั้งหมด:</strong><br />
-            <span class="fs-2 fw-bold text-primary" id="totalSellingPrice"
-              >0</span
-            >
+            <span class="fs-2 fw-bold text-primary" id="totalSellingPrice">0</span>
           </p>
         </div>
         <div class="col-md-4 mb-3">
@@ -174,7 +115,6 @@
       </div>
     </div>
 
-    <!-- Modal เลือก Payments -->
     <div
       class="modal fade"
       id="selectPaymentsModal"
@@ -185,290 +125,202 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="selectPaymentsModalLabel">
-              เลือก Payments ที่ต้องการสร้าง Invoice
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+            <h5 class="modal-title" id="selectPaymentsModalLabel">เลือก Payments ที่ต้องการสร้าง Invoice</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <!-- รายการ Checkbox Payment -->
-            <div id="paymentsListContainer">
-              <!-- จะเติมด้วย JavaScript -->
-            </div>
+            <div id="paymentsListContainer"></div>
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Close
-            </button>
-            <button type="button" class="btn btn-primary" id="confirmSelectBtn">
-              Confirm Selection
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="confirmSelectBtn">Confirm Selection</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal ดู Invoice -->
     <div class="modal fade" id="viewInvoiceModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">View Invoice</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <select class="form-select" id="invoicesSelect"></select>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">
-              Close
-            </button>
-            <button class="btn btn-primary" id="viewSelectedInvoiceBtn">
-              View
-            </button>
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button class="btn btn-primary" id="viewSelectedInvoiceBtn">View</button>
           </div>
         </div>
       </div>
     </div>
-    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="/component/menu.js"></script>
-    <!-- Firebase Config + JS -->
     <script type="module">
-      import { database } from "/js/firebase-config.js";
-      import {
-        ref,
-        get,
-        set,
-        push,
-      } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+      import { database } from '/js/firebase-config.js'
+      import { ref, get, set, push } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
 
-      // สร้าง nameText เป็น "firstName lastName / pax"
-      // const nameText = `${firstName} ${lastName} / ${pax}`.trim();
-      // -------------------------------------------------------
-      // ฟังก์ชันช่วย format ตัวเลขใส่ comma
-      // -------------------------------------------------------
       function formatNumberWithCommas(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
       }
 
-      // -------------------------------------------------------
-      // ฟังก์ชัน parse string -> Date object (DD/MM/YYYY)
-      // -------------------------------------------------------
       function parseDateStr(dateStr) {
-        if (!dateStr) return null;
-        const [d, m, y] = dateStr.split("/");
-        if (!d || !m || !y) return null;
-        return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+        if (!dateStr) return null
+        const [d, m, y] = dateStr.split('/')
+        if (!d || !m || !y) return null
+        return new Date(parseInt(y), parseInt(m) - 1, parseInt(d))
       }
 
-      // -------------------------------------------------------
-      // ฟังก์ชันแปลง Date -> "DD MMM YY" (12 JAN 25)
-      // -------------------------------------------------------
       function formatToShortThaiDate(dateObj) {
-        if (!dateObj) return "-";
-        const day = dateObj.getDate();
-        const month = dateObj
-          .toLocaleString("en-US", { month: "short" })
-          .toUpperCase();
-        const year = (dateObj.getFullYear() % 100).toString().padStart(2, "0");
-        return `${day} ${month} ${year}`;
+        if (!dateObj) return '-'
+        const day = dateObj.getDate()
+        const month = dateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase()
+        const year = (dateObj.getFullYear() % 100).toString().padStart(2, '0')
+        return `${day} ${month} ${year}`
       }
 
-      // -------------------------------------------------------
-      // สร้างช่วงวันที่ เช่น "12 - 18 JAN 25" หรือข้ามปี
-      // -------------------------------------------------------
+      let allPaymentsData = {}
+      let allTourBookingsData = {}
+      let allTransferBookingsData = {}
 
-      // ตัวแปร global เก็บ data ที่โหลดมา
-      let allPaymentsData = {};
-      let allTourBookingsData = {};
-      let allTransferBookingsData = {};
-      // เก็บ keys ของ Payment ที่ผู้ใช้เลือก
-      let selectedPaymentKeys = [];
-      let draftInvoiceDate = ""; // เก็บวันที่ที่ผู้ใช้กรอก
+      let selectedPaymentKeys = []
+      let draftInvoiceDate = ''
 
-      document.addEventListener("DOMContentLoaded", async () => {
-        const selectPaymentsBtn = document.getElementById("selectPaymentsBtn");
-        const confirmSelectBtn = document.getElementById("confirmSelectBtn");
-        const printBtn = document.getElementById("printBtn");
-        const saveInvoiceBtn = document.getElementById("saveInvoiceBtn");
+      document.addEventListener('DOMContentLoaded', async () => {
+        const selectPaymentsBtn = document.getElementById('selectPaymentsBtn')
+        const confirmSelectBtn = document.getElementById('confirmSelectBtn')
+        const printBtn = document.getElementById('printBtn')
+        const saveInvoiceBtn = document.getElementById('saveInvoiceBtn')
 
-        const invoiceTbody = document.querySelector("#invoiceTable tbody");
-        const grandTotalDisplay = document.getElementById("grandTotalDisplay");
+        const invoiceTbody = document.querySelector('#invoiceTable tbody')
+        const grandTotalDisplay = document.getElementById('grandTotalDisplay')
 
-        // Modal
-        const selectPaymentsModalEl = document.getElementById(
-          "selectPaymentsModal"
-        );
+        const selectPaymentsModalEl = document.getElementById('selectPaymentsModal')
         const selectPaymentsModal = new bootstrap.Modal(selectPaymentsModalEl, {
-          backdrop: "static",
+          backdrop: 'static',
           keyboard: false,
-        });
-        const paymentsListContainer = document.getElementById(
-          "paymentsListContainer"
-        );
+        })
+        const paymentsListContainer = document.getElementById('paymentsListContainer')
 
-        // ปุ่ม Print
         if (printBtn) {
-          printBtn.addEventListener("click", () => {
-            window.print();
-          });
+          printBtn.addEventListener('click', () => {
+            window.print()
+          })
         }
 
-        // โหลดข้อมูล payments / tourBookings / transferBookings
         const [paySnap, tourSnap, transferSnap] = await Promise.all([
-          get(ref(database, "payments")),
-          get(ref(database, "tourBookings")),
-          get(ref(database, "transferBookings")),
-        ]);
+          get(ref(database, 'payments')),
+          get(ref(database, 'tourBookings')),
+          get(ref(database, 'transferBookings')),
+        ])
 
         if (paySnap.exists()) {
-          allPaymentsData = paySnap.val();
+          allPaymentsData = paySnap.val()
         }
         if (tourSnap.exists()) {
-          allTourBookingsData = tourSnap.val();
+          allTourBookingsData = tourSnap.val()
         }
         if (transferSnap.exists()) {
-          allTransferBookingsData = transferSnap.val();
+          allTransferBookingsData = transferSnap.val()
         }
 
-        // --------------------------------------------------------
-        // ปุ่ม "Select Payments" => เปิด Modal
-        // --------------------------------------------------------
-        selectPaymentsBtn.addEventListener("click", () => {
-          buildPaymentsList();
-          selectPaymentsModal.show();
-        });
+        selectPaymentsBtn.addEventListener('click', () => {
+          buildPaymentsList()
+          selectPaymentsModal.show()
+        })
 
-        // --------------------------------------------------------
-        // ปุ่ม "Confirm Selection"
-        // --------------------------------------------------------
-        confirmSelectBtn.addEventListener("click", () => {
-          // อ่านค่า checkbox
-          selectedPaymentKeys = [];
-          const checkboxes = paymentsListContainer.querySelectorAll(
-            "input[type='checkbox']:checked"
-          );
-          checkboxes.forEach((ck) => {
-            selectedPaymentKeys.push(ck.value);
-          });
-          selectPaymentsModal.hide();
+        confirmSelectBtn.addEventListener('click', () => {
+          selectedPaymentKeys = []
+          const checkboxes = paymentsListContainer.querySelectorAll("input[type='checkbox']:checked")
+          checkboxes.forEach(ck => {
+            selectedPaymentKeys.push(ck.value)
+          })
+          selectPaymentsModal.hide()
 
-          // สร้างตาราง Invoice ใหม่
-          buildInvoiceTable(selectedPaymentKeys);
+          buildInvoiceTable(selectedPaymentKeys)
 
-          // ---------- เพิ่มโค้ดส่วนนี้ ----------
           if (selectedPaymentKeys.length > 0) {
-            const invoiceDateSpan = document.getElementById("invoiceDateSpan");
+            const invoiceDateSpan = document.getElementById('invoiceDateSpan')
             if (invoiceDateSpan) {
-              // ถ้าไม่มีค่าใน draftInvoiceDate => ใช้ "กรุณากรอกวันที่"
-              invoiceDateSpan.textContent =
-                draftInvoiceDate || "กรุณากรอกวันที่";
-              // ตั้ง data-invoice-key = "temp" เพื่อบอกว่ายังไม่มี invoiceKey จริง
-              invoiceDateSpan.setAttribute("data-invoice-key", "temp");
+              invoiceDateSpan.textContent = draftInvoiceDate || 'กรุณากรอกวันที่'
+
+              invoiceDateSpan.setAttribute('data-invoice-key', 'temp')
             }
-            // เรียกให้ dblclick ทำงานได้
-            enableInvoiceDateEdit();
+
+            enableInvoiceDateEdit()
           }
-        });
+        })
 
-        // --------------------------------------------------------
-        // ฟังก์ชันสร้างรายการ Checkbox Payment ใน Modal
-        // --------------------------------------------------------
         function buildPaymentsList() {
-          paymentsListContainer.innerHTML = "";
-          let hasAny = false;
+          paymentsListContainer.innerHTML = ''
+          let hasAny = false
 
-          const mainKeys = Object.keys(allPaymentsData).sort();
-          mainKeys.forEach((mainK) => {
-            const subObj = allPaymentsData[mainK];
-            if (!subObj || typeof subObj !== "object") return;
+          const mainKeys = Object.keys(allPaymentsData).sort()
+          mainKeys.forEach(mainK => {
+            const subObj = allPaymentsData[mainK]
+            if (!subObj || typeof subObj !== 'object') return
 
-            const subKeys = Object.keys(subObj).sort();
-            subKeys.forEach((subK) => {
-              const payment = subObj[subK];
-              // ข้ามถ้า invoiced === true
+            const subKeys = Object.keys(subObj).sort()
+            subKeys.forEach(subK => {
+              const payment = subObj[subK]
+
               if (payment.invoiced === true) {
-                return;
+                return
               }
 
-              // + firstName, lastName
-              let displayName = ""; // กำหนดค่าเริ่มต้นเป็นค่าว่าง
+              let displayName = ''
 
-              // ถ้ามีข้อมูลลูกค้า ให้ใช้เฉพาะชื่อและนามสกุล
               if (payment.customer && payment.customer.firstName) {
-                displayName = `${payment.customer.firstName}`;
+                displayName = `${payment.customer.firstName}`
                 if (payment.customer.lastName) {
-                  displayName += ` ${payment.customer.lastName}`;
+                  displayName += ` ${payment.customer.lastName}`
                 }
               } else {
-                // กรณีไม่มีชื่อเลย ใช้ mainK/subK แทน (แต่คอมเม้นไว้)
-                // displayName = `${mainK}/${subK}`;
               }
 
-              hasAny = true;
-              const combinedKey = `${mainK}/${subK}`;
-              const alreadySelected = selectedPaymentKeys.includes(combinedKey);
+              hasAny = true
+              const combinedKey = `${mainK}/${subK}`
+              const alreadySelected = selectedPaymentKeys.includes(combinedKey)
 
-              const label = document.createElement("label");
-              label.classList.add("d-flex", "align-items-center", "mb-2");
+              const label = document.createElement('label')
+              label.classList.add('d-flex', 'align-items-center', 'mb-2')
               label.innerHTML = `
         <input
           type="checkbox"
           class="form-check-input me-2"
           value="${combinedKey}"
-          ${alreadySelected ? "checked" : ""}
+          ${alreadySelected ? 'checked' : ''}
         />
         <span>${displayName}</span>
-      `;
-              paymentsListContainer.appendChild(label);
-            });
-          });
+      `
+              paymentsListContainer.appendChild(label)
+            })
+          })
 
           if (!hasAny) {
             paymentsListContainer.innerHTML = `
       <div class="alert alert-warning">No Payments Found</div>
-    `;
+    `
           }
         }
-        // --------------------------------------------------------
-        // ฟังก์ชันสร้างตาราง Invoice
-        // --------------------------------------------------------
-        // เก็บ REF ของแต่ละ Payment ชั่วคราว
-        // เก็บ REF ของแต่ละ Payment ชั่วคราว
-        const refMap = {}; // key => string
+
+        const refMap = {}
 
         function buildInvoiceTable(paymentKeys) {
-          const invoiceTable = document.getElementById("invoiceTable");
-          if (!invoiceTable) return;
+          const invoiceTable = document.getElementById('invoiceTable')
+          if (!invoiceTable) return
 
-          // อ่านสถานะ checkbox
-          const showCostProfit = document.getElementById(
-            "showCostProfitCheckbox"
-          )
-            ? document.getElementById("showCostProfitCheckbox").checked
-            : false;
+          const showCostProfit = document.getElementById('showCostProfitCheckbox')
+            ? document.getElementById('showCostProfitCheckbox').checked
+            : false
 
-          // สร้าง thead ใหม่แบบไดนามิก (ลบหรือคอมเมนต์ thead เก่าที่อยู่ใน HTML ถ้ามี)
-          const invoiceThead = invoiceTable.querySelector("thead");
-          const invoiceTbody = invoiceTable.querySelector("tbody");
-          if (!invoiceThead || !invoiceTbody) return;
+          const invoiceThead = invoiceTable.querySelector('thead')
+          const invoiceTbody = invoiceTable.querySelector('tbody')
+          if (!invoiceThead || !invoiceTbody) return
 
-          // header dynamic
           let theadHtml = `
     <tr>
       <th>Item</th>
@@ -477,79 +329,59 @@
       <th>Hotel</th>
       <th>Date in PHUKET</th>
       <th>TOUR INCLUDE</th>
-      ${
-        showCostProfit
-          ? `<th>Cost</th><th>PRICE</th><th>Profit</th>`
-          : `<th>PRICE</th>`
-      }
+      ${showCostProfit ? `<th>Cost</th><th>PRICE</th><th>Profit</th>` : `<th>PRICE</th>`}
       <th>Fee</th>
       <th>Unit</th>
       <th>TOTAL</th>
     </tr>
-  `;
-          invoiceThead.innerHTML = theadHtml;
+  `
+          invoiceThead.innerHTML = theadHtml
 
-          // ล้างข้อมูลใน tbody
-          invoiceTbody.innerHTML = "";
+          invoiceTbody.innerHTML = ''
 
-          // แสดง/ซ่อน summaryCostProfitContainer
-          const summaryContainer = document.getElementById(
-            "summaryCostProfitContainer"
-          );
+          const summaryContainer = document.getElementById('summaryCostProfitContainer')
           if (summaryContainer) {
-            summaryContainer.style.display = showCostProfit ? "block" : "none";
+            summaryContainer.style.display = showCostProfit ? 'block' : 'none'
           }
 
-          // ถ้าไม่มี paymentKeys
           if (!paymentKeys || paymentKeys.length === 0) {
             invoiceTbody.innerHTML = `
       <tr>
-        <td colspan="${
-          showCostProfit ? 12 : 10
-        }" class="text-center text-danger">
+        <td colspan="${showCostProfit ? 12 : 10}" class="text-center text-danger">
           No Payments Selected
         </td>
       </tr>
-    `;
-            // ปิด Summary
-            return;
+    `
+
+            return
           }
 
-          // ตัวแปรรวม
-          let itemCount = 0;
-          let grandTotal = 0;
+          let itemCount = 0
+          let grandTotal = 0
 
-          // ตัวแปรสรุป Cost, Price, Profit
-          let totalCostSum = 0;
-          let totalSellingSum = 0;
-          let totalProfitSum = 0;
+          let totalCostSum = 0
+          let totalSellingSum = 0
+          let totalProfitSum = 0
 
-          // สร้างตัวเก็บ REF (เพื่อใช้กับการแก้ไข)
-          const refMap = {};
+          const refMap = {}
 
-          paymentKeys.forEach((combinedKey) => {
-            const [mainK, subK] = combinedKey.split("/");
-            if (!allPaymentsData[mainK] || !allPaymentsData[mainK][subK])
-              return;
+          paymentKeys.forEach(combinedKey => {
+            const [mainK, subK] = combinedKey.split('/')
+            if (!allPaymentsData[mainK] || !allPaymentsData[mainK][subK]) return
 
-            const payment = allPaymentsData[mainK][subK];
+            const payment = allPaymentsData[mainK][subK]
 
-            itemCount++;
+            itemCount++
 
-            // bookings array
-            let bookingsArr = [];
+            let bookingsArr = []
             if (Array.isArray(payment.bookings)) {
-              bookingsArr = payment.bookings;
-            } else if (
-              payment.bookings &&
-              typeof payment.bookings === "object"
-            ) {
-              bookingsArr = Object.values(payment.bookings);
+              bookingsArr = payment.bookings
+            } else if (payment.bookings && typeof payment.bookings === 'object') {
+              bookingsArr = Object.values(payment.bookings)
             }
 
             if (!bookingsArr || bookingsArr.length === 0) {
-              // ไม่มี bookings
-              const tr = document.createElement("tr");
+              const tr = document.createElement('tr')
               tr.innerHTML = `
         <td>${itemCount}</td>
         <td>NAME ???</td>
@@ -557,77 +389,69 @@
         <td colspan="${showCostProfit ? 9 : 7}" class="text-danger">
           No bookings found
         </td>
-      `;
-              invoiceTbody.appendChild(tr);
-              return;
+      `
+              invoiceTbody.appendChild(tr)
+              return
             }
 
-            // NAME
-            let firstName = payment.customer?.firstName || "";
-            let lastName = payment.customer?.lastName || "";
-            let pax = payment.customer?.pax || "";
-            const nameText = `${firstName} ${lastName} / ${pax}`.trim();
+            let firstName = payment.customer?.firstName || ''
+            let lastName = payment.customer?.lastName || ''
+            let pax = payment.customer?.pax || ''
+            const nameText = `${firstName} ${lastName} / ${pax}`.trim()
 
-            // REF
-            const refKey = combinedKey;
-            refMap[refKey] = payment.ref || "-";
+            const refKey = combinedKey
+            refMap[refKey] = payment.ref || '-'
 
-            // HOTEL => จาก booking แรก
-            let hotelText = "-";
-            const firstBk = bookingsArr[0];
+            let hotelText = '-'
+            const firstBk = bookingsArr[0]
             if (firstBk) {
-              if (firstBk.type === "tour" && firstBk.tourHotel) {
-                hotelText = firstBk.tourHotel;
-              } else if (firstBk.type === "transfer" && firstBk.transferHotel) {
-                hotelText = firstBk.transferHotel;
+              if (firstBk.type === 'tour' && firstBk.tourHotel) {
+                hotelText = firstBk.tourHotel
+              } else if (firstBk.type === 'transfer' && firstBk.transferHotel) {
+                hotelText = firstBk.transferHotel
               }
             }
 
-            // สรุปยอด Payment นี้
-            const paymentTotal = payment.summary?.totalSellingPrice || 0;
-            grandTotal += paymentTotal;
+            const paymentTotal = payment.summary?.totalSellingPrice || 0
+            grandTotal += paymentTotal
 
-            // เรียง bookings ตามวันที่
             bookingsArr.sort((a, b) => {
-              const dateA = a.tourDate || a.transferDate;
-              const dateB = b.tourDate || b.transferDate;
-              if (!dateA) return 1;
-              if (!dateB) return -1;
-              return new Date(dateA) - new Date(dateB);
-            });
+              const dateA = a.tourDate || a.transferDate
+              const dateB = b.tourDate || b.transferDate
+              if (!dateA) return 1
+              if (!dateB) return -1
+              return new Date(dateA) - new Date(dateB)
+            })
 
-            const rowSpanCount = bookingsArr.length;
-            // ใส่โค้ดนี้ก่อนเริ่ม forEach(bookingsArr) ภายใน buildInvoiceTable()
-            let orderCostSum = 0;
-            let orderPriceSum = 0;
-            let orderProfitSum = 0;
+            const rowSpanCount = bookingsArr.length
+
+            let orderCostSum = 0
+            let orderPriceSum = 0
+            let orderProfitSum = 0
 
             bookingsArr.forEach((bk, index) => {
-              const unitVal = bk.quantity ?? 0;
-              const priceVal = bk.sellingPrice;
-              const costVal = bk.totalCostin ?? 0; // มีในโครงสร้าง
-              const rowTotal = priceVal * unitVal;
-              const profitVal = rowTotal - costVal;
-              const feeVal = bk.fee ?? 0; // ถ้ายังไม่มีในโครงสร้าง ต้องไปเพิ่มเอง
+              const unitVal = bk.quantity ?? 0
+              const priceVal = bk.sellingPrice
+              const costVal = bk.totalCostin ?? 0
+              const rowTotal = priceVal * unitVal
+              const profitVal = rowTotal - costVal
+              const feeVal = bk.fee ?? 0
 
-              const detailText = bk.detail || "-";
-              const typeText = bk.type || bk.bookingType || "-";
-              const bookingDate = bk.tourDate || bk.transferDate || "-";
+              const detailText = bk.detail || '-'
+              const typeText = bk.type || bk.bookingType || '-'
+              const bookingDate = bk.tourDate || bk.transferDate || '-'
 
-              orderCostSum += costVal;
-              orderPriceSum += priceVal;
-              orderProfitSum += profitVal;
+              orderCostSum += costVal
+              orderPriceSum += rowTotal
+              orderProfitSum += profitVal
 
-              // สะสมยอดรวม (Cost / Price / Profit)
-              totalCostSum += costVal;
-              totalSellingSum += priceVal;
-              totalProfitSum += profitVal;
+              totalCostSum += costVal
+              totalSellingSum += rowTotal
+              totalProfitSum += profitVal
 
-              // สร้าง <tr>
-              const tr = document.createElement("tr");
+              const tr = document.createElement('tr')
 
               if (index === 0) {
-                // แถวแรก => merge 4 ช่อง (Item, NAME, REF, HOTEL)
                 tr.innerHTML = `
           <td rowspan="${rowSpanCount}">${itemCount}</td>
           <td rowspan="${rowSpanCount}" class="nameCell">${nameText}</td>
@@ -662,11 +486,11 @@
 
           <td>${unitVal}</td>
           <td>${formatNumberWithCommas(rowTotal)}</td>
-        `;
+        `
               } else {
                 tr.innerHTML = `
           <td>${formatDate(bookingDate)}</td>
-          <td class="text-start">${detailText} (${typeText})</td>
+          <td class="text-start">${detailText} </td>
 
           ${
             showCostProfit
@@ -691,13 +515,13 @@
 
           <td>${unitVal}</td>
           <td>${formatNumberWithCommas(rowTotal)}</td>
-        `;
+        `
               }
 
-              invoiceTbody.appendChild(tr);
-            });
+              invoiceTbody.appendChild(tr)
+            })
             if (showCostProfit) {
-              const cpRow = document.createElement("tr");
+              const cpRow = document.createElement('tr')
               cpRow.innerHTML = `
     <td colspan="6" class="text-end fw-bold text-secondary">
       Sub-Total (Cost/Price/Profit)
@@ -712,11 +536,11 @@
       ${formatNumberWithCommas(orderProfitSum)}
     </td>
     <td colspan="2"></td>
-  `;
-              invoiceTbody.appendChild(cpRow);
+  `
+              invoiceTbody.appendChild(cpRow)
             }
-            // แสดงยอด Total (เฉพาะ Payment นี้)
-            const totalRow = document.createElement("tr");
+
+            const totalRow = document.createElement('tr')
             totalRow.innerHTML = `
       <td colspan="${showCostProfit ? 10 : 8}" class="text-end fw-bold">
         Total
@@ -724,488 +548,391 @@
       <td class="fw-bold" colspan="2">
         ${formatNumberWithCommas(paymentTotal)}
       </td>
-    `;
-            invoiceTbody.appendChild(totalRow);
-          });
+    `
+            invoiceTbody.appendChild(totalRow)
+          })
 
-          // GRAND TOTAL
-          const grandRow = document.createElement("tr");
+          const grandRow = document.createElement('tr')
           grandRow.innerHTML = `
-    <td colspan="${
-      showCostProfit ? 10 : 8
-    }" class="text-end fw-bold text-success">
+    <td colspan="${showCostProfit ? 10 : 8}" class="text-end fw-bold text-success">
       GRAND TOTAL
     </td>
     <td class="fw-bold text-success" colspan="2">
       ${formatNumberWithCommas(grandTotal)}
     </td>
-  `;
-          invoiceTbody.appendChild(grandRow);
+  `
+          invoiceTbody.appendChild(grandRow)
 
-          // อัปเดต Summary (Cost/Price/Profit) ถ้า showCostProfit === true
           if (showCostProfit) {
             if (summaryContainer) {
-              const totalCostEl = document.getElementById("totalCost");
-              const totalSellingEl =
-                document.getElementById("totalSellingPrice");
-              const totalProfitEl = document.getElementById("totalProfit");
+              const totalCostEl = document.getElementById('totalCost')
+              const totalSellingEl = document.getElementById('totalSellingPrice')
+              const totalProfitEl = document.getElementById('totalProfit')
 
-              if (totalCostEl)
-                totalCostEl.textContent = formatNumberWithCommas(totalCostSum);
-              if (totalSellingEl)
-                totalSellingEl.textContent =
-                  formatNumberWithCommas(totalSellingSum);
-              if (totalProfitEl)
-                totalProfitEl.textContent =
-                  formatNumberWithCommas(totalProfitSum);
+              if (totalCostEl) totalCostEl.textContent = formatNumberWithCommas(totalCostSum)
+              if (totalSellingEl) totalSellingEl.textContent = formatNumberWithCommas(totalSellingSum)
+              if (totalProfitEl) totalProfitEl.textContent = formatNumberWithCommas(totalProfitSum)
             }
           }
 
-          // เรียกฟังก์ชัน enableRefEdit (ถ้ามี)
-          enableRefEdit?.();
+          enableRefEdit?.()
 
-          // เรียกฟังก์ชัน enableFeeEdit => สำหรับดับเบิ้ลคลิกแก้ไข Fee
-          enableFeeEdit?.();
+          enableFeeEdit?.()
         }
 
-        const viewSelectedInvoiceBtn = document.getElementById(
-          "viewSelectedInvoiceBtn"
-        );
+        const viewSelectedInvoiceBtn = document.getElementById('viewSelectedInvoiceBtn')
         if (viewSelectedInvoiceBtn) {
-          viewSelectedInvoiceBtn.addEventListener("click", async () => {
-            const invoicesSelect = document.getElementById("invoicesSelect");
+          viewSelectedInvoiceBtn.addEventListener('click', async () => {
+            const invoicesSelect = document.getElementById('invoicesSelect')
             if (!invoicesSelect.value) {
-              alert("กรุณาเลือก Invoice ก่อน");
-              return;
+              alert('กรุณาเลือก Invoice ก่อน')
+              return
             }
-            const invoiceKey = invoicesSelect.value;
+            const invoiceKey = invoicesSelect.value
 
-            // โหลด Invoice
-            const invoiceSnap = await get(
-              ref(database, "invoices/" + invoiceKey)
-            );
+            const invoiceSnap = await get(ref(database, 'invoices/' + invoiceKey))
             if (!invoiceSnap.exists()) {
-              alert("ไม่พบข้อมูล Invoice นี้");
-              return;
+              alert('ไม่พบข้อมูล Invoice นี้')
+              return
             }
-            const invoiceObj = invoiceSnap.val();
+            const invoiceObj = invoiceSnap.val()
 
-            // ตรวจว่ามี selectedPaymentKeys ไหม
-            if (
-              !invoiceObj.selectedPaymentKeys ||
-              !Array.isArray(invoiceObj.selectedPaymentKeys)
-            ) {
-              alert("Invoice นี้ไม่มี selectedPaymentKeys");
-              return;
+            if (!invoiceObj.selectedPaymentKeys || !Array.isArray(invoiceObj.selectedPaymentKeys)) {
+              alert('Invoice นี้ไม่มี selectedPaymentKeys')
+              return
             }
 
-            console.log("Load Invoice:", invoiceKey, invoiceObj);
-            document.getElementById("showCostProfitCheckbox").checked = true;
-            selectedPaymentKeys = invoiceObj.selectedPaymentKeys || [];
-            // เรียก buildInvoiceTable(...) แสดงผล
-            buildInvoiceTable(invoiceObj.selectedPaymentKeys);
-            // หลังจากโหลด invoiceObj ได้มา
-            const invoiceDateSpan = document.getElementById("invoiceDateSpan");
+            console.log('Load Invoice:', invoiceKey, invoiceObj)
+            document.getElementById('showCostProfitCheckbox').checked = true
+            selectedPaymentKeys = invoiceObj.selectedPaymentKeys || []
+
+            buildInvoiceTable(invoiceObj.selectedPaymentKeys)
+
+            const invoiceDateSpan = document.getElementById('invoiceDateSpan')
             if (invoiceDateSpan) {
               if (invoiceObj.invoiceDate) {
-                invoiceDateSpan.textContent = invoiceObj.invoiceDate;
+                invoiceDateSpan.textContent = invoiceObj.invoiceDate
               } else {
-                invoiceDateSpan.textContent = "กรุณากรอกวันที่";
+                invoiceDateSpan.textContent = 'กรุณากรอกวันที่'
               }
 
-              // เซต data-invoice-key
-              invoiceDateSpan.setAttribute("data-invoice-key", invoiceKey);
+              invoiceDateSpan.setAttribute('data-invoice-key', invoiceKey)
             }
 
-            // เรียก enableInvoiceDateEdit()
-            enableInvoiceDateEdit?.();
+            enableInvoiceDateEdit?.()
 
-            // ปิด modal
-            const viewInvoiceModalEl =
-              document.getElementById("viewInvoiceModal");
-            const viewInvoiceModal =
-              bootstrap.Modal.getInstance(viewInvoiceModalEl);
-            viewInvoiceModal.hide();
+            const viewInvoiceModalEl = document.getElementById('viewInvoiceModal')
+            const viewInvoiceModal = bootstrap.Modal.getInstance(viewInvoiceModalEl)
+            viewInvoiceModal.hide()
 
-            // เปิดปุ่ม export CSV
-            if (exportCsvBtn) exportCsvBtn.disabled = false;
-          });
+            if (exportCsvBtn) exportCsvBtn.disabled = false
+          })
         }
         async function storeRefInDB(mainKey, subKey, newVal) {
-          // ตัวอย่างการบันทึก (แล้วแต่โครงสร้างจริงของคุณ)
-          // เช่น ต้องการเก็บเป็น payments/mainKey/subKey/ref
-          const refPath = ref(database, `payments/${mainKey}/${subKey}/ref`);
-          await set(refPath, newVal);
+          const refPath = ref(database, `payments/${mainKey}/${subKey}/ref`)
+          await set(refPath, newVal)
         }
 
         function enableRefEdit() {
-          const refCells = invoiceTbody.querySelectorAll(".refCell");
-          refCells.forEach((cell) => {
-            cell.addEventListener("dblclick", () => {
-              const oldText = cell.textContent.trim();
-              const combinedKey = cell.dataset.key; // เช่น "P_INDO/REET-250121-001"
-              if (!combinedKey) return;
+          const refCells = invoiceTbody.querySelectorAll('.refCell')
+          refCells.forEach(cell => {
+            cell.addEventListener('dblclick', () => {
+              const oldText = cell.textContent.trim()
+              const combinedKey = cell.dataset.key
+              if (!combinedKey) return
 
-              // สร้าง input
-              const input = document.createElement("input");
-              input.type = "text";
-              input.value = oldText === "-" ? "" : oldText;
-              input.classList.add("form-control");
-              input.style.maxWidth = "120px";
+              const input = document.createElement('input')
+              input.type = 'text'
+              input.value = oldText === '-' ? '' : oldText
+              input.classList.add('form-control')
+              input.style.maxWidth = '120px'
 
-              cell.textContent = "";
-              cell.appendChild(input);
-              input.focus();
+              cell.textContent = ''
+              cell.appendChild(input)
+              input.focus()
 
               const saveRef = async () => {
-                const newVal = input.value.trim() || "-";
-                cell.innerHTML = newVal;
+                const newVal = input.value.trim() || '-'
+                cell.innerHTML = newVal
 
-                // แยก mainK/subK
-                const [mainK, subK] = combinedKey.split("/");
+                const [mainK, subK] = combinedKey.split('/')
                 try {
-                  await storeRefInDB(mainK, subK, newVal);
+                  await storeRefInDB(mainK, subK, newVal)
                 } catch (err) {
-                  console.error(err);
-                  alert("ไม่สามารถบันทึก REF ได้");
+                  console.error(err)
+                  alert('ไม่สามารถบันทึก REF ได้')
                 }
-              };
+              }
 
-              input.addEventListener("blur", saveRef);
-              input.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  saveRef();
+              input.addEventListener('blur', saveRef)
+              input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  saveRef()
                 }
-              });
-            });
-          });
+              })
+            })
+          })
         }
 
-        // ---------------------------------------------------------
-        // ฟังก์ชัน: เมื่อกดบันทึก Invoice
-        // ---------------------------------------------------------
         if (saveInvoiceBtn) {
-          saveInvoiceBtn.addEventListener("click", async () => {
-            const invoiceName = prompt("กรุณาตั้งชื่อ Invoice:", "MyInvoice");
+          saveInvoiceBtn.addEventListener('click', async () => {
+            const invoiceName = prompt('กรุณาตั้งชื่อ Invoice:', 'MyInvoice')
             if (!invoiceName) {
-              alert("คุณยังไม่ได้ตั้งชื่อ Invoice");
-              return;
+              alert('คุณยังไม่ได้ตั้งชื่อ Invoice')
+              return
             }
 
-            const invoicesRef = ref(database, "invoices");
-            const newInvoiceRef = push(invoicesRef);
+            const invoicesRef = ref(database, 'invoices')
+            const newInvoiceRef = push(invoicesRef)
 
-            // สร้าง payload
             const invoicePayload = {
               invoiceName: invoiceName,
               createdAt: new Date().toISOString(),
               selectedPaymentKeys,
-              invoiceDate: draftInvoiceDate || "กรุณากรอกวันที่", // ใช้ตัวแปรที่เก็บไว้
-            };
+              invoiceDate: draftInvoiceDate || 'กรุณากรอกวันที่',
+            }
 
             try {
-              await set(newInvoiceRef, invoicePayload);
+              await set(newInvoiceRef, invoicePayload)
 
-              // *** สำคัญ: เซต invoiced = true ให้ทุก Payment ที่เลือก
               for (let ck of selectedPaymentKeys) {
-                const [mk, sk] = ck.split("/");
-                const paymentRef = ref(
-                  database,
-                  `payments/${mk}/${sk}/invoiced`
-                );
-                await set(paymentRef, true);
+                const [mk, sk] = ck.split('/')
+                const paymentRef = ref(database, `payments/${mk}/${sk}/invoiced`)
+                await set(paymentRef, true)
               }
 
-              alert(`บันทึก Invoice เรียบร้อย! InvoiceName: ${invoiceName}`);
-              // ...
+              alert(`บันทึก Invoice เรียบร้อย! InvoiceName: ${invoiceName}`)
             } catch (err) {
-              console.error(err);
-              alert("เกิดข้อผิดพลาดในการบันทึก Invoice");
+              console.error(err)
+              alert('เกิดข้อผิดพลาดในการบันทึก Invoice')
             }
-          });
+          })
         }
-        document
-          .getElementById("showCostProfitCheckbox")
-          ?.addEventListener("change", () => {
-            if (selectedPaymentKeys && selectedPaymentKeys.length > 0) {
-              buildInvoiceTable(selectedPaymentKeys);
-            }
-          });
+        document.getElementById('showCostProfitCheckbox')?.addEventListener('change', () => {
+          if (selectedPaymentKeys && selectedPaymentKeys.length > 0) {
+            buildInvoiceTable(selectedPaymentKeys)
+          }
+        })
 
-        // ---------------------------------------------------------
-        // ฟังก์ชัน: ผูก double-click บน REF => เปลี่ยนเป็น input
-        // ---------------------------------------------------------
         function setupRefEdit() {
-          // หา td.refCell
-          const refCells = invoiceTbody.querySelectorAll(".refCell");
-          refCells.forEach((cell) => {
-            cell.addEventListener("dblclick", () => {
-              const currentRef = cell.getAttribute("data-ref") || "-";
-              // สร้าง input
-              const inputEl = document.createElement("input");
-              inputEl.type = "text";
-              inputEl.value = currentRef;
-              inputEl.classList.add("ref-edit-input");
-              // ลบเนื้อหาเดิม
-              cell.innerHTML = "";
-              cell.appendChild(inputEl);
-              inputEl.focus();
+          const refCells = invoiceTbody.querySelectorAll('.refCell')
+          refCells.forEach(cell => {
+            cell.addEventListener('dblclick', () => {
+              const currentRef = cell.getAttribute('data-ref') || '-'
 
-              // เมื่อ blur หรือกด Enter => กลับเป็น text
+              const inputEl = document.createElement('input')
+              inputEl.type = 'text'
+              inputEl.value = currentRef
+              inputEl.classList.add('ref-edit-input')
+
+              cell.innerHTML = ''
+              cell.appendChild(inputEl)
+              inputEl.focus()
+
               const finalize = () => {
-                const newVal = inputEl.value.trim() || "-";
-                cell.setAttribute("data-ref", newVal);
-                cell.textContent = newVal;
-              };
-              inputEl.addEventListener("blur", finalize);
-              inputEl.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") {
-                  finalize();
+                const newVal = inputEl.value.trim() || '-'
+                cell.setAttribute('data-ref', newVal)
+                cell.textContent = newVal
+              }
+              inputEl.addEventListener('blur', finalize)
+              inputEl.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                  finalize()
                 }
-              });
-            });
-          });
+              })
+            })
+          })
         }
         async function storeFeeInDB(mainKey, subKey, bookingIndex, feeValue) {
-          // path: payments/mainKey/subKey/bookings/bookingIndex/fee
-          const feeRef = ref(
-            database,
-            `payments/${mainKey}/${subKey}/bookings/${bookingIndex}/fee`
-          );
-          // แปลงเป็นตัวเลข ถ้าต้องการเก็บเป็น number
-          const numericFee = parseFloat(feeValue) || 0;
-          await set(feeRef, numericFee);
+          const feeRef = ref(database, `payments/${mainKey}/${subKey}/bookings/${bookingIndex}/fee`)
+
+          const numericFee = parseFloat(feeValue) || 0
+          await set(feeRef, numericFee)
         }
 
         function enableFeeEdit() {
-          const invoiceTbody = document.querySelector("#invoiceTable tbody");
-          if (!invoiceTbody) return;
+          const invoiceTbody = document.querySelector('#invoiceTable tbody')
+          if (!invoiceTbody) return
 
-          const feeCells = invoiceTbody.querySelectorAll(".feeCell");
-          feeCells.forEach((cell) => {
-            cell.addEventListener("dblclick", () => {
-              // อ่านค่าปัจจุบัน (อย่าลืมเอา comma ออก ถ้ามี)
-              const oldText = cell.textContent.replace(/,/g, "").trim();
-              const mainK = cell.getAttribute("data-maink");
-              const subK = cell.getAttribute("data-subk");
-              const bkIndex = cell.getAttribute("data-bk-index");
+          const feeCells = invoiceTbody.querySelectorAll('.feeCell')
+          feeCells.forEach(cell => {
+            cell.addEventListener('dblclick', () => {
+              const oldText = cell.textContent.replace(/,/g, '').trim()
+              const mainK = cell.getAttribute('data-maink')
+              const subK = cell.getAttribute('data-subk')
+              const bkIndex = cell.getAttribute('data-bk-index')
 
-              // สร้าง input (type="text")
-              const inputEl = document.createElement("input");
-              inputEl.type = "text";
-              inputEl.value = oldText === "-" ? "" : oldText;
-              inputEl.classList.add("form-control");
-              inputEl.style.maxWidth = "100px";
+              const inputEl = document.createElement('input')
+              inputEl.type = 'text'
+              inputEl.value = oldText === '-' ? '' : oldText
+              inputEl.classList.add('form-control')
+              inputEl.style.maxWidth = '100px'
 
-              cell.textContent = "";
-              cell.appendChild(inputEl);
-              inputEl.focus();
+              cell.textContent = ''
+              cell.appendChild(inputEl)
+              inputEl.focus()
 
-              // ฟังก์ชันบันทึก
               const saveFee = async () => {
-                const newVal = inputEl.value.trim();
-                cell.innerHTML = newVal;
+                const newVal = inputEl.value.trim()
+                cell.innerHTML = newVal
 
-                // บันทึกลง DB (แบบเก็บเป็น string)
                 try {
-                  // path: payments/mainK/subK/bookings/bkIndex/fee
-                  const feeRef = ref(
-                    database,
-                    `payments/${mainK}/${subK}/bookings/${bkIndex}/fee`
-                  );
-                  await set(feeRef, newVal); // เก็บเป็น string
+                  const feeRef = ref(database, `payments/${mainK}/${subK}/bookings/${bkIndex}/fee`)
+                  await set(feeRef, newVal)
                 } catch (err) {
-                  console.error("Error saving fee:", err);
-                  alert("ไม่สามารถบันทึก Fee ได้");
+                  console.error('Error saving fee:', err)
+                  alert('ไม่สามารถบันทึก Fee ได้')
                 }
-              };
+              }
 
-              inputEl.addEventListener("blur", saveFee);
-              inputEl.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  saveFee();
+              inputEl.addEventListener('blur', saveFee)
+              inputEl.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  saveFee()
                 }
-              });
-            });
-          });
+              })
+            })
+          })
         }
         function enableInvoiceDateEdit() {
-          const dateSpan = document.getElementById("invoiceDateSpan");
-          if (!dateSpan) return;
+          const dateSpan = document.getElementById('invoiceDateSpan')
+          if (!dateSpan) return
 
-          dateSpan.addEventListener("dblclick", () => {
-            const oldText = dateSpan.textContent.trim();
-            const invoiceKey = dateSpan.getAttribute("data-invoice-key") || "";
+          dateSpan.addEventListener('dblclick', () => {
+            const oldText = dateSpan.textContent.trim()
+            const invoiceKey = dateSpan.getAttribute('data-invoice-key') || ''
 
-            // สร้าง input
-            const inputEl = document.createElement("input");
-            inputEl.type = "text";
-            inputEl.value = oldText === "กรุณากรอกวันที่" ? "" : oldText;
-            inputEl.classList.add("form-control");
-            inputEl.style.display = "inline-block";
-            inputEl.style.width = "auto";
+            const inputEl = document.createElement('input')
+            inputEl.type = 'text'
+            inputEl.value = oldText === 'กรุณากรอกวันที่' ? '' : oldText
+            inputEl.classList.add('form-control')
+            inputEl.style.display = 'inline-block'
+            inputEl.style.width = 'auto'
 
-            // เคลียร์ span แล้วใส่ input แทน
-            dateSpan.innerHTML = "";
-            dateSpan.appendChild(inputEl);
-            inputEl.focus();
+            dateSpan.innerHTML = ''
+            dateSpan.appendChild(inputEl)
+            inputEl.focus()
 
-            // ฟังก์ชันบันทึก
             const saveDate = async () => {
-              const newVal = inputEl.value.trim() || "กรุณากรอกวันที่";
-              dateSpan.textContent = newVal; // แสดงค่าที่แก้
+              const newVal = inputEl.value.trim() || 'กรุณากรอกวันที่'
+              dateSpan.textContent = newVal
 
-              if (invoiceKey === "temp") {
-                // ยังไม่มี InvoiceKey -> เก็บไว้ใน draftInvoiceDate
-                draftInvoiceDate = newVal;
+              if (invoiceKey === 'temp') {
+                draftInvoiceDate = newVal
               } else {
-                // มี InvoiceKey จริง -> บันทึกลง DB
-                const dateRef = ref(
-                  database,
-                  `invoices/${invoiceKey}/invoiceDate`
-                );
-                await set(dateRef, newVal);
+                const dateRef = ref(database, `invoices/${invoiceKey}/invoiceDate`)
+                await set(dateRef, newVal)
               }
-            };
+            }
 
-            inputEl.addEventListener("blur", saveDate);
-            inputEl.addEventListener("keydown", (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                saveDate();
+            inputEl.addEventListener('blur', saveDate)
+            inputEl.addEventListener('keydown', e => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                saveDate()
               }
-            });
-          });
+            })
+          })
         }
-      });
+      })
 
       function formatDate(dateStr) {
-        if (!dateStr || dateStr === "-") return "-";
+        if (!dateStr || dateStr === '-') return '-'
 
-        // โค้ดเดิม (DD/MM/YYYY)
-        // const [year, month, day] = dateStr.split("-");
-        // if (!year || !month || !day) return dateStr;
-        // return `${day}/${month}/${year}`;
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+        const [year, month, day] = dateStr.split('-')
+        if (!year || !month || !day) return dateStr
 
-        // โค้ดใหม่ (DD MMM YY)
-        const months = [
-          "JAN",
-          "FEB",
-          "MAR",
-          "APR",
-          "MAY",
-          "JUN",
-          "JUL",
-          "AUG",
-          "SEP",
-          "OCT",
-          "NOV",
-          "DEC",
-        ];
-        const [year, month, day] = dateStr.split("-");
-        if (!year || !month || !day) return dateStr;
+        const shortYear = year.slice(2)
+        const shortMonth = months[parseInt(month, 10) - 1]
 
-        const shortYear = year.slice(2); // เอาแค่สองตัวท้ายของปี
-        const shortMonth = months[parseInt(month, 10) - 1]; // หาชื่อเดือนแบบสั้น
-
-        return `${day} ${shortMonth} ${shortYear}`;
+        return `${day} ${shortMonth} ${shortYear}`
       }
 
-      const exportCsvBtn = document.getElementById("exportCsvBtn");
+      const exportCsvBtn = document.getElementById('exportCsvBtn')
       if (exportCsvBtn) {
-        // เริ่มต้น disabled
-        exportCsvBtn.disabled = true;
+        exportCsvBtn.disabled = true
 
-        exportCsvBtn.addEventListener("click", () => {
-          // เรียกฟังก์ชัน export CSV
-          exportTableToCSV("invoice_export.csv");
-        });
+        exportCsvBtn.addEventListener('click', () => {
+          exportTableToCSV('invoice_export.csv')
+        })
       }
 
-      // ฟังก์ชัน exportTableToCSV
       function exportTableToCSV(filename) {
-        const table = document.getElementById("invoiceTable");
+        const table = document.getElementById('invoiceTable')
         if (!table) {
-          alert("ไม่พบตาราง invoiceTable");
-          return;
+          alert('ไม่พบตาราง invoiceTable')
+          return
         }
-        let csv = [];
-        // สร้าง Array จาก each row
+        let csv = []
+
         for (let i = 0; i < table.rows.length; i++) {
-          let row = [];
+          let row = []
           for (let j = 0; j < table.rows[i].cells.length; j++) {
-            let text = table.rows[i].cells[j].innerText.replace(
-              /(\r\n|\n|\r)/gm,
-              ""
-            );
-            text = text.replace(/"/g, '""'); // escape double quotes
-            row.push(`"${text}"`);
+            let text = table.rows[i].cells[j].innerText.replace(/(\r\n|\n|\r)/gm, '')
+            text = text.replace(/"/g, '""')
+            row.push(`"${text}"`)
           }
-          csv.push(row.join(","));
+          csv.push(row.join(','))
         }
 
-        // รวมเป็น string
-        const csvString = csv.join("\n");
+        const csvString = csv.join('\n')
 
-        // สร้าง Blob
-        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", filename);
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', filename)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
       }
-      const viewInvoiceBtn = document.getElementById("viewInvoiceBtn");
+      const viewInvoiceBtn = document.getElementById('viewInvoiceBtn')
       if (viewInvoiceBtn) {
-        viewInvoiceBtn.addEventListener("click", () => {
-          viewInvoiceList();
-        });
+        viewInvoiceBtn.addEventListener('click', () => {
+          viewInvoiceList()
+        })
       }
 
-      // ฟังก์ชัน viewInvoiceList
       async function viewInvoiceList() {
-        // โหลด invoices
-        const invoicesSnap = await get(ref(database, "invoices"));
+        const invoicesSnap = await get(ref(database, 'invoices'))
         if (!invoicesSnap.exists()) {
-          alert("ยังไม่มี Invoice ใดๆ");
-          return;
+          alert('ยังไม่มี Invoice ใดๆ')
+          return
         }
-        const invoicesData = invoicesSnap.val();
+        const invoicesData = invoicesSnap.val()
 
-        const invoicesSelect = document.getElementById("invoicesSelect");
+        const invoicesSelect = document.getElementById('invoicesSelect')
         if (!invoicesSelect) {
-          alert("ไม่พบ select #invoicesSelect");
-          return;
+          alert('ไม่พบ select #invoicesSelect')
+          return
         }
-        invoicesSelect.innerHTML = "";
+        invoicesSelect.innerHTML = ''
 
-        const invoiceKeys = Object.keys(invoicesData);
-        invoiceKeys.forEach((k) => {
-          const invObj = invoicesData[k];
-          const option = document.createElement("option");
-          option.value = k;
-          const invName = invObj.invoiceName || "(NoName)";
-          // option.textContent = `${invName} [${k}]`;
-          option.textContent = `${invName}`;
-          invoicesSelect.appendChild(option);
-        });
+        const invoiceKeys = Object.keys(invoicesData)
+        invoiceKeys.forEach(k => {
+          const invObj = invoicesData[k]
+          const option = document.createElement('option')
+          option.value = k
+          const invName = invObj.invoiceName || '(NoName)'
 
-        // เปิด modal
-        const viewInvoiceModalEl = document.getElementById("viewInvoiceModal");
+          option.textContent = `${invName}`
+          invoicesSelect.appendChild(option)
+        })
+
+        const viewInvoiceModalEl = document.getElementById('viewInvoiceModal')
         if (!viewInvoiceModalEl) {
-          alert("ไม่มี modal #viewInvoiceModal ใน HTML");
-          return;
+          alert('ไม่มี modal #viewInvoiceModal ใน HTML')
+          return
         }
         const viewInvoiceModal = new bootstrap.Modal(viewInvoiceModalEl, {
-          backdrop: "static",
+          backdrop: 'static',
           keyboard: false,
-        });
-        viewInvoiceModal.show();
+        })
+        viewInvoiceModal.show()
       }
     </script>
   </body>

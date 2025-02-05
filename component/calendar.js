@@ -138,57 +138,52 @@ class CalendarComponent extends HTMLElement {
         <div>
             <div id="calendar"></div>
         </div>
-        `;
+        `
 
     // Your existing JavaScript to initialize FullCalendar
     // Add features like tooltips or animations as needed.
 
     // Firebase Config
     const firebaseConfig = {
-      apiKey: "AIzaSyDijkIIuVzWQWk6VSkXmexrnR_Ldjro",
-      authDomain: "booking-database-86230.firebaseapp.com",
-      databaseURL:
-        "https://booking-database-86230-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "booking-database-86230",
-      storageBucket: "booking-database-86230.appspot.com",
-      messagingSenderId: "891604763798",
-      appId: "1:891604763798:web:a27d3bf90c0e60563caeb7",
-      measurementId: "G-YVFPZ8RJGE",
-    };
+      apiKey: 'AIzaSyDijkIIuVzWQWk6VSkXmexrnR_Ldjro',
+      authDomain: 'booking-database-86230.firebaseapp.com',
+      databaseURL: 'https://booking-database-86230-default-rtdb.asia-southeast1.firebasedatabase.app',
+      projectId: 'booking-database-86230',
+      storageBucket: 'booking-database-86230.appspot.com',
+      messagingSenderId: '891604763798',
+      appId: '1:891604763798:web:a27d3bf90c0e60563caeb7',
+      measurementId: 'G-YVFPZ8RJGE',
+    }
 
     // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    firebase.initializeApp(firebaseConfig)
+    const database = firebase.database()
 
     // Initialize FullCalendar
-    const calendarEl = this.querySelector("#calendar");
+    const calendarEl = this.querySelector('#calendar')
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      themeSystem: "standard",
-      initialView: "dayGridMonth",
+      themeSystem: 'standard',
+      initialView: 'dayGridMonth',
       headerToolbar: {
-        left: "prev,next today",
-        center: "title",
-        right: "dayGridMonth,dayGridWeek",
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,dayGridWeek',
       },
       events: async function (info, successCallback, failureCallback) {
         try {
           const [tourSnapshot, transferSnapshot] = await Promise.all([
-            database.ref("tourBookings").once("value"),
-            database.ref("transferBookings").once("value"),
-          ]);
+            database.ref('tourBookings').once('value'),
+            database.ref('transferBookings').once('value'),
+          ])
 
-          const events = [];
+          const events = []
 
           // ดึงข้อมูล Tour
           if (tourSnapshot.exists()) {
-            tourSnapshot.forEach((booking) => {
-              const data = booking.val();
+            tourSnapshot.forEach(booking => {
+              const data = booking.val()
               events.push({
-                title: `(T) ${
-                  data.tourPickUpTime +
-                  " " +
-                  (data.tourFirstName || data.customerName || "No name")
-                } `,
+                title: `(T) ${data.tourPickUpTime + ' ' + (data.tourFirstName || data.customerName || 'No name')} `,
                 start: data.tourDate || data.date,
                 color: getColorByStatus(data.status),
                 extendedProps: {
@@ -205,24 +200,20 @@ class CalendarComponent extends HTMLElement {
                   pickUpTime: data.tourPickUpTime || data.pickUpTime,
                   sendTo: data.tourSendTo || data.sendTo,
                   note: data.tourNote || data.note,
-                  firstName: data.tourFirstName || "",
-                  lastName: data.tourLastName || "",
+                  firstName: data.tourFirstName || '',
+                  lastName: data.tourLastName || '',
                   status: data.status,
                 },
-              });
-            });
+              })
+            })
           }
 
           // ดึงข้อมูล Transfer
           if (transferSnapshot.exists()) {
-            transferSnapshot.forEach((booking) => {
-              const data = booking.val();
+            transferSnapshot.forEach(booking => {
+              const data = booking.val()
               events.push({
-                title: `(Tr) ${
-                  data.transferPickUpTime +
-                  " " +
-                  (data.transferFirstName || data.name || "No name")
-                } `,
+                title: `(Tr) ${data.transferPickUpTime + ' ' + (data.transferFirstName || data.name || 'No name')} `,
                 start: data.transferDate || data.date,
                 color: getColorByStatus(data.status),
                 extendedProps: {
@@ -238,75 +229,61 @@ class CalendarComponent extends HTMLElement {
                   dropTo: data.transferDropTo || data.dropTo,
                   sendTo: data.transferSendTo || data.sendTo,
                   note: data.transferNote || data.note,
-                  firstName: data.transferFirstName || "",
-                  lastName: data.transferLastName || "",
+                  firstName: data.transferFirstName || '',
+                  lastName: data.transferLastName || '',
                   status: data.status,
-                  carModel: data.car_model || "-",
-                  licensePlate: data.license_plate || "-",
-                  driverName: data.driver_name || "-",
-                  phoneNumber: data.phone_number || "-",
+                  carModel: data.car_model || '-',
+                  licensePlate: data.license_plate || '-',
+                  driverName: data.driver_name || '-',
+                  phoneNumber: data.phone_number || '-',
                 },
-              });
-            });
+              })
+            })
           }
 
           // จัดเรียงเหตุการณ์ตาม pickUpTime
           events.sort((a, b) => {
-            const timeA = a.extendedProps.pickUpTime || "00:00";
-            const timeB = b.extendedProps.pickUpTime || "00:00";
-            return timeA.localeCompare(timeB);
-          });
+            const timeA = a.extendedProps.pickUpTime || '00:00'
+            const timeB = b.extendedProps.pickUpTime || '00:00'
+            return timeA.localeCompare(timeB)
+          })
 
           // ส่งข้อมูลกลับไปยัง FullCalendar
-          successCallback(events);
+          successCallback(events)
         } catch (error) {
-          console.error("Error fetching events:", error);
-          failureCallback(error);
+          console.error('Error fetching events:', error)
+          failureCallback(error)
         }
       },
 
       eventDidMount: function (info) {
-        const isTransfer = info.event.title.includes("(Tr)"); // ตรวจสอบว่าเป็น Transfer หรือไม่
-        const firstName = info.event.extendedProps.firstName || "-";
-        const lastName = info.event.extendedProps.lastName || "-";
+        const isTransfer = info.event.title.includes('(Tr)') // ตรวจสอบว่าเป็น Transfer หรือไม่
+        const firstName = info.event.extendedProps.firstName || '-'
+        const lastName = info.event.extendedProps.lastName || '-'
 
         const tooltipContent = `
           <div style="display: flex; gap: 20px;">
-            <!-- คอลัมน์ซ้าย -->
-            <div style="flex: 1;">
+                        <div style="flex: 1;">
               <h5><strong>${
                 info.event.start
-                  ? `${String(info.event.start.getDate()).padStart(
-                      2,
-                      "0"
-                    )}/${String(info.event.start.getMonth() + 1).padStart(
-                      2,
-                      "0"
-                    )}/${info.event.start.getFullYear()}`
-                  : "-"
+                  ? `${String(info.event.start.getDate()).padStart(2, '0')}/${String(
+                      info.event.start.getMonth() + 1
+                    ).padStart(2, '0')}/${info.event.start.getFullYear()}`
+                  : '-'
               }</strong></h5>
 
-              <h6><strong>เวลารับ:</strong> ${
-                info.event.extendedProps.pickUpTime || "-"
-              }</h6>
+              <h6><strong>เวลารับ:</strong> ${info.event.extendedProps.pickUpTime || '-'}</h6>
               <strong>ชื่อ:</strong> ${firstName}<br>
               <strong>นามสกุล:</strong> ${lastName}<br>
-              <strong>จำนวน:</strong> ${info.event.extendedProps.pax || "-"}<br>
-              <strong>ส่งใคร:</strong> ${
-                info.event.extendedProps.sendTo || "-"
-              }<br>
+              <strong>จำนวน:</strong> ${info.event.extendedProps.pax || '-'}<br>
+              <strong>ส่งใคร:</strong> ${info.event.extendedProps.sendTo || '-'}<br>
             
-              <strong>ประเภท:</strong> ${
-                info.event.extendedProps.type || "-"
-              }<br>
-              <strong>รายละเอียด:</strong> ${
-                info.event.extendedProps.detail || "-"
-              }<br>
+              <strong>ประเภท:</strong> ${info.event.extendedProps.type || '-'}<br>
+              <strong>รายละเอียด:</strong> ${info.event.extendedProps.detail || '-'}<br>
              
             </div>
       
-            <!-- คอลัมน์ขวา -->
-            <div style="flex: 1;">
+                        <div style="flex: 1;">
 
               ${
                 isTransfer
@@ -317,107 +294,92 @@ class CalendarComponent extends HTMLElement {
                 <strong>เบอร์โทร:</strong> ${info.event.extendedProps.phoneNumber}<br>
                 `
                   : `
-                 <strong>โรงแรม:</strong> ${
-                   info.event.extendedProps.hotel || "-"
-                 }<br>
-          <strong>หมายเลขห้อง:</strong> ${
-            info.event.extendedProps.roomNo || "-"
-          }<br>
-          <strong>Fee:</strong> ${info.event.extendedProps.fee || "-"}<br>
-          <strong>อาหาร:</strong> ${info.event.extendedProps.meal || "-"}<br>
-          <strong>ติดต่อ:</strong> ${
-            info.event.extendedProps.contactNo || "-"
-          }<br>
+                 <strong>โรงแรม:</strong> ${info.event.extendedProps.hotel || '-'}<br>
+          <strong>หมายเลขห้อง:</strong> ${info.event.extendedProps.roomNo || '-'}<br>
+          <strong>Fee:</strong> ${info.event.extendedProps.fee || '-'}<br>
+          <strong>อาหาร:</strong> ${info.event.extendedProps.meal || '-'}<br>
+          <strong>ติดต่อ:</strong> ${info.event.extendedProps.contactNo || '-'}<br>
                 `
               }
-              <strong>หมายเหตุ:</strong> ${
-                info.event.extendedProps.note || "-"
-              }<br>
-              <strong>สถานะ:</strong> ${
-                info.event.extendedProps.status || "-"
-              }<br>
-              <h5 style="color:rgb(128, 128, 128);"><i><strong>${
-                isTransfer ? "Transfer" : "Tour"
-              }</strong></i></h5>
-              <h6 style="color:rgb(128, 128, 128);"><i><strong>${
-                info.event.extendedProps.id || "-"
-              }</strong></i></h6>
+              <strong>หมายเหตุ:</strong> ${info.event.extendedProps.note || '-'}<br>
+              <strong>สถานะ:</strong> ${info.event.extendedProps.status || '-'}<br>
+              <h5 style="color:rgb(128, 128, 128);"><i><strong>${isTransfer ? 'Transfer' : 'Tour'}</strong></i></h5>
+              <h6 style="color:rgb(128, 128, 128);"><i><strong>${info.event.extendedProps.id || '-'}</strong></i></h6>
             </div>
           </div>
-        `;
+        `
 
-        const tooltip = document.createElement("div");
-        tooltip.innerHTML = tooltipContent;
-        tooltip.style.position = "absolute";
-        tooltip.style.backgroundColor = "#fff";
-        tooltip.style.padding = "10px";
-        tooltip.style.border = "1px solid #ddd";
-        tooltip.style.borderRadius = "5px";
-        tooltip.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
-        tooltip.style.zIndex = "1000";
-        tooltip.style.display = "none";
-        tooltip.style.fontSize = "0.9rem";
-        tooltip.style.color = "#333";
+        const tooltip = document.createElement('div')
+        tooltip.innerHTML = tooltipContent
+        tooltip.style.position = 'absolute'
+        tooltip.style.backgroundColor = '#fff'
+        tooltip.style.padding = '10px'
+        tooltip.style.border = '1px solid #ddd'
+        tooltip.style.borderRadius = '5px'
+        tooltip.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)'
+        tooltip.style.zIndex = '1000'
+        tooltip.style.display = 'none'
+        tooltip.style.fontSize = '0.9rem'
+        tooltip.style.color = '#333'
 
-        document.body.appendChild(tooltip);
+        document.body.appendChild(tooltip)
 
         // เพิ่มเอฟเฟกต์ hover
-        info.el.addEventListener("mouseenter", (e) => {
-          tooltip.style.left = `${e.pageX + 10}px`;
-          tooltip.style.top = `${e.pageY + 10}px`;
-          tooltip.style.display = "block";
+        info.el.addEventListener('mouseenter', e => {
+          tooltip.style.left = `${e.pageX + 10}px`
+          tooltip.style.top = `${e.pageY + 10}px`
+          tooltip.style.display = 'block'
 
           // เพิ่มสไตล์ hover
-          info.el.style.transition =
-            "transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease";
-          info.el.style.transform = "scale(1.05)";
-          info.el.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
-          info.el.style.border = "2px solid black"; // เพิ่มกรอบสีดำ
-        });
+          info.el.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease'
+          info.el.style.transform = 'scale(1.05)'
+          info.el.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)'
+          info.el.style.border = '2px solid black' // เพิ่มกรอบสีดำ
+        })
 
-        info.el.addEventListener("mousemove", (e) => {
-          tooltip.style.left = `${e.pageX + 10}px`;
-          tooltip.style.top = `${e.pageY + 10}px`;
-        });
+        info.el.addEventListener('mousemove', e => {
+          tooltip.style.left = `${e.pageX + 10}px`
+          tooltip.style.top = `${e.pageY + 10}px`
+        })
 
-        info.el.addEventListener("mouseleave", () => {
-          tooltip.style.display = "none";
+        info.el.addEventListener('mouseleave', () => {
+          tooltip.style.display = 'none'
 
           // คืนค่าเดิมเมื่อเมาส์ออก
-          info.el.style.transform = "scale(1)";
-          info.el.style.boxShadow = "none";
-          info.el.style.border = "none"; // ลบกรอบสีดำ
-        });
+          info.el.style.transform = 'scale(1)'
+          info.el.style.boxShadow = 'none'
+          info.el.style.border = 'none' // ลบกรอบสีดำ
+        })
       },
-    });
-    const getColorByStatus = (status) => {
+    })
+    const getColorByStatus = status => {
       switch (status) {
-        case "รอดำเนินการ":
-          return "#a6a6a6"; // สีเทาเข้มขึ้น
-        case "จองแล้ว":
-          return "#007bff"; // สีน้ำเงินเข้มขึ้น
-        case "ดำเนินการอยู่":
-          return "#e0a800"; // สีเหลืองเข้มขึ้น
-        case "เสร็จสมบูรณ์":
-          return "#218838"; // สีเขียวเข้มขึ้น
+        case 'รอดำเนินการ':
+          return '#a6a6a6' // สีเทาเข้มขึ้น
+        case 'จองแล้ว':
+          return '#007bff' // สีน้ำเงินเข้มขึ้น
+        case 'ดำเนินการอยู่':
+          return '#e0a800' // สีเหลืองเข้มขึ้น
+        case 'เสร็จสมบูรณ์':
+          return '#218838' // สีเขียวเข้มขึ้น
         default:
-          return "#ff0033"; // สีดำ (สำหรับสถานะที่ไม่รู้จัก)
+          return '#ff0033' // สีดำ (สำหรับสถานะที่ไม่รู้จัก)
       }
-    };
+    }
 
     const updateCalendar = () => {
-      database.ref("tourBookings").on("value", () => {
-        calendar.refetchEvents();
-      });
+      database.ref('tourBookings').on('value', () => {
+        calendar.refetchEvents()
+      })
 
-      database.ref("transferBookings").on("value", () => {
-        calendar.refetchEvents();
-      });
-    };
+      database.ref('transferBookings').on('value', () => {
+        calendar.refetchEvents()
+      })
+    }
 
-    calendar.render();
-    updateCalendar();
+    calendar.render()
+    updateCalendar()
   }
 }
 
-customElements.define("calendar-component", CalendarComponent);
+customElements.define('calendar-component', CalendarComponent)

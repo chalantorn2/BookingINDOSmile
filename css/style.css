@@ -1,7 +1,7 @@
 body {
   background: linear-gradient(to bottom right, #e7f0fd, #ffffff);
-  font-family: "Prompt", sans-serif;
-  padding-top: 70px; /* ระยะห่างจาก Header */
+  font-family: 'Prompt', sans-serif;
+  padding-top: 70px;
 }
 
 h1 {
@@ -28,34 +28,29 @@ h1 {
 .form-label {
   font-weight: 600;
 }
-/* เพิ่มแอนิเมชัน */
 
-/* เมนู */
-
-/* สีพื้นหลังตามสถานะ */
-/* สีพื้นหลังตามสถานะ */
 .status-รอดำเนินการ {
-  background-color: #f0f0f0; /* สีเทาอ่อน */
-  border-left: 4px solid #c4c4c4; /* เส้นขอบเทา */
+  background-color: #f0f0f0;
+  border-left: 4px solid #c4c4c4;
 }
 
 .status-จองแล้ว {
-  background-color: #d0e7ff; /* ฟ้าอ่อน */
-  border-left: 4px solid #5ab4f7; /* เส้นขอบฟ้า */
+  background-color: #d0e7ff;
+  border-left: 4px solid #5ab4f7;
 }
 
 .status-ดำเนินการอยู่ {
-  background-color: #ffe8a1; /* เหลืองสด */
-  border-left: 4px solid #ffc107; /* เส้นขอบเหลือง */
+  background-color: #ffe8a1;
+  border-left: 4px solid #ffc107;
 }
 
 .status-เสร็จสมบูรณ์ {
-  background-color: #d4f7d4; /* เขียวสด */
-  border-left: 4px solid #28a745; /* เส้นขอบเขียว */
+  background-color: #d4f7d4;
+  border-left: 4px solid #28a745;
 }
 .status-ยกเลิก {
-  background-color: #f8d7da; /* แดงอ่อน */
-  border-left: 4px solid #dc3545; /* แดงเข้ม */
+  background-color: #f8d7da;
+  border-left: 4px solid #dc3545;
 }
 
 .status-indicator {
@@ -71,66 +66,35 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%; /* ให้ครอบคลุมพื้นที่ */
+  width: 100%;
 }
 
 #inlineCalendar {
-  width: 100%; /* ให้ปฏิทินพอดีกับกรอบ */
+  width: 100%;
 }
 
 .action-buttons a,
 .action-buttons button {
-  font-size: 0.9rem; /* ลดขนาดข้อความ */
-  padding: 8px 10px; /* ลด Padding */
+  font-size: 0.9rem;
+  padding: 8px 10px;
 }
 
 .flatpickr-calendar {
-  /* width: auto; */
-  width: 100%; /* Adjust based on content */
-  max-width: 400px; /* Define a more flexible limit */
-  margin: 0 auto; /* Center the calendar */
-  /* padding: 10px; */
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
 }
 @media (max-width: 768px) {
   .flatpickr-calendar {
-    width: auto; /* ให้ปรับขนาดอัตโนมัติบนจอเล็ก */
+    width: auto;
   }
 }
 
 .col-md-3 {
-  border-right: 1px solid #ddd; /* เส้นแบ่งด้านขวา */
-  padding-right: 15px; /* เพิ่มระยะห่างภายใน */
+  border-right: 1px solid #ddd;
+  padding-right: 15px;
 }
 
 .col-md-9 {
-  padding-left: 15px; /* เพิ่มระยะห่างด้านซ้าย */
+  padding-left: 15px;
 }
-
-/* table_booking.html
-.filter-section {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.table-container {
-  overflow-x: auto;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-table th,
-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-table th {
-  background-color: #007bff;
-  color: white;
-}
-
-.view-details-btn:disabled {
-  pointer-events: none;
-  opacity: 0.6;
-} */
