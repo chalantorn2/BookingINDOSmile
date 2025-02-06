@@ -22,10 +22,11 @@
         </button>
 
         <button class="btn btn-success me-2" id="saveInvoiceBtn"><i class="bi bi-save"></i> บันทึก Invoice</button>
+        <button class="btn btn-primary me-2" id="editInvoiceBtn">Edit Invoice</button>
 
-        <button class="btn btn-primary me-2" id="exportCsvBtn" disabled>
+        <!-- <button class="btn btn-primary me-2" id="exportCsvBtn" disabled>
           <i class="bi bi-file-earmark-spreadsheet"></i> Export ข้อมูล
-        </button>
+        </button> -->
 
         <button class="btn btn-info me-2" id="viewInvoiceBtn"><i class="bi bi-eye"></i> View Invoice</button>
 
@@ -156,6 +157,55 @@
         </div>
       </div>
     </div>
+
+    <div class="modal fade" id="editInvoiceModal" tabindex="-1">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Invoice</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="invoiceSearchInput" class="form-label">Select Invoice</label>
+              <input
+                type="text"
+                class="form-control"
+                id="invoiceSearchInput"
+                placeholder="Type to search invoice"
+                list="invoicesDataList"
+              />
+              <datalist id="invoicesDataList"></datalist>
+            </div>
+            <div class="mb-3">
+              <ul class="list-group" id="selectedPaymentsList"></ul>
+            </div>
+            <div>
+              <button class="btn btn-success" id="addPaymentBtn">Add Payment</button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button class="btn btn-primary" id="saveEditInvoiceBtn">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="addPaymentModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Payment</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="addPaymentModalBody">
+            <ul class="list-group" id="addPaymentList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="/component/menu.js"></script>
@@ -836,8 +886,212 @@
             })
           })
         }
-      })
 
+        const addPaymentBtn = document.getElementById('addPaymentBtn')
+        if (addPaymentBtn) {
+          addPaymentBtn.addEventListener('click', () => {
+            setupAddPaymentModal()
+            openAddPaymentModal()
+          })
+        }
+        const saveEditInvoiceBtn = document.getElementById('saveEditInvoiceBtn')
+        if (saveEditInvoiceBtn) {
+          saveEditInvoiceBtn.addEventListener('click', () => {
+            saveEditInvoice()
+          })
+        }
+        document.getElementById('editInvoiceBtn').addEventListener('click', () => {
+          openEditInvoiceModal()
+        })
+      })
+      let editInvoiceModal
+      let currentEditingInvoiceKey = ''
+      let currentEditingPayments = []
+
+      function openEditInvoiceModal() {
+        if (!editInvoiceModal) {
+          const modalEl = document.getElementById('editInvoiceModal')
+          editInvoiceModal = new bootstrap.Modal(modalEl, { backdrop: 'static' })
+        }
+        currentEditingInvoiceKey = ''
+        currentEditingPayments = []
+        buildInvoiceListForEdit()
+        document.getElementById('invoiceSearchInput').value = ''
+        document.getElementById('invoicesDataList').innerHTML = ''
+        document.getElementById('selectedPaymentsList').innerHTML = ''
+        editInvoiceModal.show()
+      }
+
+      async function buildInvoiceListForEdit() {
+        const invoiceSearchInput = document.getElementById('invoiceSearchInput')
+        const invoicesDataList = document.getElementById('invoicesDataList')
+        if (!invoiceSearchInput || !invoicesDataList) return
+
+        const invoicesSnap = await get(ref(database, 'invoices'))
+        if (!invoicesSnap.exists()) return
+
+        const data = invoicesSnap.val()
+        const keys = Object.keys(data)
+        invoicesDataList.innerHTML = ''
+
+        keys.forEach(k => {
+          let n = data[k].invoiceName || '(No Name)'
+          let opt = document.createElement('option')
+          opt.value = n
+          opt.dataset.key = k
+          invoicesDataList.appendChild(opt)
+        })
+
+        invoiceSearchInput.addEventListener(
+          'change',
+          () => {
+            let val = invoiceSearchInput.value.trim()
+            if (!val) return
+
+            let selectedOption = Array.from(invoicesDataList.children).find(opt => opt.value === val)
+            if (!selectedOption) return
+
+            let invoiceKey = selectedOption.dataset.key
+            loadInvoiceForEdit(invoiceKey)
+          },
+          { once: true }
+        )
+      }
+
+      async function loadInvoiceForEdit(k) {
+        const snap = await get(ref(database, 'invoices/' + k))
+        if (!snap.exists()) return
+        const invObj = snap.val()
+        currentEditingInvoiceKey = k
+        currentEditingPayments = []
+        if (invObj.selectedPaymentKeys && Array.isArray(invObj.selectedPaymentKeys)) {
+          currentEditingPayments = invObj.selectedPaymentKeys.slice()
+        }
+        buildSelectedPaymentsList()
+      }
+
+      function movePaymentUp(idx) {
+        if (idx <= 0) return
+        let tmp = currentEditingPayments[idx]
+        currentEditingPayments[idx] = currentEditingPayments[idx - 1]
+        currentEditingPayments[idx - 1] = tmp
+        buildSelectedPaymentsList()
+      }
+      let addPaymentModal
+      function setupAddPaymentModal() {
+        if (!addPaymentModal) {
+          const el = document.getElementById('addPaymentModal')
+          addPaymentModal = new bootstrap.Modal(el, { backdrop: 'static' })
+        }
+      }
+      function movePaymentDown(idx) {
+        if (idx >= currentEditingPayments.length - 1) return
+        let tmp = currentEditingPayments[idx]
+        currentEditingPayments[idx] = currentEditingPayments[idx + 1]
+        currentEditingPayments[idx + 1] = tmp
+        buildSelectedPaymentsList()
+      }
+
+      function openAddPaymentModal() {
+        buildAddPaymentList()
+        addPaymentModal.show()
+      }
+
+      window.deletePaymentFromInvoice = deletePaymentFromInvoice
+      window.movePaymentUp = movePaymentUp
+      window.movePaymentDown = movePaymentDown
+      window.addPaymentToInvoice = addPaymentToInvoice
+      window.setupAddPaymentModal = setupAddPaymentModal
+      window.openAddPaymentModal = openAddPaymentModal
+
+      function buildSelectedPaymentsList() {
+        const listEl = document.getElementById('selectedPaymentsList')
+        if (!listEl) return
+        listEl.innerHTML = ''
+        currentEditingPayments.forEach((ck, idx) => {
+          let li = document.createElement('li')
+          li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center')
+          let label = getDisplayNameFromPaymentKey(ck)
+          li.innerHTML = `
+      <div>
+        <span class="me-2">${label}</span>
+        <button class="btn btn-sm btn-link text-danger" data-idx="${idx}" onclick="deletePaymentFromInvoice(${idx})">Delete</button>
+      </div>
+      <div>
+        <button class="btn btn-sm btn-secondary me-1" onclick="movePaymentUp(${idx})">Up</button>
+        <button class="btn btn-sm btn-secondary" onclick="movePaymentDown(${idx})">Down</button>
+      </div>
+    `
+          listEl.appendChild(li)
+        })
+      }
+
+      function getDisplayNameFromPaymentKey(ck) {
+        let splitted = ck.split('/')
+        let mk = splitted[0]
+        let sk = splitted[1]
+        if (!allPaymentsData[mk] || !allPaymentsData[mk][sk]) return ck
+        let p = allPaymentsData[mk][sk]
+        if (p.customer && p.customer.firstName) {
+          let f = p.customer.firstName
+          let l = p.customer.lastName ? p.customer.lastName : ''
+          return `${f} ${l}`.trim()
+        }
+        return ck
+      }
+
+      function deletePaymentFromInvoice(idx) {
+        currentEditingPayments.splice(idx, 1)
+        buildSelectedPaymentsList()
+      }
+
+      function buildAddPaymentList() {
+        const addListEl = document.getElementById('addPaymentList')
+        if (!addListEl) return
+        addListEl.innerHTML = ''
+        const mainKeys = Object.keys(allPaymentsData).sort()
+        mainKeys.forEach(mk => {
+          let subObj = allPaymentsData[mk]
+          if (!subObj) return
+          let subKeys = Object.keys(subObj).sort()
+          subKeys.forEach(sk => {
+            let pay = subObj[sk]
+            if (pay.invoiced === true) return
+            let label = ''
+            if (pay.customer && pay.customer.firstName) {
+              label = pay.customer.firstName
+              if (pay.customer.lastName) label += ' ' + pay.customer.lastName
+            }
+            let ck = mk + '/' + sk
+            let li = document.createElement('li')
+            li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center')
+            li.innerHTML = `
+        <span>${label}</span>
+        <button class="btn btn-sm btn-primary" onclick="addPaymentToInvoice('${ck}')">Add</button>
+      `
+            addListEl.appendChild(li)
+          })
+        })
+      }
+
+      function addPaymentToInvoice(ck) {
+        if (!currentEditingPayments.includes(ck)) {
+          currentEditingPayments.push(ck)
+        }
+        buildSelectedPaymentsList()
+      }
+
+      async function saveEditInvoice() {
+        if (!currentEditingInvoiceKey) return
+        let invKey = currentEditingInvoiceKey
+        let invRef = ref(database, 'invoices/' + invKey)
+        let snapshot = await get(invRef)
+        if (!snapshot.exists()) return
+        let obj = snapshot.val()
+        obj.selectedPaymentKeys = currentEditingPayments.slice()
+        await set(invRef, obj)
+        editInvoiceModal.hide()
+      }
       function formatDate(dateStr) {
         if (!dateStr || dateStr === '-') return '-'
 

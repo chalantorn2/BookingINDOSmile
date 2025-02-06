@@ -4,8 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>INDO Smile Booking Form</title>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap" rel="stylesheet" />
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css" />
   </head>
 
@@ -21,292 +23,63 @@
         <excel-export class="col-3 btn"></excel-export>
       </div>
 
-      <div class="d-flex justify-content-center mb-4">
-        <div class="btn-group" role="group">
-          <input type="radio" class="btn-check" name="formType" id="formTour" value="tour" autocomplete="off" />
-          <label class="btn btn-outline-success" for="formTour" id="labelTour">Tour</label>
-
-          <input type="radio" class="btn-check" name="formType" id="formTransfer" value="transfer" autocomplete="off" />
-          <label class="btn btn-outline-primary" for="formTransfer" id="labelTransfer">Transfer</label>
-        </div>
-      </div>
-
-      <div class="card shadow-sm d-none" id="tourCard">
-        <div class="card-header text-white" id="tourCardHeader">
-          <h5 class="mb-0">Tour Booking Form</h5>
+      <!-- ฟอร์มข้อมูลกลางที่ใช้ร่วมกัน -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header text-center bg-dark text-white">
+          <h5 class="mb-0">ข้อมูลหลักของ Booking</h5>
         </div>
         <div class="card-body">
-          <form id="tourForm">
-            <div class="row g-3 mb-3">
+          <form id="mainBookingForm">
+            <div class="row g-3">
               <div class="col-md-6">
-                <label for="tourAgent" class="form-label">Agent</label>
-                <input type="text" class="form-control" id="tourAgent" name="tourAgent" placeholder="ใส่ชื่อ Agent" />
-              </div>
-              <div class="col-md-6">
-                <label for="tourSendTo" class="form-label">ส่งใคร</label>
-                <input type="text" class="form-control" id="tourSendTo" name="tourSendTo" placeholder="ส่งงานให้ใคร" />
-              </div>
-            </div>
-            <div class="row g-4 mb-3">
-              <div class="col-md-4">
-                <label for="tourFirstNameCustomer" class="form-label">ชื่อ</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="tourFirstNameCustomer"
-                  name="tourFirstNameCustomer"
-                  placeholder="ชื่อลูกค้า"
-                  required
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="tourLastNameCustomer" class="form-label">นามสกุล</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="tourLastNameCustomer"
-                  name="tourLastNameCustomer"
-                  placeholder="นามสกุลลูกค้า หากไม่มีให้ใส่ - (ขีด)"
-                  required
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="tourPax" class="form-label">จำนวน</label>
-                <input type="text" class="form-control" id="tourPax" name="tourPax" placeholder="จำนวนคน" />
-              </div>
-            </div>
-            <div class="mb-3">
-              <label for="tourType" class="form-label">ประเภท</label>
-              <input type="text" class="form-control" id="tourType" name="tourType" placeholder="ประเภททัวร์" />
-            </div>
-
-            <div class="mb-3">
-              <label for="tourDetail" class="form-label">รายละเอียด</label>
-              <textarea
-                class="form-control"
-                id="tourDetail"
-                name="tourDetail"
-                rows="3"
-                placeholder="รายละเอียดทัวร์"
-              ></textarea>
-            </div>
-
-            <div class="row g-3 mb-3">
-              <div class="col-md-4">
-                <label for="tourFee" class="form-label">FEE</label>
-                <input type="text" class="form-control" id="tourFee" name="tourFee" placeholder="ค่าทัวร์" />
-              </div>
-              <div class="col-md-4">
-                <label for="tourMeal" class="form-label">MEAL</label>
-                <input type="text" class="form-control" id="tourMeal" name="tourMeal" placeholder="อาหารที่รวม" />
-              </div>
-              <div class="col-md-4">
-                <label for="tourDate" class="form-label">Date</label>
-                <input type="date" class="form-control" id="tourDate" name="tourDate" required />
-              </div>
-            </div>
-
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label for="tourHotel" class="form-label">โรงแรม</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="tourHotel"
-                  name="tourHotel"
-                  placeholder="ชื่อโรงแรมที่พัก"
-                />
+                <label for="agent" class="form-label">Agent</label>
+                <input type="text" class="form-control" id="agent" placeholder="ชื่อ Agent" required />
               </div>
               <div class="col-md-6">
-                <label for="tourRoomNo" class="form-label">หมายเลขห้องพัก</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="tourRoomNo"
-                  name="tourRoomNo"
-                  placeholder="หมายเลขห้องพัก"
-                />
+                <label for="firstName" class="form-label">First Name</label>
+                <input type="text" class="form-control" id="firstName" placeholder="ชื่อลูกค้า" required />
               </div>
             </div>
 
-            <div class="row g-3 mb-3">
+            <div class="row g-3 mt-1">
               <div class="col-md-6">
-                <label for="tourContactNo" class="form-label">Contact No.</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="tourContactNo"
-                  name="tourContactNo"
-                  placeholder="เบอร์ติดต่อ"
-                />
+                <label for="lastName" class="form-label">Last Name</label>
+                <input type="text" class="form-control" id="lastName" placeholder="นามสกุลลูกค้า" required />
               </div>
               <div class="col-md-6">
-                <label for="tourPickUpTime" class="form-label">เวลารับ</label>
-                <input type="text" class="form-control" id="tourPickUpTime" name="tourPickUpTime" placeholder="HH:MM" />
+                <label for="pax" class="form-label">Pax</label>
+                <input type="number" class="form-control" id="pax" placeholder="จำนวนคน" required />
               </div>
             </div>
-
-            <div class="mb-3">
-              <label for="tourNote" class="form-label">หมายเหตุ</label>
-              <textarea
-                class="form-control"
-                id="tourNote"
-                name="tourNote"
-                rows="3"
-                placeholder="หมายเหตุเพิ่มเติม"
-              ></textarea>
+            <!-- ปุ่มเพิ่มฟอร์ม Tour และ Transfer -->
+            <div class="d-flex justify-content-center mb-4 mt-4">
+              <button type="button" class="btn btn-outline-success me-3" id="addTourForm">Add Tour</button>
+              <button type="button" class="btn btn-outline-primary" id="addTransferForm">Add Transfer</button>
             </div>
-
-            <button type="submit" class="btn btn-primary btn-lg mt-3" id="tourSubmitBtn">บันทึก</button>
-          </form>
-        </div>
-      </div>
-
-      <div class="card shadow-sm d-none mt-4" id="transferCard">
-        <div class="card-header text-white" id="transferCardHeader">
-          <h5 class="mb-0">Transfer Booking Form</h5>
-        </div>
-        <div class="card-body">
-          <form id="transferForm">
-            <div class="row g-3 mb-3">
+            <!-- Container สำหรับแสดงฟอร์มที่เพิ่ม -->
+            <div class="row d-none" id="additionalForms">
+              <!-- ฝั่งซ้าย: Tour Bookings -->
               <div class="col-md-6">
-                <label for="transferAgent" class="form-label">Agent</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="transferAgent"
-                  name="transferAgent"
-                  placeholder="ใส่ชื่อ Agent"
-                />
+                <h4 class="text-center text-success fw-bold">
+                  Tour Bookings <span id="tourCount" class="badge bg-success">0</span>
+                </h4>
+
+                <div id="tourForms"></div>
               </div>
+
+              <!-- ฝั่งขวา: Transfer Bookings -->
               <div class="col-md-6">
-                <label for="transferSendTo" class="form-label">ส่งใคร</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="transferSendTo"
-                  name="transferSendTo"
-                  placeholder="ส่งงานให้ใคร"
-                />
+                <h4 class="text-center text-primary fw-bold">
+                  Transfer Bookings <span id="transferCount" class="badge bg-primary">0</span>
+                </h4>
+
+                <div id="transferForms"></div>
               </div>
             </div>
-            <div class="row g-3 mb-3">
-              <div class="col-md-4">
-                <label for="transferFirstNameCustomer" class="form-label">ชื่อ</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="transferFirstNameCustomer"
-                  name="transferFirstNameCustomer"
-                  placeholder="ชื่อลูกค้า"
-                  required
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="transferLastNameCustomer" class="form-label">นามสกุล</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="transferLastNameCustomer"
-                  name="transferLastNameCustomer"
-                  placeholder="นามสกุลลูกค้า หากไม่มีให้ใส่ - (ขีด)"
-                  required
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="transferPax" class="form-label">จำนวน</label>
-                <input type="text" class="form-control" id="transferPax" name="transferPax" placeholder="จำนวนคน" />
-              </div>
+            <!-- ปุ่มบันทึกข้อมูล (ซ่อนไว้ตอนเริ่มต้น) -->
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-warning btn-lg d-none" id="submitBookingBtn">บันทึกข้อมูล</button>
             </div>
-
-            <div class="mb-3">
-              <label for="transferType" class="form-label">ประเภท</label>
-              <input
-                type="text"
-                class="form-control"
-                id="transferType"
-                name="transferType"
-                placeholder="ประเภทการรับ-ส่ง"
-              />
-            </div>
-
-            <div class="mb-3">
-              <label for="transferDetail" class="form-label">รายละเอียด</label>
-              <textarea
-                class="form-control"
-                id="transferDetail"
-                name="transferDetail"
-                rows="3"
-                placeholder="รายละเอียดการรับ-ส่ง"
-              ></textarea>
-            </div>
-
-            <div class="row g-3 mb-3">
-              <div class="col-md-4">
-                <label for="transferFlight" class="form-label">Flight</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="transferFlight"
-                  name="transferFlight"
-                  placeholder="เที่ยวบิน"
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="transferTime" class="form-label">Flight Time</label>
-                <input type="text" class="form-control" id="transferTime" name="transferTime" placeholder="HH:MM" />
-              </div>
-              <div class="col-md-4">
-                <label for="transferDate" class="form-label">Date</label>
-                <input type="date" class="form-control" id="transferDate" name="transferDate" required />
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label for="transferPickUpTime" class="form-label">เวลารับ</label>
-              <input
-                type="text"
-                class="form-control"
-                id="transferPickUpTime"
-                name="transferPickUpTime"
-                placeholder="HH:MM"
-              />
-            </div>
-
-            <div class="mb-3">
-              <label for="transferPickupFrom" class="form-label">รับจาก</label>
-              <input
-                type="text"
-                class="form-control"
-                id="transferPickupFrom"
-                name="transferPickupFrom"
-                placeholder="สถานที่รับ"
-              />
-            </div>
-
-            <div class="mb-3">
-              <label for="transferDropTo" class="form-label">ไปส่งที่</label>
-              <input
-                type="text"
-                class="form-control"
-                id="transferDropTo"
-                name="transferDropTo"
-                placeholder="สถานที่ส่ง"
-              />
-            </div>
-
-            <div class="mb-3">
-              <label for="transferNote" class="form-label">หมายเหตุ</label>
-              <textarea
-                class="form-control"
-                id="transferNote"
-                name="transferNote"
-                rows="3"
-                placeholder="หมายเหตุเพิ่มเติม"
-              ></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-lg mt-3" id="transferSubmitBtn">บันทึก</button>
           </form>
         </div>
       </div>
@@ -316,163 +89,307 @@
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js'
       import { getDatabase, ref, push, set } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
       import { generateBookingID } from '/js/id.js'
-
       import { database } from '/js/firebase-config.js'
 
       document.addEventListener('DOMContentLoaded', function () {
         console.log('DOM Loaded Successfully')
 
-        const tourCard = document.getElementById('tourCard')
-        const transferCard = document.getElementById('transferCard')
-        const tourRadio = document.getElementById('formTour')
-        const transferRadio = document.getElementById('formTransfer')
-        const tourForm = document.getElementById('tourForm')
-        const transferForm = document.getElementById('transferForm')
+        const addTourBtn = document.getElementById('addTourForm')
+        const addTransferBtn = document.getElementById('addTransferForm')
+        const additionalForms = document.getElementById('additionalForms')
+        const mainForm = document.getElementById('mainBookingForm')
+        const tourFormsContainer = document.getElementById('tourForms')
+        const transferFormsContainer = document.getElementById('transferForms')
+        function getNextAvailableID(type) {
+          const existingIDs = [...document.querySelectorAll(`.${type}-form`)]
+            .map(el => parseInt(el.id.split('-')[1]))
+            .sort((a, b) => a - b)
 
-        const labelTour = document.getElementById('labelTour')
-        const labelTransfer = document.getElementById('labelTransfer')
-
-        const tourCardHeader = document.getElementById('tourCardHeader')
-        const transferCardHeader = document.getElementById('transferCardHeader')
-        const tourSubmitBtn = document.getElementById('tourSubmitBtn')
-        const transferSubmitBtn = document.getElementById('transferSubmitBtn')
-        tourRadio.checked = true
-
-        if (!tourCard || !transferCard || !tourRadio || !transferRadio) {
-          console.error('One or more DOM elements not found. Check your HTML structure.')
-          return
+          let nextID = 1
+          while (existingIDs.includes(nextID)) {
+            nextID++
+          }
+          return nextID
         }
 
-        function setTourColors() {
-          tourCardHeader.className = 'card-header bg-success text-white'
-
-          tourSubmitBtn.className = 'btn btn-success btn-lg mt-3'
-
-          const tourLabels = document.querySelectorAll('#tourForm label')
-          tourLabels.forEach(label => {
-            label.classList.remove('text-primary')
-
-            label.classList.add('text-success')
-          })
+        // ฟังก์ชันสร้างฟอร์ม Tour (ใช้ ID ที่เล็กที่สุดที่ยังไม่มีอยู่)
+        function createTourForm() {
+          const id = getNextAvailableID('tour')
+          return `
+      <div class="card shadow-sm mt-3 tour-form" id="tour-${id}">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">Tour Booking #${id}</h6>
+          <button type="button" class="btn btn-danger btn-sm remove-tour" data-id="${id}">ลบ</button>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">ประเภท</label>
+              <input type="text" class="form-control" name="tourType">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">ส่งใคร</label>
+              <input type="text" class="form-control" name="tourSendTo">
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-4">
+              <label class="form-label">รายละเอียด</label>
+              <textarea type="text" class="form-control" name="tourDetail"></textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">เวลารับ</label>
+              <input type="text" class="form-control" name="tourPickUpTime">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">วันที่</label>
+              <input type="date" class="form-control" name="tourDate" required>
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-4">
+              <label class="form-label">โรงแรม</label>
+              <input type="text" class="form-control" name="tourHotel">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">หมายเลขห้อง</label>
+              <input type="text" class="form-control" name="tourRoomNo">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">เบอร์ติดต่อ</label>
+              <input type="text" class="form-control" name="tourContactNo"> </textarea>
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-4">
+              <label class="form-label">FEE</label>
+              <input type="text" class="form-control" name="tourFee">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">MEAL</label>
+              <input type="text" class="form-control" name="tourMeal">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">หมายเหตุ</label>
+              <input type="text" class="form-control" name="tourNote">
+            </div>
+          </div>
+        </div>
+      </div>
+    `
         }
 
-        function setTransferColors() {
-          transferCardHeader.className = 'card-header bg-primary text-white'
-          transferSubmitBtn.className = 'btn btn-primary btn-lg mt-3'
-
-          const transferLabels = document.querySelectorAll('#transferForm label')
-          transferLabels.forEach(label => {
-            label.classList.remove('text-success')
-            label.classList.add('text-primary')
-          })
+        // ฟังก์ชันสร้างฟอร์ม Transfer (ใช้ ID ที่เล็กที่สุดที่ยังไม่มีอยู่)
+        function createTransferForm() {
+          const id = getNextAvailableID('transfer')
+          return `
+      <div class="card shadow-sm mt-3 transfer-form" id="transfer-${id}">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">Transfer Booking #${id}</h6>
+          <button type="button" class="btn btn-danger btn-sm remove-transfer" data-id="${id}">ลบ</button>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">ประเภท</label>
+              <input type="text" class="form-control" name="transferType">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">ส่งใคร</label>
+              <input type="text" class="form-control" name="transferSendTo">
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-4">
+              <label class="form-label">รายละเอียด</label>
+              <textarea class="form-control" name="transferDetail"> </textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">เวลารับ</label>
+              <input type="text" class="form-control" name="transferPickUpTime">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">วันที่</label>
+              <input type="date" class="form-control" name="transferDate" required>
+            </div>
+          </div>
+          <div class="row g-2 mt-1">
+            <div class="col-md-6">
+              <label class="form-label">เที่ยวบิน</label>
+              <input type="text" class="form-control" name="transferFlight">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">เวลาบิน</label>
+              <input type="text" class="form-control" name="transferTime">
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-4">
+              <label class="form-label">รับจาก</label>
+              <input type="text" class="form-control" name="transferPickupFrom">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">ไปส่งที่</label>
+              <input type="text" class="form-control" name="transferDropTo">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">หมายเหตุ</label>
+              <input type="text" class="form-control" name="transferNote">
+            </div>
+          </div>
+        </div>
+      </div>
+    `
         }
+        function updateFormCount() {
+          const tourForms = document.querySelectorAll('.tour-form').length
+          const transferForms = document.querySelectorAll('.transfer-form').length
 
-        function showForm(type) {
-          console.log(`Switching to form: ${type}`)
-          if (type === 'tour') {
-            tourCard.classList.remove('d-none')
-            transferCard.classList.add('d-none')
-            setTourColors()
-          } else if (type === 'transfer') {
-            labelTour.classList.remove('btn-outline-success')
-            labelTour.classList.add('btn-outline-success')
+          document.getElementById('tourCount').textContent = tourForms
+          document.getElementById('transferCount').textContent = transferForms
+        }
+        let tourCounter = 1
+        let transferCounter = 1
 
-            labelTransfer.classList.remove('btn-outline-primary')
-            labelTransfer.classList.add('btn-outline-primary')
-            tourCard.classList.add('d-none')
-            transferCard.classList.remove('d-none')
-            setTransferColors()
+        const submitBookingBtn = document.getElementById('submitBookingBtn')
+
+        function updateSubmitButtonVisibility() {
+          const tourForms = document.querySelectorAll('.tour-form').length
+          const transferForms = document.querySelectorAll('.transfer-form').length
+
+          if (tourForms > 0 || transferForms > 0) {
+            submitBookingBtn.classList.remove('d-none') // แสดงปุ่ม
+            additionalForms.classList.remove('d-none')
+          } else {
+            submitBookingBtn.classList.add('d-none') // ซ่อนปุ่ม
+            additionalForms.classList.add('d-none')
           }
         }
 
-        if (tourRadio.checked) {
-          showForm('tour')
-        }
-
-        tourRadio.addEventListener('change', function () {
-          if (this.checked) {
-            showForm('tour')
-          }
+        addTourBtn.addEventListener('click', () => {
+          tourFormsContainer.insertAdjacentHTML('beforeend', createTourForm())
+          updateSubmitButtonVisibility()
+          updateFormCount()
         })
 
-        transferRadio.addEventListener('change', function () {
-          if (this.checked) {
-            showForm('transfer')
-          }
+        addTransferBtn.addEventListener('click', () => {
+          transferFormsContainer.insertAdjacentHTML('beforeend', createTransferForm())
+          updateSubmitButtonVisibility()
+          updateFormCount()
         })
 
-        tourForm.addEventListener('submit', async e => {
+        document.getElementById('additionalForms').addEventListener('click', event => {
+          if (event.target.classList.contains('remove-tour')) {
+            document.getElementById(`tour-${event.target.dataset.id}`).remove()
+          }
+          if (event.target.classList.contains('remove-transfer')) {
+            document.getElementById(`transfer-${event.target.dataset.id}`).remove()
+          }
+          updateSubmitButtonVisibility()
+          updateFormCount()
+        })
+
+        document.getElementById('mainBookingForm').addEventListener('submit', async function (e) {
           e.preventDefault()
-          console.log('Submitting Tour Form')
+
           try {
-            const bookingID = await generateBookingID('tour')
-            console.log(`Generated Booking ID: ${bookingID}`)
-            const formData = {
-              tourID: bookingID,
-              tourAgent: document.getElementById('tourAgent').value,
-              tourType: document.getElementById('tourType').value,
-              tourDetail: document.getElementById('tourDetail').value,
-              tourFee: document.getElementById('tourFee').value,
-              tourMeal: document.getElementById('tourMeal').value,
-              tourDate: document.getElementById('tourDate').value,
-              tourFirstName: document.getElementById('tourFirstNameCustomer').value,
-              tourLastName: document.getElementById('tourLastNameCustomer').value,
-              tourPax: document.getElementById('tourPax').value,
-              tourHotel: document.getElementById('tourHotel').value,
-              tourRoomNo: document.getElementById('tourRoomNo').value,
-              tourContactNo: document.getElementById('tourContactNo').value,
-              tourPickUpTime: document.getElementById('tourPickUpTime').value,
-              tourSendTo: document.getElementById('tourSendTo').value,
-              tourNote: document.getElementById('tourNote').value,
-              status: 'รอดำเนินการ',
-              timestamp: Date.now(),
+            const agent = document.getElementById('agent').value
+            const firstName = document.getElementById('firstName').value
+            const lastName = document.getElementById('lastName').value
+            const pax = document.getElementById('pax').value
+            const timestamp = Date.now()
+            const status = 'รอดำเนินการ'
+
+            let tourCount = 0
+            let tourIDs = []
+            let transferCount = 0
+            let transferIDs = []
+
+            // ดึงค่าฟอร์ม Tour ที่ถูกเพิ่มเข้ามาทั้งหมด
+            const tourForms = document.querySelectorAll('.tour-form')
+            for (const tourForm of tourForms) {
+              const bookingID = await generateBookingID('tour')
+
+              const formData = {
+                tourID: bookingID,
+                tourAgent: agent,
+                tourFirstName: firstName,
+                tourLastName: lastName,
+                tourPax: pax,
+                tourType: tourForm.querySelector('[name="tourType"]').value,
+                tourSendTo: tourForm.querySelector('[name="tourSendTo"]').value,
+                tourDetail: tourForm.querySelector('[name="tourDetail"]').value,
+                tourPickUpTime: tourForm.querySelector('[name="tourPickUpTime"]').value,
+                tourDate: tourForm.querySelector('[name="tourDate"]').value,
+                tourHotel: tourForm.querySelector('[name="tourHotel"]').value,
+                tourRoomNo: tourForm.querySelector('[name="tourRoomNo"]').value,
+                tourContactNo: tourForm.querySelector('[name="tourContactNo"]').value,
+                tourFee: tourForm.querySelector('[name="tourFee"]').value,
+                tourMeal: tourForm.querySelector('[name="tourMeal"]').value,
+                tourNote: tourForm.querySelector('[name="tourNote"]').value,
+                status: status,
+                timestamp: timestamp,
+              }
+
+              const tourRef = ref(database, 'tourBookings')
+              const newTourRef = push(tourRef)
+              await set(newTourRef, formData)
+
+              tourIDs.push(bookingID)
+              tourCount++
             }
 
-            const tourRef = ref(database, 'tourBookings')
-            const newTourRef = push(tourRef)
-            await set(newTourRef, formData)
-            console.log('Tour booking saved successfully')
-            alert(`บันทึกข้อมูลสำเร็จ! Booking ID: ${bookingID}`)
-            tourForm.reset()
-          } catch (error) {
-            console.error('Error in Tour Form Submission:', error)
-          }
-        })
+            // ดึงค่าฟอร์ม Transfer ที่ถูกเพิ่มเข้ามาทั้งหมด
+            const transferForms = document.querySelectorAll('.transfer-form')
+            for (const transferForm of transferForms) {
+              const bookingID = await generateBookingID('transfer')
 
-        transferForm.addEventListener('submit', async e => {
-          e.preventDefault()
-          console.log('Submitting Transfer Form')
-          try {
-            const bookingID = await generateBookingID('transfer')
-            console.log(`Generated Booking ID: ${bookingID}`)
-            const formData = {
-              transferID: bookingID,
-              transferAgent: document.getElementById('transferAgent').value,
-              transferType: document.getElementById('transferType').value,
-              transferDetail: document.getElementById('transferDetail').value,
-              transferFlight: document.getElementById('transferFlight').value,
-              transferTime: document.getElementById('transferTime').value,
-              transferDate: document.getElementById('transferDate').value,
-              transferFirstName: document.getElementById('transferFirstNameCustomer').value,
-              transferLastName: document.getElementById('transferLastNameCustomer').value,
-              transferPax: document.getElementById('transferPax').value,
-              transferPickUpTime: document.getElementById('transferPickUpTime').value,
-              transferPickupFrom: document.getElementById('transferPickupFrom').value,
-              transferDropTo: document.getElementById('transferDropTo').value,
-              transferSendTo: document.getElementById('transferSendTo').value,
-              transferNote: document.getElementById('transferNote').value,
-              status: 'รอดำเนินการ',
-              timestamp: Date.now(),
+              const formData = {
+                transferID: bookingID,
+                transferAgent: agent,
+                transferFirstName: firstName,
+                transferLastName: lastName,
+                transferPax: pax,
+                transferType: transferForm.querySelector('[name="transferType"]').value,
+                transferSendTo: transferForm.querySelector('[name="transferSendTo"]').value,
+                transferDetail: transferForm.querySelector('[name="transferDetail"]').value,
+                transferPickUpTime: transferForm.querySelector('[name="transferPickUpTime"]').value,
+                transferDate: transferForm.querySelector('[name="transferDate"]').value,
+                transferFlight: transferForm.querySelector('[name="transferFlight"]').value,
+                transferTime: transferForm.querySelector('[name="transferTime"]').value,
+                transferPickupFrom: transferForm.querySelector('[name="transferPickupFrom"]').value,
+                transferDropTo: transferForm.querySelector('[name="transferDropTo"]').value,
+                transferNote: transferForm.querySelector('[name="transferNote"]').value,
+                status: status,
+                timestamp: timestamp,
+              }
+
+              const transferRef = ref(database, 'transferBookings')
+              const newTransferRef = push(transferRef)
+              await set(newTransferRef, formData)
+
+              transferIDs.push(bookingID)
+              transferCount++
             }
 
-            const transferRef = ref(database, 'transferBookings')
-            const newTransferRef = push(transferRef)
-            await set(newTransferRef, formData)
-            console.log('Transfer booking saved successfully')
-            alert(`บันทึกข้อมูลสำเร็จ! Booking ID: ${bookingID}`)
-            transferForm.reset()
+            // ✅ สร้างข้อความ Alert
+            let message = 'บันทึกข้อมูลสำเร็จ!\n\n'
+            if (tourCount > 0) {
+              message += `✅ Tour Bookings: ${tourCount} รายการ\nID: ${tourIDs.join(', ')}\n\n`
+            }
+            if (transferCount > 0) {
+              message += `✅ Transfer Bookings: ${transferCount} รายการ\nID: ${transferIDs.join(', ')}\n\n`
+            }
+
+            alert(message)
+
+            // ✅ รีเซ็ตฟอร์ม
+            document.getElementById('mainBookingForm').reset()
+            additionalForms.innerHTML = '' // ล้างฟอร์ม Tour & Transfer ที่ถูกเพิ่มเข้ามา
+            updateSubmitButtonVisibility() // ซ่อนปุ่มบันทึกถ้าไม่มี Booking
           } catch (error) {
-            console.error('Error in Transfer Form Submission:', error)
+            console.error('Error in form submission:', error)
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล')
           }
         })
       })

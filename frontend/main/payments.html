@@ -44,8 +44,9 @@
       </div>
 
       <div class="mt-5 d-none" id="bookingContainer">
-        <div class="text-center mb-4">
+        <div class="text-center">
           <p id="customerNameDisplay" class="fs-2 fw-bold mt-3" style="color: #b30b00"></p>
+          <p id="idDisplay" class="fs-3" style="color: #680700"></p>
         </div>
 
         <div class="row" id="bookingList"></div>
@@ -141,6 +142,7 @@
         const orderDropdown = document.getElementById('orderDropdown')
         const bookingContainer = document.getElementById('bookingContainer')
         const customerNameDisplay = document.getElementById('customerNameDisplay')
+        const idDisplay = document.getElementById('idDisplay')
         const bookingList = document.getElementById('bookingList')
         const selectedBookingsContainer = document.getElementById('selectedBookingsContainer')
         const bookingDetailsTable = document.getElementById('bookingDetailsTable')
@@ -154,6 +156,7 @@
           !orderDropdown ||
           !bookingContainer ||
           !customerNameDisplay ||
+          !idDisplay ||
           !bookingList ||
           !selectedBookingsContainer ||
           !bookingDetailsTable ||
@@ -232,6 +235,7 @@
           } else {
             bookingContainer.classList.add('d-none')
             customerNameDisplay.textContent = ''
+            idDisplay.textContent = ''
             bookingList.innerHTML = ''
             bookingDetailsTable.innerHTML = `
               <tr>
@@ -448,6 +452,7 @@
             const newTPrice = newSellingPrice * newQuantity
 
             totalCostCell.textContent = newTotalCost.toLocaleString()
+            totalSellingPriceCell.textContent = newTPrice.toLocaleString()
             profitCell.textContent = newProfit.toLocaleString()
 
             updateStatusColor()
@@ -568,11 +573,13 @@
             globalPax = isTour ? firstBooking.tourPax : firstBooking.transferPax
 
             customerNameDisplay.textContent = `${globalFirstName} ${globalLastName} / ${globalPax} คน`
+            idDisplay.textContent = `${orderId}`
           } else {
             globalFirstName = ''
             globalLastName = ''
             globalPax = 0
             customerNameDisplay.textContent = 'No customer info.'
+            idDisplay.textContent = 'No customer info.'
           }
 
           allBookings.sort((a, b) => {

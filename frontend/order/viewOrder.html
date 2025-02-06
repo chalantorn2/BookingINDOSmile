@@ -173,14 +173,21 @@
           }
 
           const orders = ordersSnapshot.val()
-
           allProcessedOrders = await processOrders(orders)
 
-          const filteredOrders = allProcessedOrders.filter(({ earliestDate }) => {
-            if (!earliestDate) return false
-            const year = String(earliestDate.getFullYear())
-            const month = String(earliestDate.getMonth() + 1).padStart(2, '0')
-            return selectedYear === year && selectedMonth === month
+          const filteredOrders = allProcessedOrders.filter(({ earliestDate, latestDate }) => {
+            if (!earliestDate && !latestDate) return false
+
+            const earliestYear = earliestDate ? String(earliestDate.getFullYear()) : null
+            const earliestMonth = earliestDate ? String(earliestDate.getMonth() + 1).padStart(2, '0') : null
+
+            const latestYear = latestDate ? String(latestDate.getFullYear()) : null
+            const latestMonth = latestDate ? String(latestDate.getMonth() + 1).padStart(2, '0') : null
+
+            const matchEarliest = selectedYear === earliestYear && selectedMonth === earliestMonth
+            const matchLatest = selectedYear === latestYear && selectedMonth === latestMonth
+
+            return matchEarliest || matchLatest
           })
 
           renderOrders(filteredOrders)
@@ -544,13 +551,24 @@
         const selectedYear = yearSelector.value
         const selectedMonth = monthSelector.value
 
-        const filtered = allProcessedOrders.filter(({ earliestDate }) => {
-          if (!earliestDate) return false
-          const year = String(earliestDate.getFullYear())
-          const month = String(earliestDate.getMonth() + 1).padStart(2, '0')
+        const filtered = allProcessedOrders.filter(({ earliestDate, latestDate }) => {
+          if (!earliestDate && !latestDate) return false
 
-          return (!selectedYear || selectedYear === year) && (!selectedMonth || selectedMonth === month)
+          const earliestYear = earliestDate ? String(earliestDate.getFullYear()) : null
+          const earliestMonth = earliestDate ? String(earliestDate.getMonth() + 1).padStart(2, '0') : null
+
+          const latestYear = latestDate ? String(latestDate.getFullYear()) : null
+          const latestMonth = latestDate ? String(latestDate.getMonth() + 1).padStart(2, '0') : null
+
+          const matchEarliest =
+            (!selectedYear || selectedYear === earliestYear) && (!selectedMonth || selectedMonth === earliestMonth)
+
+          const matchLatest =
+            (!selectedYear || selectedYear === latestYear) && (!selectedMonth || selectedMonth === latestMonth)
+
+          return matchEarliest || matchLatest
         })
+
         renderOrders(filtered)
       }
 
