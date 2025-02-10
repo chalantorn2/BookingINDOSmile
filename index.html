@@ -166,7 +166,7 @@
           const ordersRef = ref(database, 'orders')
           const ordersSnapshot = await get(ordersRef)
 
-          $('#orderDropdown').append('<option value="">-- โปรดเลือก Order --</option>')
+          // $('#orderDropdown').append('<option value="">-- โปรดเลือก Order --</option>')
 
           if (ordersSnapshot.exists()) {
             ordersSnapshot.forEach(snap => {
@@ -459,27 +459,34 @@
 
         createOrderBtn.addEventListener('click', async function () {
           try {
-            const newID = await generateOrderID('INDO')
+            // สร้าง order เปล่า (ยังไม่กำหนด id)
             const ordersRef = ref(database, 'orders')
             const newOrderRef = push(ordersRef)
 
+            // สร้าง object เปล่า หรือจะ set เป็น {id: ''} ก็ได้
             await set(newOrderRef, {
-              id: newID,
+              id: '', // ยังไม่กำหนดค่า id
             })
 
+            // เก็บ pushKey ไว้เพื่อใช้งานตอนบันทึก booking
             currentOrderKey = newOrderRef.key
-            currentOrderIDString = newID
-            console.log('✅ Created New Order:', currentOrderIDString, currentOrderKey)
+            // ตั้งค่าว่างเพื่อบอกว่ายังไม่มี Order ID
+            currentOrderIDString = ''
 
+            console.log('✅ Created Empty Order:', currentOrderKey)
+
+            // Reset ฟอร์มหลัก + ล้างฟอร์มย่อย
             mainBookingForm.reset()
             tourFormsContainer.innerHTML = ''
             transferFormsContainer.innerHTML = ''
             updateFormCount()
             updateSubmitButtonVisibility()
 
+            // ซ่อน dropdown, ปิดปุ่มสร้าง order
             orderDropdown.classList.add('d-none')
             createOrderBtn.classList.add('d-none')
 
+            // แสดงส่วนฟอร์ม Booking (ให้ผู้ใช้กรอก Agent, FirstName, etc.)
             bookingSection.classList.remove('d-none')
             additionalForms.classList.remove('d-none')
           } catch (err) {
@@ -487,7 +494,6 @@
             alert('เกิดข้อผิดพลาดในการสร้าง Order ใหม่')
           }
         })
-
         addTourBtn.addEventListener('click', () => {
           const tourHTML = createTourForm()
           tourFormsContainer.insertAdjacentHTML('beforeend', tourHTML)
@@ -518,25 +524,49 @@
         mainBookingForm.addEventListener('submit', async function (e) {
           e.preventDefault()
           try {
-            const agent = document.getElementById('agent').value
+            const agent = document.getElementById('agent').value.trim()
             const firstName = document.getElementById('firstName').value
             const lastName = document.getElementById('lastName').value
             const pax = document.getElementById('pax').value
             const timestamp = Date.now()
             const status = 'รอดำเนินการ'
 
-            if (!currentOrderIDString || !currentOrderKey) {
+            // ตรวจสอบว่ามี currentOrderKey แล้วหรือยัง
+            if (!currentOrderKey) {
               alert('ยังไม่ได้เลือกหรือสร้าง Order')
               return
             }
 
+            // ถ้ายังไม่มี currentOrderIDString (หมายถึงเป็น Order ใหม่ที่ยังไม่มี id)
+            // จะต้องสร้าง id จาก agent ก่อน
+            if (!currentOrderIDString || currentOrderIDString === '') {
+              if (!agent) {
+                alert('กรุณากรอก Agent ก่อน เพื่อใช้เป็น prefix ของ Order ID')
+                return
+              }
+              // สร้าง Order ID จาก agent
+              const newID = await generateOrderID(agent)
+
+              // อัปเดตค่า id ของ orders/{currentOrderKey}
+              await update(ref(database, 'orders/' + currentOrderKey), { id: newID })
+
+              // เก็บลงตัวแปรไว้ใช้ตอนบันทึก tour/transfer
+              currentOrderIDString = newID
+              console.log('✅ Generated New Order ID:', newID)
+            }
+
+            // จากนี้ไป ไม่ว่า Order จะเก่าหรือใหม่ ก็จะมี currentOrderIDString เสมอ
             let tourCount = 0
             let transferCount = 0
             let tourIDs = []
             let transferIDs = []
 
+            // ---------------------------------------------
+            // บันทึก Tour Bookings
+            // ---------------------------------------------
             const tourForms = document.querySelectorAll('.tour-form')
             for (const tourForm of tourForms) {
+              // เรียก generateBookingID('tour') จาก /js/id.js
               const bookingID = await generateBookingID('tour')
 
               const formData = {
@@ -557,29 +587,32 @@
                 tourFee: tourForm.querySelector('[name="tourFee"]').value,
                 tourMeal: tourForm.querySelector('[name="tourMeal"]').value,
                 tourNote: tourForm.querySelector('[name="tourNote"]').value,
-                status: status,
-                timestamp: timestamp,
+                status,
+                timestamp,
               }
 
               const tourRef = ref(database, 'tourBookings')
               const newTourRef = push(tourRef)
               await set(newTourRef, formData)
 
+              // เก็บ pushKey ไว้ใน orders/{currentOrderKey}/bookings
               const newTourKey = newTourRef.key
-
               const bookingListRef = ref(database, `orders/${currentOrderKey}/bookings`)
               const bookingListSnap = await get(bookingListRef)
               let existingList = bookingListSnap.val() || []
               existingList.push(newTourKey)
-
               await set(bookingListRef, existingList)
 
-              tourIDs.push(bookingID)
               tourCount++
+              tourIDs.push(bookingID)
             }
 
+            // ---------------------------------------------
+            // บันทึก Transfer Bookings
+            // ---------------------------------------------
             const transferForms = document.querySelectorAll('.transfer-form')
             for (const transferForm of transferForms) {
+              // เรียก generateBookingID('transfer') จาก /js/id.js
               const bookingID = await generateBookingID('transfer')
 
               const formData = {
@@ -599,27 +632,29 @@
                 transferPickupFrom: transferForm.querySelector('[name="transferPickupFrom"]').value,
                 transferDropTo: transferForm.querySelector('[name="transferDropTo"]').value,
                 transferNote: transferForm.querySelector('[name="transferNote"]').value,
-                status: status,
-                timestamp: timestamp,
+                status,
+                timestamp,
               }
 
               const transferRef = ref(database, 'transferBookings')
               const newTransferRef = push(transferRef)
               await set(newTransferRef, formData)
 
+              // เก็บ pushKey ไว้ใน orders/{currentOrderKey}/bookings
               const newTransferKey = newTransferRef.key
-
               const bookingListRef = ref(database, `orders/${currentOrderKey}/bookings`)
               const bookingListSnap = await get(bookingListRef)
               let existingList = bookingListSnap.val() || []
               existingList.push(newTransferKey)
-
               await set(bookingListRef, existingList)
 
-              transferIDs.push(bookingID)
               transferCount++
+              transferIDs.push(bookingID)
             }
 
+            // ---------------------------------------------
+            // สรุปผล + Alert
+            // ---------------------------------------------
             let message = 'บันทึกข้อมูลสำเร็จ!\n'
             if (tourCount > 0) {
               message += `Tour Bookings: ${tourCount}\nIDs: ${tourIDs.join(', ')}\n`
@@ -629,6 +664,7 @@
             }
             alert(message)
 
+            // เคลียร์ฟอร์มหลังบันทึก
             mainBookingForm.reset()
             additionalForms.innerHTML = ''
             updateSubmitButtonVisibility()
