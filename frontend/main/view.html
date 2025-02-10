@@ -213,7 +213,7 @@
               listItem.innerHTML = `
                 <div class="d-flex justify-content-between">
                   <span><strong>${index + 1}. ${customerName}</strong> | ${data.tourPax || data.pax || '-'} คน</span>
-                  <button class="btn btn-sm btn-info view-details-btn" data-id="${
+                  <button class="btn btn-sm  view-details-btn" style="background-color: #0f5434; color: white;" data-id="${
                     data.id
                   }" data-type="tour"><i class="bi bi-eye"></i></button>
                 </div>
@@ -252,7 +252,7 @@
                   <span><strong> ${index + 1}. ${customerName}</strong> | ${
                 data.transferPax || data.pax || '-'
               } คน </span>
-                  <button class="btn btn-sm btn-info view-details-btn" data-id="${
+                  <button class="btn btn-sm view-details-btn" style="background-color: #06357d; color: white;" data-id="${
                     data.id
                   }" data-type="transfer"><i class="bi bi-eye"></i></button>
                 </div>
