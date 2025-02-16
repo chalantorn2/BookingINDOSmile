@@ -52,7 +52,7 @@
                 รอดำเนินการ
               </div>
               <div class="d-flex align-items-center me-3">
-                <span class="status-indicator bg-info me-2"></span>
+                <span class="status-indicator me-2" style="background-color: #5ab4f7"></span>
                 จองแล้ว
               </div>
               <div class="d-flex align-items-center me-3">
@@ -227,7 +227,24 @@
                   <strong>รายละเอียด:</strong> ${data.tourDetail || data.detail || '-'} 
                   <br><strong><i class="bi bi-geo-alt-fill"> </i> โรงแรม:</strong> ${data.tourHotel || '-'}  
                 </small><br>
-                <strong style="color: #686868;"><i>${data.tourID || '-'}</i></strong>
+                <div class="row justify-content-between"><div class="col"><strong style="color: #686868;"><i>${
+                  data.tourID || '-'
+                }</i></strong></div>
+                <div class="col row justify-content-end"> <div class="text-end"><strong  style="
+      color: ${
+        data.status === 'รอดำเนินการ'
+          ? '#555555'
+          : data.status === 'จองแล้ว'
+          ? '#0056b3'
+          : data.status === 'ดำเนินการอยู่'
+          ? '#c79100'
+          : data.status === 'เสร็จสมบูรณ์'
+          ? '#1e7e34'
+          : data.status === 'ยกเลิก'
+          ? '#b21f2d'
+          : '#000000'
+      };
+      font-weight: 700;">${data.status || '-'}</strong></div></div> </div>
               `
               tourContainer.appendChild(listItem)
             })
@@ -271,8 +288,24 @@
                     |
                   <strong>เวลา:</strong> ${data.transferTime || '-'}
                 </small><br>
-                <strong style="color: #686868;"><i>${data.transferID || '-'}</i></strong>
-                <br>
+                <div class="row justify-content-between"><div class="col"><strong style="color: #686868;"><i>${
+                  data.transferID || '-'
+                }</i></strong></div>
+                <div class="col row justify-content-end"> <div class="text-end"><strong  style="
+      color: ${
+        data.status === 'รอดำเนินการ'
+          ? '#555555'
+          : data.status === 'จองแล้ว'
+          ? '#0056b3'
+          : data.status === 'ดำเนินการอยู่'
+          ? '#c79100'
+          : data.status === 'เสร็จสมบูรณ์'
+          ? '#1e7e34'
+          : data.status === 'ยกเลิก'
+          ? '#b21f2d'
+          : '#000000'
+      };
+      font-weight: 700;">${data.status || '-'}</strong></div></div> </div>
                
               `
               transferContainer.appendChild(listItem)
