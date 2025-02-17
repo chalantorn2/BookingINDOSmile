@@ -22,16 +22,14 @@
         </button>
 
         <button class="btn btn-success me-2" id="saveInvoiceBtn"><i class="bi bi-save"></i> บันทึก Invoice</button>
-        <button class="btn btn-primary me-2" id="editInvoiceBtn">Edit Invoice</button>
+        <button class="btn btn-info me-2" id="editInvoiceBtn">Edit Invoice</button>
 
         <!-- <button class="btn btn-primary me-2" id="exportCsvBtn" disabled>
           <i class="bi bi-file-earmark-spreadsheet"></i> Export ข้อมูล
         </button> -->
 
-        <button class="btn btn-info me-2" id="viewInvoiceBtn"><i class="bi bi-eye"></i> View Invoice</button>
-
-        <button class="btn btn-secondary" onclick="window.location.href='/frontend/main/payments.html'">
-          <i class="bi bi-arrow-left"></i> กลับไปหน้า Payments
+        <button class="btn text-white btn-primary me-2" id="viewInvoiceBtn">
+          <i class="bi bi-eye"></i> View Invoice
         </button>
       </div>
 
@@ -338,22 +336,22 @@
               const label = document.createElement('label')
               label.classList.add('d-flex', 'align-items-center', 'mb-2')
               label.innerHTML = `
-        <input
-          type="checkbox"
-          class="form-check-input me-2"
-          value="${combinedKey}"
-          ${alreadySelected ? 'checked' : ''}
-        />
-        <span>${displayName}</span>
-      `
+             <input
+               type="checkbox"
+               class="form-check-input me-2"
+               value="${combinedKey}"
+               ${alreadySelected ? 'checked' : ''}
+             />
+             <span>${displayName}</span>
+           `
               paymentsListContainer.appendChild(label)
             })
           })
 
           if (!hasAny) {
             paymentsListContainer.innerHTML = `
-      <div class="alert alert-warning">No Payments Found</div>
-    `
+           <div class="alert alert-warning">No Payments Found</div>
+         `
           }
         }
 
@@ -372,19 +370,19 @@
           if (!invoiceThead || !invoiceTbody) return
 
           let theadHtml = `
-    <tr>
-      <th>Item</th>
-      <th>NAME</th>
-      <th>REF.</th>
-      <th>Hotel</th>
-      <th>Date in PHUKET</th>
-      <th>TOUR INCLUDE</th>
-      ${showCostProfit ? `<th>Cost</th><th>PRICE</th><th>Profit</th>` : `<th>PRICE</th>`}
-      <th>Fee</th>
-      <th>Unit</th>
-      <th>TOTAL</th>
-    </tr>
-  `
+         <tr>
+           <th>Item</th>
+           <th>NAME</th>
+           <th>REF.</th>
+           <th>Hotel</th>
+           <th>Date in PHUKET</th>
+           <th>TOUR INCLUDE</th>
+           ${showCostProfit ? `<th>Cost</th><th>PRICE</th><th>Profit</th>` : `<th>PRICE</th>`}
+           <th>Fee</th>
+           <th>Unit</th>
+           <th>TOTAL</th>
+         </tr>
+       `
           invoiceThead.innerHTML = theadHtml
 
           invoiceTbody.innerHTML = ''
@@ -396,12 +394,12 @@
 
           if (!paymentKeys || paymentKeys.length === 0) {
             invoiceTbody.innerHTML = `
-      <tr>
-        <td colspan="${showCostProfit ? 12 : 10}" class="text-center text-danger">
-          No Payments Selected
-        </td>
-      </tr>
-    `
+           <tr>
+             <td colspan="${showCostProfit ? 12 : 10}" class="text-center text-danger">
+               No Payments Selected
+             </td>
+           </tr>
+         `
 
             return
           }
@@ -433,13 +431,13 @@
             if (!bookingsArr || bookingsArr.length === 0) {
               const tr = document.createElement('tr')
               tr.innerHTML = `
-        <td>${itemCount}</td>
-        <td>NAME ???</td>
-        <td>REF ???</td>
-        <td colspan="${showCostProfit ? 9 : 7}" class="text-danger">
-          No bookings found
-        </td>
-      `
+             <td>${itemCount}</td>
+             <td>NAME ???</td>
+             <td>REF ???</td>
+             <td colspan="${showCostProfit ? 9 : 7}" class="text-danger">
+               No bookings found
+             </td>
+           `
               invoiceTbody.appendChild(tr)
               return
             }
@@ -503,69 +501,69 @@
 
               if (index === 0) {
                 tr.innerHTML = `
-          <td rowspan="${rowSpanCount}">${itemCount}</td>
-          <td rowspan="${rowSpanCount}" class="nameCell">${nameText}</td>
-          <td rowspan="${rowSpanCount}" class="refCell" data-key="${refKey}">
-            ${refMap[refKey]}
-          </td>
-          <td rowspan="${rowSpanCount}" class="hotelCell">${hotelText}</td>
+               <td rowspan="${rowSpanCount}">${itemCount}</td>
+               <td rowspan="${rowSpanCount}" class="nameCell">${nameText}</td>
+               <td rowspan="${rowSpanCount}" class="refCell" data-key="${refKey}">
+                 ${refMap[refKey]}
+               </td>
+               <td rowspan="${rowSpanCount}" class="hotelCell">${hotelText}</td>
 
-          <td>${formatDate(bookingDate)}</td>
-          <td class="text-start">${detailText} </td>
+               <td>${formatDate(bookingDate)}</td>
+               <td class="text-start">${detailText} </td>
 
-          ${
-            showCostProfit
-              ? `
-                  <td>${formatNumberWithCommas(costVal)}</td>
-                  <td>${formatNumberWithCommas(priceVal)}</td>
-                  <td>${formatNumberWithCommas(profitVal)}</td>
-                `
-              : `
-                  <td>${formatNumberWithCommas(priceVal)}</td>
-                `
-          }
+               ${
+                 showCostProfit
+                   ? `
+                       <td>${formatNumberWithCommas(costVal)}</td>
+                       <td>${formatNumberWithCommas(priceVal)}</td>
+                       <td>${formatNumberWithCommas(profitVal)}</td>
+                     `
+                   : `
+                       <td>${formatNumberWithCommas(priceVal)}</td>
+                     `
+               }
 
-          <td
-            class="feeCell"
-            data-maink="${mainK}"
-            data-subk="${subK}"
-            data-bk-index="${index}"
-          >
-            ${formatNumberWithCommas(feeVal)}
-          </td>
+               <td
+                 class="feeCell"
+                 data-maink="${mainK}"
+                 data-subk="${subK}"
+                 data-bk-index="${index}"
+               >
+                 ${formatNumberWithCommas(feeVal)}
+               </td>
 
-          <td>${unitVal}</td>
-          <td>${formatNumberWithCommas(rowTotal)}</td>
-        `
+               <td>${unitVal}</td>
+               <td>${formatNumberWithCommas(rowTotal)}</td>
+             `
               } else {
                 tr.innerHTML = `
-          <td>${formatDate(bookingDate)}</td>
-          <td class="text-start">${detailText} </td>
+               <td>${formatDate(bookingDate)}</td>
+               <td class="text-start">${detailText} </td>
 
-          ${
-            showCostProfit
-              ? `
-                  <td>${formatNumberWithCommas(costVal)}</td>
-                  <td>${formatNumberWithCommas(priceVal)}</td>
-                  <td>${formatNumberWithCommas(profitVal)}</td>
-                `
-              : `
-                  <td>${formatNumberWithCommas(priceVal)}</td>
-                `
-          }
+               ${
+                 showCostProfit
+                   ? `
+                       <td>${formatNumberWithCommas(costVal)}</td>
+                       <td>${formatNumberWithCommas(priceVal)}</td>
+                       <td>${formatNumberWithCommas(profitVal)}</td>
+                     `
+                   : `
+                       <td>${formatNumberWithCommas(priceVal)}</td>
+                     `
+               }
 
-          <td
-            class="feeCell"
-            data-maink="${mainK}"
-            data-subk="${subK}"
-            data-bk-index="${index}"
-          >
-            ${formatNumberWithCommas(feeVal)}
-          </td>
+               <td
+                 class="feeCell"
+                 data-maink="${mainK}"
+                 data-subk="${subK}"
+                 data-bk-index="${index}"
+               >
+                 ${formatNumberWithCommas(feeVal)}
+               </td>
 
-          <td>${unitVal}</td>
-          <td>${formatNumberWithCommas(rowTotal)}</td>
-        `
+               <td>${unitVal}</td>
+               <td>${formatNumberWithCommas(rowTotal)}</td>
+             `
               }
 
               invoiceTbody.appendChild(tr)
@@ -573,44 +571,44 @@
             if (showCostProfit) {
               const cpRow = document.createElement('tr')
               cpRow.innerHTML = `
-    <td colspan="6" class="text-end fw-bold text-secondary">
-      Sub-Total (Cost/Price/Profit)
-    </td>
-    <td class="fw-bold text-info">
-      ${formatNumberWithCommas(orderCostSum)}
-    </td>
-    <td class="fw-bold text-primary">
-      ${formatNumberWithCommas(orderPriceSum)}
-    </td>
-    <td class="fw-bold text-success">
-      ${formatNumberWithCommas(orderProfitSum)}
-    </td>
-    <td colspan="2"></td>
-  `
+         <td colspan="6" class="text-end fw-bold text-secondary">
+           Sub-Total (Cost/Price/Profit)
+         </td>
+         <td class="fw-bold text-info">
+           ${formatNumberWithCommas(orderCostSum)}
+         </td>
+         <td class="fw-bold text-primary">
+           ${formatNumberWithCommas(orderPriceSum)}
+         </td>
+         <td class="fw-bold text-success">
+           ${formatNumberWithCommas(orderProfitSum)}
+         </td>
+         <td colspan="2"></td>
+       `
               invoiceTbody.appendChild(cpRow)
             }
 
             const totalRow = document.createElement('tr')
             totalRow.innerHTML = `
-      <td colspan="${showCostProfit ? 10 : 8}" class="text-end fw-bold">
-        Total
-      </td>
-      <td class="fw-bold" colspan="2">
-        ${formatNumberWithCommas(paymentTotal)}
-      </td>
-    `
+           <td colspan="${showCostProfit ? 10 : 8}" class="text-end fw-bold">
+             Total
+           </td>
+           <td class="fw-bold" colspan="2">
+             ${formatNumberWithCommas(paymentTotal)}
+           </td>
+         `
             invoiceTbody.appendChild(totalRow)
           })
 
           const grandRow = document.createElement('tr')
           grandRow.innerHTML = `
-    <td colspan="${showCostProfit ? 10 : 8}" class="text-end fw-bold text-success">
-      GRAND TOTAL
-    </td>
-    <td class="fw-bold text-success" colspan="2">
-      ${formatNumberWithCommas(grandTotal)}
-    </td>
-  `
+         <td colspan="${showCostProfit ? 10 : 8}" class="text-end fw-bold text-success">
+           GRAND TOTAL
+         </td>
+         <td class="fw-bold text-success" colspan="2">
+           ${formatNumberWithCommas(grandTotal)}
+         </td>
+       `
           invoiceTbody.appendChild(grandRow)
 
           if (showCostProfit) {
@@ -727,7 +725,11 @@
 
         if (saveInvoiceBtn) {
           saveInvoiceBtn.addEventListener('click', async () => {
-            const invoiceName = prompt('กรุณาตั้งชื่อ Invoice:', 'MyInvoice')
+            if (!draftInvoiceDate || draftInvoiceDate === 'กรุณากรอกวันที่') {
+              alert('กรุณากรอกวันที่ก่อนบันทึก Invoice')
+              return
+            }
+            const invoiceName = prompt('กรุณาตั้งชื่อ Invoice:')
             if (!invoiceName) {
               alert('คุณยังไม่ได้ตั้งชื่อ Invoice')
               return
@@ -942,20 +944,21 @@
           invoicesDataList.appendChild(opt)
         })
 
-        invoiceSearchInput.addEventListener(
-          'change',
-          () => {
-            let val = invoiceSearchInput.value.trim()
-            if (!val) return
+        invoiceSearchInput.addEventListener('change', () => {
+          let val = invoiceSearchInput.value.trim()
+          if (!val) {
+            currentEditingInvoiceKey = ''
+            currentEditingPayments = []
+            document.getElementById('selectedPaymentsList').innerHTML = ''
+            return
+          }
 
-            let selectedOption = Array.from(invoicesDataList.children).find(opt => opt.value === val)
-            if (!selectedOption) return
+          let selectedOption = Array.from(invoicesDataList.children).find(opt => opt.value === val)
+          if (!selectedOption) return
 
-            let invoiceKey = selectedOption.dataset.key
-            loadInvoiceForEdit(invoiceKey)
-          },
-          { once: true }
-        )
+          let invoiceKey = selectedOption.dataset.key
+          loadInvoiceForEdit(invoiceKey)
+        })
       }
 
       async function loadInvoiceForEdit(k) {
@@ -1013,15 +1016,15 @@
           li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center')
           let label = getDisplayNameFromPaymentKey(ck)
           li.innerHTML = `
-      <div>
-        <span class="me-2">${label}</span>
-        <button class="btn btn-sm btn-link text-danger" data-idx="${idx}" onclick="deletePaymentFromInvoice(${idx})">Delete</button>
-      </div>
-      <div>
-        <button class="btn btn-sm btn-secondary me-1" onclick="movePaymentUp(${idx})">Up</button>
-        <button class="btn btn-sm btn-secondary" onclick="movePaymentDown(${idx})">Down</button>
-      </div>
-    `
+           <div>
+             <span class="me-2">${label}</span>
+             <button class="btn btn-sm btn-link text-danger" data-idx="${idx}" onclick="deletePaymentFromInvoice(${idx})">Delete</button>
+           </div>
+           <div>
+             <button class="btn btn-sm btn-secondary me-1" onclick="movePaymentUp(${idx})">Up</button>
+             <button class="btn btn-sm btn-secondary" onclick="movePaymentDown(${idx})">Down</button>
+           </div>
+         `
           listEl.appendChild(li)
         })
       }
@@ -1066,9 +1069,9 @@
             let li = document.createElement('li')
             li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center')
             li.innerHTML = `
-        <span>${label}</span>
-        <button class="btn btn-sm btn-primary" onclick="addPaymentToInvoice('${ck}')">Add</button>
-      `
+             <span>${label}</span>
+             <button class="btn btn-sm btn-primary" onclick="addPaymentToInvoice('${ck}')">Add</button>
+           `
             addListEl.appendChild(li)
           })
         })
@@ -1089,6 +1092,10 @@
         if (!snapshot.exists()) return
         let obj = snapshot.val()
         obj.selectedPaymentKeys = currentEditingPayments.slice()
+        for (let ck of currentEditingPayments) {
+          const [mk, sk] = ck.split('/')
+          await set(ref(database, `payments/${mk}/${sk}/invoiced`), true)
+        }
         await set(invRef, obj)
         editInvoiceModal.hide()
       }

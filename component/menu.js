@@ -129,6 +129,9 @@ class MenuComponent extends HTMLElement {
                     <li class="nav-item">
                         <a class="nav-link" href="/frontend/main/payments.html">Payments</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/frontend/main/Invoice.html">Invoice</a>
+                    </li>
 
                 </ul>
 

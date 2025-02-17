@@ -209,7 +209,7 @@
                 data.tourLastName || ''
               }`.trim()
               const listItem = document.createElement('div')
-              listItem.className = `list-group-item status-${data.status || 'unknown'}`
+              listItem.className = `list-group-item mb-1 status-${data.status || 'unknown'}`
               listItem.innerHTML = `
                 <div class="d-flex justify-content-between">
                   <span><strong>${index + 1}. ${customerName}</strong> | ${data.tourPax || data.pax || '-'} คน</span>
@@ -263,7 +263,7 @@
                 data.transferLastName || ''
               }`.trim()
               const listItem = document.createElement('div')
-              listItem.className = `list-group-item status-${data.status || 'unknown'}`
+              listItem.className = `list-group-item mb-1 status-${data.status || 'unknown'}`
               listItem.innerHTML = `
                 <div class="d-flex justify-content-between">
                   <span><strong> ${index + 1}. ${customerName}</strong> | ${
