@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ย้ายข้อมูล Orders</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <style>
+      body {
+        font-family: 'Prompt', sans-serif;
+        padding-top: 30px;
+      }
+      .warning-block {
+        border-left: 5px solid #dc3545;
+        padding: 15px;
+        background-color: #fff8f8;
+        margin-bottom: 20px;
+      }
+      pre {
+        font-size: 13px;
+        max-height: 300px;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        padding: 10px;
+      }
+      .log-container {
+        margin-top: 20px;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 5px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .success-log {
+        color: #28a745;
+      }
+      .error-log {
+        color: #dc3545;
+      }
+      .warning-log {
+        color: #ffc107;
+      }
+      .btn-section {
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="mb-4">เครื่องมือย้ายข้อมูล Orders</h1>
+
+      <div class="warning-block">
+        <h5 class="text-danger">คำเตือน!</h5>
+        <p>
+          เครื่องมือนี้จะปรับโครงสร้างข้อมูล Orders ในฐานข้อมูลของคุณ โดยจะใช้ Order ID (เช่น "INDO/REET-250221-029")
+          เป็น key แทน Firebase auto-generated keys
+        </p>
+        <p>กรุณาสำรองข้อมูลก่อนดำเนินการต่อ!</p>
+      </div>
+
+      <div class="progress mb-4" style="display: none">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+      </div>
+
+      <div class="btn-section">
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="backupConfirm" />
+          <label class="form-check-label" for="backupConfirm"> ฉันได้สำรองข้อมูลแล้ว </label>
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="understandRisk" />
+          <label class="form-check-label" for="understandRisk"> ฉันเข้าใจความเสี่ยงและพร้อมดำเนินการต่อ </label>
+        </div>
+
+        <button class="btn btn-danger" id="startMigration" disabled>เริ่มการย้ายข้อมูล</button>
+        <button class="btn btn-secondary ms-2" id="verifyButton" style="display: none">ตรวจสอบหลังย้ายข้อมูล</button>
+      </div>
+
+      <div class="log-container" id="logContainer">
+        <p>รอดำเนินการ...</p>
+      </div>
+
+      <div id="summarySection" style="display: none" class="mt-4">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">สรุปผลการย้ายข้อมูล</h5>
+          </div>
+          <div class="card-body">
+            <div id="summaryContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js'
+      import {
+        getDatabase,
+        ref,
+        get,
+        set,
+        update,
+        remove,
+        onValue,
+      } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
+
+      // นำเข้า config จากโปรเจค
+      import { database } from '/js/firebase-config.js'
+
+      // ตัวแปรสำหรับเก็บข้อมูล
+      let allOrders = {}
+      let ordersWithDuplicateIDs = []
+      let ordersWithoutID = []
+      let migrationResults = {
+        total: 0,
+        success: 0,
+        failed: 0,
+        duplicates: 0,
+        noID: 0,
+      }
+
+      // DOM Elements
+      const startButton = document.getElementById('startMigration')
+      const verifyButton = document.getElementById('verifyButton')
+      const logContainer = document.getElementById('logContainer')
+      const backupConfirm = document.getElementById('backupConfirm')
+      const understandRisk = document.getElementById('understandRisk')
+      const progressBar = document.querySelector('.progress-bar')
+      const progressContainer = document.querySelector('.progress')
+      const summarySection = document.getElementById('summarySection')
+      const summaryContent = document.getElementById('summaryContent')
+
+      // ตรวจสอบว่ามีการเชื่อมต่อกับ Firebase หรือไม่
+      const connectedRef = ref(database, '.info/connected')
+      onValue(connectedRef, snap => {
+        if (snap.val() === true) {
+          logMessage('เชื่อมต่อกับ Firebase สำเร็จ', 'success')
+        } else {
+          logMessage('ไม่สามารถเชื่อมต่อกับ Firebase ได้ กรุณาตรวจสอบการเชื่อมต่อ', 'error')
+          startButton.disabled = true
+        }
+      })
+
+      // ตรวจสอบการเลือก checkbox
+      function checkboxHandler() {
+        startButton.disabled = !(backupConfirm.checked && understandRisk.checked)
+      }
+
+      backupConfirm.addEventListener('change', checkboxHandler)
+      understandRisk.addEventListener('change', checkboxHandler)
+
+      // เพิ่มข้อความลงใน log
+      function logMessage(message, type = 'info') {
+        const p = document.createElement('p')
+        p.textContent = `${new Date().toLocaleTimeString()}: ${message}`
+
+        if (type === 'success') {
+          p.classList.add('success-log')
+        } else if (type === 'error') {
+          p.classList.add('error-log')
+        } else if (type === 'warning') {
+          p.classList.add('warning-log')
+        }
+
+        logContainer.appendChild(p)
+        logContainer.scrollTop = logContainer.scrollHeight
+      }
+
+      // อัปเดต progress bar
+      function updateProgress(percentage) {
+        progressBar.style.width = `${percentage}%`
+        progressBar.setAttribute('aria-valuenow', percentage)
+      }
+
+      // เริ่มกระบวนการย้ายข้อมูล
+      async function startMigration() {
+        try {
+          // ล้าง log เดิม
+          logContainer.innerHTML = ''
+
+          // แสดง progress bar
+          progressContainer.style.display = 'block'
+          updateProgress(5)
+
+          // เริ่มต้นดึงข้อมูล Orders
+          logMessage('กำลังดึงข้อมูล Orders ทั้งหมด...')
+          const ordersRef = ref(database, 'orders')
+          const ordersSnapshot = await get(ordersRef)
+
+          if (!ordersSnapshot.exists()) {
+            logMessage('ไม่พบข้อมูล Orders ในฐานข้อมูล', 'error')
+            return
+          }
+
+          // เก็บข้อมูลทั้งหมด
+          allOrders = ordersSnapshot.val()
+          const totalOrders = Object.keys(allOrders).length
+          migrationResults.total = totalOrders
+
+          logMessage(`พบข้อมูล Orders ทั้งหมด ${totalOrders} รายการ`, 'success')
+          updateProgress(20)
+
+          // ตรวจสอบข้อมูลก่อนการย้าย
+          logMessage('กำลังตรวจสอบข้อมูลก่อนการย้าย...')
+
+          // สร้าง Map เพื่อตรวจสอบ ID ซ้ำ
+          const idMap = new Map()
+
+          // วนลูปตรวจสอบข้อมูล
+          Object.entries(allOrders).forEach(([firebaseKey, orderData]) => {
+            // ตรวจสอบว่ามีฟิลด์ id หรือไม่
+            if (!orderData.id || orderData.id === '') {
+              ordersWithoutID.push(firebaseKey)
+              migrationResults.noID++
+            } else {
+              // ตรวจสอบว่า ID ซ้ำหรือไม่
+              if (idMap.has(orderData.id)) {
+                ordersWithDuplicateIDs.push({
+                  id: orderData.id,
+                  keys: [idMap.get(orderData.id), firebaseKey],
+                })
+                migrationResults.duplicates++
+              } else {
+                idMap.set(orderData.id, firebaseKey)
+              }
+            }
+          })
+
+          // แสดงผลการตรวจสอบ
+          if (ordersWithoutID.length > 0) {
+            logMessage(`พบ Orders ที่ไม่มีฟิลด์ ID จำนวน ${ordersWithoutID.length} รายการ`, 'warning')
+            logMessage('Orders เหล่านี้จะไม่ถูกย้าย: ' + ordersWithoutID.join(', '), 'warning')
+          }
+
+          if (ordersWithDuplicateIDs.length > 0) {
+            logMessage(`พบ Orders ที่มี ID ซ้ำกันจำนวน ${ordersWithDuplicateIDs.length} รายการ`, 'warning')
+            ordersWithDuplicateIDs.forEach(dup => {
+              logMessage(`ID: ${dup.id} ซ้ำใน Keys: ${dup.keys.join(', ')}`, 'warning')
+            })
+          }
+
+          updateProgress(30)
+
+          // สร้างสำเนาข้อมูลก่อนย้าย
+          logMessage('กำลังสร้างสำเนาข้อมูลก่อนการย้าย...')
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+          const backupRef = ref(database, `backups/orders_before_migration_${timestamp}`)
+          await set(backupRef, allOrders)
+          logMessage(`สำรองข้อมูลเรียบร้อยที่ backups/orders_before_migration_${timestamp}`, 'success')
+
+          updateProgress(40)
+
+          // เริ่มกระบวนการย้ายข้อมูล
+          logMessage('เริ่มกระบวนการย้ายข้อมูล Orders...')
+
+          let migratedData = {}
+          let processedCount = 0
+
+          for (const [firebaseKey, orderData] of Object.entries(allOrders)) {
+            processedCount++
+
+            // อัปเดตความคืบหน้า
+            updateProgress(40 + (processedCount / totalOrders) * 50)
+
+            // ข้ามรายการที่ไม่มี ID
+            if (!orderData.id || orderData.id === '') {
+              logMessage(`ข้ามรายการ key: ${firebaseKey} เนื่องจากไม่มี ID`, 'warning')
+              continue
+            }
+
+            // ข้ามรายการที่มี ID ซ้ำ ยกเว้นรายการแรก
+            const dupEntry = ordersWithDuplicateIDs.find(dup => dup.keys.includes(firebaseKey))
+            if (dupEntry && dupEntry.keys[0] !== firebaseKey) {
+              logMessage(`ข้ามรายการ key: ${firebaseKey} เนื่องจากมี ID ซ้ำ: ${orderData.id}`, 'warning')
+              continue
+            }
+
+            try {
+              // เพิ่มข้อมูลลงในโครงสร้างใหม่
+              migratedData[orderData.id] = orderData
+              logMessage(`ย้ายข้อมูลสำเร็จ: ${firebaseKey} -> ${orderData.id}`)
+              migrationResults.success++
+            } catch (error) {
+              logMessage(`ย้ายข้อมูลไม่สำเร็จสำหรับ key: ${firebaseKey}, เกิดข้อผิดพลาด: ${error.message}`, 'error')
+              migrationResults.failed++
+            }
+          }
+
+          updateProgress(90)
+
+          // บันทึกข้อมูลที่ย้ายแล้ว
+          logMessage('กำลังบันทึกข้อมูลที่ย้ายแล้วลงฐานข้อมูล...')
+          await set(ref(database, 'orders'), migratedData)
+
+          updateProgress(100)
+          logMessage('การย้ายข้อมูลเสร็จสมบูรณ์!', 'success')
+
+          // แสดงปุ่มตรวจสอบ
+          verifyButton.style.display = 'inline-block'
+
+          // แสดงสรุปผล
+          displaySummary()
+        } catch (error) {
+          logMessage(`เกิดข้อผิดพลาดในการย้ายข้อมูล: ${error.message}`, 'error')
+          console.error(error)
+        }
+      }
+
+      // ฟังก์ชันสำหรับตรวจสอบหลังการย้ายข้อมูล
+      async function verifyMigration() {
+        try {
+          logMessage('กำลังตรวจสอบข้อมูลหลังการย้าย...')
+
+          const ordersRef = ref(database, 'orders')
+          const ordersSnapshot = await get(ordersRef)
+
+          if (!ordersSnapshot.exists()) {
+            logMessage('ไม่พบข้อมูล Orders ในฐานข้อมูล', 'error')
+            return
+          }
+
+          const migratedOrders = ordersSnapshot.val()
+          const migratedCount = Object.keys(migratedOrders).length
+
+          logMessage(`พบข้อมูล Orders หลังการย้ายทั้งหมด ${migratedCount} รายการ`, 'success')
+
+          // ตรวจสอบว่าทุกรายการมี key ตรงกับฟิลด์ id
+          let mismatchCount = 0
+
+          Object.entries(migratedOrders).forEach(([key, data]) => {
+            if (key !== data.id) {
+              logMessage(`พบรายการที่ key ไม่ตรงกับฟิลด์ id: ${key} != ${data.id}`, 'warning')
+              mismatchCount++
+            }
+          })
+
+          if (mismatchCount === 0) {
+            logMessage('การตรวจสอบเสร็จสิ้น: ทุกรายการมี key ตรงกับฟิลด์ id', 'success')
+          } else {
+            logMessage(`การตรวจสอบเสร็จสิ้น: พบ ${mismatchCount} รายการที่มีปัญหา`, 'warning')
+          }
+        } catch (error) {
+          logMessage(`เกิดข้อผิดพลาดในการตรวจสอบ: ${error.message}`, 'error')
+          console.error(error)
+        }
+      }
+
+      // แสดงสรุปผลการย้ายข้อมูล
+      function displaySummary() {
+        summaryContent.innerHTML = `
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card text-center mb-3">
+              <div class="card-body">
+                <h3 class="card-title">${migrationResults.total}</h3>
+                <p class="card-text">จำนวน Orders ทั้งหมด</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card text-center mb-3 text-white bg-success">
+              <div class="card-body">
+                <h3 class="card-title">${migrationResults.success}</h3>
+                <p class="card-text">ย้ายข้อมูลสำเร็จ</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card text-center mb-3 ${migrationResults.failed > 0 ? 'text-white bg-danger' : ''}">
+              <div class="card-body">
+                <h3 class="card-title">${migrationResults.failed}</h3>
+                <p class="card-text">ย้ายข้อมูลไม่สำเร็จ</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card text-center mb-3 ${migrationResults.noID > 0 ? 'text-white bg-warning' : ''}">
+              <div class="card-body">
+                <h3 class="card-title">${migrationResults.noID}</h3>
+                <p class="card-text">ไม่มีฟิลด์ ID</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card text-center mb-3 ${migrationResults.duplicates > 0 ? 'text-white bg-warning' : ''}">
+              <div class="card-body">
+                <h3 class="card-title">${migrationResults.duplicates}</h3>
+                <p class="card-text">ID ซ้ำกัน</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-info">
+          <h5>ขั้นตอนต่อไป</h5>
+          <p>1. ตรวจสอบข้อมูลที่ย้ายแล้วโดยคลิกปุ่ม "ตรวจสอบหลังย้ายข้อมูล"</p>
+          <p>2. อัปเดตโค้ดในหน้า index.html ให้ใช้ Custom ID เป็น key</p>
+          <p>3. ตรวจสอบและอัปเดตโค้ดในส่วนอื่นๆ ที่อาจมีการอ้างอิงถึง Firebase key</p>
+        </div>
+      `
+        summarySection.style.display = 'block'
+      }
+
+      // Event listeners
+      startButton.addEventListener('click', startMigration)
+      verifyButton.addEventListener('click', verifyMigration)
+    </script>
+  </body>
+</html>

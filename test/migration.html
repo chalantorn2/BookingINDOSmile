@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      // Find the mainBookingForm.addEventListener('submit') section and replace with this:
+      mainBookingForm.addEventListener('submit', async function (e) {
+        e.preventDefault()
+        try {
+          const agent = document.getElementById('agent').value.trim()
+          const firstName = document.getElementById('firstName').value
+          const lastName = document.getElementById('lastName').value
+          const pax = document.getElementById('pax').value
+          const timestamp = Date.now()
+          const status = 'รอดำเนินการ'
+
+          // Check if currentOrderKey exists
+          if (!currentOrderKey) {
+            alert('ยังไม่ได้เลือกหรือสร้าง Order')
+            return
+          }
+
+          // Generate Order ID if it doesn't exist
+          if (!currentOrderIDString || currentOrderIDString === '') {
+            if (!agent) {
+              alert('กรุณากรอก Agent ก่อน เพื่อใช้เป็น prefix ของ Order ID')
+              return
+            }
+            // Generate Order ID from agent
+            const newID = await generateOrderID(agent)
+
+            // Update the id value for orders/{currentOrderKey}
+            await update(ref(database, 'orders/' + currentOrderKey), { id: newID })
+
+            // Store for use when saving tour/transfer
+            currentOrderIDString = newID
+            console.log('✅ Generated New Order ID:', newID)
+          }
+
+          // At this point, we always have currentOrderIDString
+          let tourCount = 0
+          let transferCount = 0
+          let tourIDs = []
+          let transferIDs = []
+
+          // ---------------------------------------------
+          // Save Tour Bookings - USING CUSTOM ID AS KEY
+          // ---------------------------------------------
+          const tourForms = document.querySelectorAll('.tour-form')
+          for (const tourForm of tourForms) {
+            // Generate booking ID from /js/id.js
+            const bookingID = await generateBookingID('tour')
+
+            const formData = {
+              orderId: currentOrderIDString,
+              tourID: bookingID, // We still keep this for compatibility
+              tourAgent: agent,
+              tourFirstName: firstName,
+              tourLastName: lastName,
+              tourPax: pax,
+              tourType: tourForm.querySelector('[name="tourType"]').value,
+              tourSendTo: tourForm.querySelector('[name="tourSendTo"]').value,
+              tourDetail: tourForm.querySelector('[name="tourDetail"]').value,
+              tourPickUpTime: tourForm.querySelector('[name="tourPickUpTime"]').value,
+              tourDate: tourForm.querySelector('[name="tourDate"]').value,
+              tourHotel: tourForm.querySelector('[name="tourHotel"]').value,
+              tourRoomNo: tourForm.querySelector('[name="tourRoomNo"]').value,
+              tourContactNo: tourForm.querySelector('[name="tourContactNo"]').value,
+              tourFee: tourForm.querySelector('[name="tourFee"]').value,
+              tourMeal: tourForm.querySelector('[name="tourMeal"]').value,
+              tourNote: tourForm.querySelector('[name="tourNote"]').value,
+              status,
+              timestamp,
+            }
+
+            // **** IMPORTANT CHANGE ****
+            // Instead of using push() to create a new key, we use bookingID directly as the key
+            const tourRef = ref(database, `tourBookings/${bookingID}`)
+            await set(tourRef, formData)
+
+            // Add to orders/{currentOrderKey}/bookings array
+            const bookingListRef = ref(database, `orders/${currentOrderKey}/bookings`)
+            const bookingListSnap = await get(bookingListRef)
+            let existingList = bookingListSnap.val() || []
+            // Use the bookingID as key, not the Firebase push key
+            existingList.push(bookingID)
+            await set(bookingListRef, existingList)
+
+            tourCount++
+            tourIDs.push(bookingID)
+          }
+
+          // ---------------------------------------------
+          // Save Transfer Bookings - USING CUSTOM ID AS KEY
+          // ---------------------------------------------
+          const transferForms = document.querySelectorAll('.transfer-form')
+          for (const transferForm of transferForms) {
+            // Generate booking ID from /js/id.js
+            const bookingID = await generateBookingID('transfer')
+
+            const formData = {
+              orderId: currentOrderIDString,
+              transferID: bookingID, // We still keep this for compatibility
+              transferAgent: agent,
+              transferFirstName: firstName,
+              transferLastName: lastName,
+              transferPax: pax,
+              transferType: transferForm.querySelector('[name="transferType"]').value,
+              transferSendTo: transferForm.querySelector('[name="transferSendTo"]').value,
+              transferDetail: transferForm.querySelector('[name="transferDetail"]').value,
+              transferPickUpTime: transferForm.querySelector('[name="transferPickUpTime"]').value,
+              transferDate: transferForm.querySelector('[name="transferDate"]').value,
+              transferFlight: transferForm.querySelector('[name="transferFlight"]').value,
+              transferTime: transferForm.querySelector('[name="transferTime"]').value,
+              transferPickupFrom: transferForm.querySelector('[name="transferPickupFrom"]').value,
+              transferDropTo: transferForm.querySelector('[name="transferDropTo"]').value,
+              transferNote: transferForm.querySelector('[name="transferNote"]').value,
+              status,
+              timestamp,
+            }
+
+            // **** IMPORTANT CHANGE ****
+            // Instead of using push() to create a new key, we use bookingID directly as the key
+            const transferRef = ref(database, `transferBookings/${bookingID}`)
+            await set(transferRef, formData)
+
+            // Add to orders/{currentOrderKey}/bookings array
+            const bookingListRef = ref(database, `orders/${currentOrderKey}/bookings`)
+            const bookingListSnap = await get(bookingListRef)
+            let existingList = bookingListSnap.val() || []
+            // Use the bookingID as key, not the Firebase push key
+            existingList.push(bookingID)
+            await set(bookingListRef, existingList)
+
+            transferCount++
+            transferIDs.push(bookingID)
+          }
+
+          // ---------------------------------------------
+          // Summary + Alert
+          // ---------------------------------------------
+          let message = 'บันทึกข้อมูลสำเร็จ!\n'
+          if (tourCount > 0) {
+            message += `Tour Bookings: ${tourCount}\nIDs: ${tourIDs.join(', ')}\n`
+          }
+          if (transferCount > 0) {
+            message += `Transfer Bookings: ${transferCount}\nIDs: ${transferIDs.join(', ')}\n`
+          }
+          alert(message)
+
+          // Clear form after saving
+          mainBookingForm.reset()
+          additionalForms.innerHTML = ''
+          updateSubmitButtonVisibility()
+        } catch (error) {
+          console.error('Error in form submission:', error)
+          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล')
+        }
+      })
+    </script>
+  </body>
+</html>

@@ -37,7 +37,7 @@
       <div class="text-center mb-3">
         <label for="orderDropdown" class="form-label fw-bold">เลือก Order</label>
         <select
-          class="selectpicker w-50 mx-auto"
+          class="selectpicker w-50 mx-auto border border-primary rounded-2"
           id="orderDropdown"
           data-live-search="true"
           title="เลือก Order"
@@ -123,6 +123,11 @@
       import { database } from '/js/firebase-config.js'
 
       import { generateBookingID } from '/js/id.js'
+      function sanitizeOrderIdForKey(orderId) {
+        if (!orderId) return orderId
+        // แทนที่เฉพาะเครื่องหมาย / เป็น -
+        return orderId.replace(/\//g, '-')
+      }
 
       async function generateOrderID(agent = 'INDO') {
         const today = new Date()
@@ -138,7 +143,10 @@
         })
         const sequence = result.snapshot.val()
 
-        return `${agent}-${yy}${mm}${dd}-${String(sequence).padStart(3, '0')}`
+        // แทนที่ / เป็น - ในตัวแปร agent ทันที
+        const safeAgent = agent.replace(/\//g, '-')
+
+        return `${safeAgent}-${yy}${mm}${dd}-${String(sequence).padStart(3, '0')}`
       }
 
       let currentOrderKey = null
@@ -457,43 +465,61 @@
           }
         })
 
-        createOrderBtn.addEventListener('click', async function () {
-          try {
-            // สร้าง order เปล่า (ยังไม่กำหนด id)
-            const ordersRef = ref(database, 'orders')
-            const newOrderRef = push(ordersRef)
+        createOrderBtn.addEventListener('click', function () {
+          // Reset all forms
+          mainBookingForm.reset()
+          tourFormsContainer.innerHTML = ''
+          transferFormsContainer.innerHTML = ''
+          updateFormCount()
+          updateSubmitButtonVisibility()
 
-            // สร้าง object เปล่า หรือจะ set เป็น {id: ''} ก็ได้
-            await set(newOrderRef, {
-              id: '', // ยังไม่กำหนดค่า id
-            })
+          // Hide dropdown, hide create order button
+          // This part can stay as it was
+          createOrderBtn.classList.add('d-none')
 
-            // เก็บ pushKey ไว้เพื่อใช้งานตอนบันทึก booking
-            currentOrderKey = newOrderRef.key
-            // ตั้งค่าว่างเพื่อบอกว่ายังไม่มี Order ID
-            currentOrderIDString = ''
+          // Show booking section without creating order yet
+          bookingSection.classList.remove('d-none')
 
-            console.log('✅ Created Empty Order:', currentOrderKey)
-
-            // Reset ฟอร์มหลัก + ล้างฟอร์มย่อย
-            mainBookingForm.reset()
-            tourFormsContainer.innerHTML = ''
-            transferFormsContainer.innerHTML = ''
-            updateFormCount()
-            updateSubmitButtonVisibility()
-
-            // ซ่อน dropdown, ปิดปุ่มสร้าง order
-            orderDropdown.classList.add('d-none')
-            createOrderBtn.classList.add('d-none')
-
-            // แสดงส่วนฟอร์ม Booking (ให้ผู้ใช้กรอก Agent, FirstName, etc.)
-            bookingSection.classList.remove('d-none')
-            additionalForms.classList.remove('d-none')
-          } catch (err) {
-            console.error('❌ Error creating new order:', err)
-            alert('เกิดข้อผิดพลาดในการสร้าง Order ใหม่')
-          }
+          // Set to null to indicate no order created yet
+          currentOrderKey = null
+          currentOrderIDString = null
         })
+        if (tourForms.length > 0 || transferForms.length > 0) {
+          // หาวันที่เริ่มต้นและสิ้นสุดจากการจองทั้งหมด
+          let startDates = []
+          let endDates = []
+
+          // รวบรวมวันที่จากการจองทัวร์
+          tourForms.forEach(form => {
+            const dateStr = form.querySelector('[name="tourDate"]').value
+            if (dateStr) {
+              startDates.push(dateStr)
+              endDates.push(dateStr)
+            }
+          })
+
+          // รวบรวมวันที่จากการจองรถรับส่ง
+          transferForms.forEach(form => {
+            const dateStr = form.querySelector('[name="transferDate"]').value
+            if (dateStr) {
+              startDates.push(dateStr)
+              endDates.push(dateStr)
+            }
+          })
+
+          // จัดเรียงวันที่เพื่อหาวันแรกและวันสุดท้าย
+          startDates.sort()
+          endDates.sort((a, b) => new Date(b) - new Date(a)) // เรียงจากมากไปน้อย
+
+          // อัปเดต startDate และ endDate ใน order
+          if (startDates.length > 0 && endDates.length > 0) {
+            const orderDatesRef = ref(database, `orders/${currentOrderKey}`)
+            await update(orderDatesRef, {
+              startDate: startDates[0],
+              endDate: endDates[0],
+            })
+          }
+        }
         addTourBtn.addEventListener('click', () => {
           const tourHTML = createTourForm()
           tourFormsContainer.insertAdjacentHTML('beforeend', tourHTML)
@@ -521,8 +547,10 @@
           updateSubmitButtonVisibility()
         })
 
+        // Find the mainBookingForm.addEventListener('submit') section and replace with this:
         mainBookingForm.addEventListener('submit', async function (e) {
           e.preventDefault()
+
           try {
             const agent = document.getElementById('agent').value.trim()
             const firstName = document.getElementById('firstName').value
@@ -531,43 +559,59 @@
             const timestamp = Date.now()
             const status = 'รอดำเนินการ'
 
-            // ตรวจสอบว่ามี currentOrderKey แล้วหรือยัง
-            if (!currentOrderKey) {
-              alert('ยังไม่ได้เลือกหรือสร้าง Order')
+            // Check if we have tours or transfers to save
+            const tourForms = document.querySelectorAll('.tour-form')
+            const transferForms = document.querySelectorAll('.transfer-form')
+
+            if (tourForms.length === 0 && transferForms.length === 0) {
+              alert('กรุณาเพิ่มการจอง Tour หรือ Transfer อย่างน้อย 1 รายการ')
               return
             }
 
-            // ถ้ายังไม่มี currentOrderIDString (หมายถึงเป็น Order ใหม่ที่ยังไม่มี id)
-            // จะต้องสร้าง id จาก agent ก่อน
-            if (!currentOrderIDString || currentOrderIDString === '') {
-              if (!agent) {
-                alert('กรุณากรอก Agent ก่อน เพื่อใช้เป็น prefix ของ Order ID')
-                return
-              }
-              // สร้าง Order ID จาก agent
-              const newID = await generateOrderID(agent)
-
-              // อัปเดตค่า id ของ orders/{currentOrderKey}
-              await update(ref(database, 'orders/' + currentOrderKey), { id: newID })
-
-              // เก็บลงตัวแปรไว้ใช้ตอนบันทึก tour/transfer
-              currentOrderIDString = newID
-              console.log('✅ Generated New Order ID:', newID)
+            // Check if agent is provided
+            if (!agent) {
+              alert('กรุณากรอก Agent ก่อน เพื่อใช้เป็น prefix ของ Order ID')
+              return
             }
 
-            // จากนี้ไป ไม่ว่า Order จะเก่าหรือใหม่ ก็จะมี currentOrderIDString เสมอ
+            // IMPORTANT: Create order only if we don't have one yet
+            if (!currentOrderKey) {
+              // Generate Order ID from agent
+              const newOrderID = await generateOrderID(agent)
+
+              // Create new order
+              const orderRef = push(ref(database, 'orders'))
+              currentOrderKey = orderRef.key
+
+              // Set order ID
+              await set(orderRef, {
+                id: newOrderID,
+                bookings: [],
+              })
+
+              // Store for use when saving tour/transfer
+              currentOrderIDString = newOrderID
+              console.log('✅ Created New Order:', currentOrderKey, 'with ID:', currentOrderIDString)
+            }
+
+            // At this point, we always have currentOrderKey and currentOrderIDString
             let tourCount = 0
             let transferCount = 0
             let tourIDs = []
             let transferIDs = []
 
-            // ---------------------------------------------
-            // บันทึก Tour Bookings
-            // ---------------------------------------------
-            const tourForms = document.querySelectorAll('.tour-form')
+            // Collect all dates for startDate and endDate calculation
+            let allDates = []
+
+            // Save Tour Bookings
             for (const tourForm of tourForms) {
-              // เรียก generateBookingID('tour') จาก /js/id.js
+              // Generate booking ID
               const bookingID = await generateBookingID('tour')
+
+              const tourDate = tourForm.querySelector('[name="tourDate"]').value
+              if (tourDate) {
+                allDates.push(tourDate)
+              }
 
               const formData = {
                 orderId: currentOrderIDString,
@@ -580,7 +624,7 @@
                 tourSendTo: tourForm.querySelector('[name="tourSendTo"]').value,
                 tourDetail: tourForm.querySelector('[name="tourDetail"]').value,
                 tourPickUpTime: tourForm.querySelector('[name="tourPickUpTime"]').value,
-                tourDate: tourForm.querySelector('[name="tourDate"]').value,
+                tourDate: tourDate,
                 tourHotel: tourForm.querySelector('[name="tourHotel"]').value,
                 tourRoomNo: tourForm.querySelector('[name="tourRoomNo"]').value,
                 tourContactNo: tourForm.querySelector('[name="tourContactNo"]').value,
@@ -591,29 +635,30 @@
                 timestamp,
               }
 
-              const tourRef = ref(database, 'tourBookings')
-              const newTourRef = push(tourRef)
-              await set(newTourRef, formData)
+              // Use bookingID as the key
+              const tourRef = ref(database, `tourBookings/${bookingID}`)
+              await set(tourRef, formData)
 
-              // เก็บ pushKey ไว้ใน orders/{currentOrderKey}/bookings
-              const newTourKey = newTourRef.key
+              // Add to orders/{currentOrderKey}/bookings array
               const bookingListRef = ref(database, `orders/${currentOrderKey}/bookings`)
               const bookingListSnap = await get(bookingListRef)
               let existingList = bookingListSnap.val() || []
-              existingList.push(newTourKey)
+              existingList.push(bookingID)
               await set(bookingListRef, existingList)
 
               tourCount++
               tourIDs.push(bookingID)
             }
 
-            // ---------------------------------------------
-            // บันทึก Transfer Bookings
-            // ---------------------------------------------
-            const transferForms = document.querySelectorAll('.transfer-form')
+            // Save Transfer Bookings
             for (const transferForm of transferForms) {
-              // เรียก generateBookingID('transfer') จาก /js/id.js
+              // Generate booking ID
               const bookingID = await generateBookingID('transfer')
+
+              const transferDate = transferForm.querySelector('[name="transferDate"]').value
+              if (transferDate) {
+                allDates.push(transferDate)
+              }
 
               const formData = {
                 orderId: currentOrderIDString,
@@ -626,7 +671,7 @@
                 transferSendTo: transferForm.querySelector('[name="transferSendTo"]').value,
                 transferDetail: transferForm.querySelector('[name="transferDetail"]').value,
                 transferPickUpTime: transferForm.querySelector('[name="transferPickUpTime"]').value,
-                transferDate: transferForm.querySelector('[name="transferDate"]').value,
+                transferDate: transferDate,
                 transferFlight: transferForm.querySelector('[name="transferFlight"]').value,
                 transferTime: transferForm.querySelector('[name="transferTime"]').value,
                 transferPickupFrom: transferForm.querySelector('[name="transferPickupFrom"]').value,
@@ -636,25 +681,34 @@
                 timestamp,
               }
 
-              const transferRef = ref(database, 'transferBookings')
-              const newTransferRef = push(transferRef)
-              await set(newTransferRef, formData)
+              // Use bookingID as the key
+              const transferRef = ref(database, `transferBookings/${bookingID}`)
+              await set(transferRef, formData)
 
-              // เก็บ pushKey ไว้ใน orders/{currentOrderKey}/bookings
-              const newTransferKey = newTransferRef.key
+              // Add to orders/{currentOrderKey}/bookings array
               const bookingListRef = ref(database, `orders/${currentOrderKey}/bookings`)
               const bookingListSnap = await get(bookingListRef)
               let existingList = bookingListSnap.val() || []
-              existingList.push(newTransferKey)
+              existingList.push(bookingID)
               await set(bookingListRef, existingList)
 
               transferCount++
               transferIDs.push(bookingID)
             }
 
-            // ---------------------------------------------
-            // สรุปผล + Alert
-            // ---------------------------------------------
+            // Update order with start and end dates
+            if (allDates.length > 0) {
+              allDates.sort() // Sort dates in ascending order
+              const startDate = allDates[0]
+              const endDate = allDates[allDates.length - 1]
+
+              await update(ref(database, `orders/${currentOrderKey}`), {
+                startDate,
+                endDate,
+              })
+            }
+
+            // Display summary message
             let message = 'บันทึกข้อมูลสำเร็จ!\n'
             if (tourCount > 0) {
               message += `Tour Bookings: ${tourCount}\nIDs: ${tourIDs.join(', ')}\n`
@@ -664,13 +718,24 @@
             }
             alert(message)
 
-            // เคลียร์ฟอร์มหลังบันทึก
+            // Refresh orders dropdown
+            await loadOrders()
+
+            // Reset form
             mainBookingForm.reset()
-            additionalForms.innerHTML = ''
+            tourFormsContainer.innerHTML = ''
+            transferFormsContainer.innerHTML = ''
+            updateFormCount()
             updateSubmitButtonVisibility()
+
+            // Show dropdown and create order button again
+            createOrderBtn.classList.remove('d-none')
+
+            // Hide booking section
+            bookingSection.classList.add('d-none')
           } catch (error) {
             console.error('Error in form submission:', error)
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล')
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message)
           }
         })
       })
@@ -679,5 +744,6 @@
     <script type="module" src="/component/menu.js"></script>
     <script type="module" src="/js/id.js"></script>
     <script type="module" src="/component/excel_export.js"></script>
+    <script type="module" src="/js/orderManager.js"></script>
   </body>
 </html>

@@ -10,6 +10,7 @@ class MenuComponent extends HTMLElement {
                 top: 0;
                 width: 100%;
                 z-index: 1000;
+       
             }
 
                         .navbar {
@@ -19,6 +20,7 @@ class MenuComponent extends HTMLElement {
                 padding: 10px 20px;
                 max-width: 1200px;
                 margin: 0 auto;
+                
             }
 
                         .navbar-brand {

@@ -132,7 +132,8 @@
 
           const monthKey = `${yy}${mm}`
           const sequenceRef = ref(database, `sequences_order/${monthKey}`)
-
+          const safeAgent = agent.replace(/\//g, '-')
+          return `${safeAgent}-${yy}${mm}${dd}-${String(sequence).padStart(3, '0')}`
           try {
             const result = await runTransaction(sequenceRef, currentValue => {
               return (currentValue || 0) + 1

@@ -1,5 +1,5 @@
 body {
-  font-family: "Prompt", sans-serif;
+  font-family: 'Prompt', sans-serif;
   padding-top: 70px; /* ระยะห่างจาก Header */
 }
 .invoice-title {
@@ -29,7 +29,7 @@ body {
   td {
     border: 1px solid black !important;
     padding: 8px;
-    font-size: 14px;
+    font-size: 12px;
     /* text-align: left; */
     vertical-align: center; /* จัดข้อความให้อยู่ด้านบน */
     white-space: normal !important; /* อนุญาตให้ข้อความขึ้นบรรทัดใหม่ */

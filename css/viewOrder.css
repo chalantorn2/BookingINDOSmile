@@ -1,0 +1,402 @@
+/* viewOrder.css */
+
+/* Base styles */
+body {
+  background: linear-gradient(135deg, #e6f0ff, #ffffff); /* Light gradient with a techy twist */
+  font-family: 'Orbitron', 'Prompt', sans-serif; /* Modern font with fallback */
+  padding-top: 70px;
+  color: #2d3748; /* Slightly darker for contrast */
+}
+
+/* Page header styles */
+.page-header h1 {
+  color: #00b4d8; /* Bright cyan for a techy pop */
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.page-header .lead {
+  font-weight: 300;
+  max-width: 600px;
+  margin: 0 auto;
+  color: #4a5568;
+}
+
+/* Card styles */
+.card {
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ffffff, #f1f5f9); /* Light gradient */
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  border: 1px solid rgba(0, 180, 216, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card {
+  background: linear-gradient(to bottom right, #f8fafc, #e6f0ff);
+}
+
+.card-header {
+  background: rgba(0, 180, 216, 0.05);
+  font-weight: 600;
+  color: #00b4d8;
+  border-bottom: 1px solid rgba(0, 180, 216, 0.2);
+}
+
+/* Filter panel styling */
+.filter-panel {
+  background: #ffffff;
+  margin-bottom: 30px;
+  border: 1px solid #00b4d8;
+  border-radius: 12px;
+}
+
+.filter-panel .card-title {
+  font-size: 1.2rem;
+  color: #00b4d8;
+}
+
+.filter-panel .input-group-text {
+  background: #f1f5f9;
+  color: #2d3748;
+  border: 1px solid #00b4d8;
+}
+
+.filter-panel .btn-group .btn {
+  border-color: #00b4d8;
+  color: #2d3748;
+  background: #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.filter-panel .btn-group .btn.active {
+  background: linear-gradient(90deg, #00b4d8, #0077b6); /* Gradient for active state */
+  color: #fff;
+  border-color: #00b4d8;
+}
+
+/* Stats summary styles */
+.stats-summary .card {
+  padding: 15px;
+}
+
+.stats-summary .card-title {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #718096;
+}
+
+.stats-summary .display-4 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #00b4d8;
+}
+
+/* Order item styling */
+.order-item {
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border-left: 6px solid #00b4d8;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+.order-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.order-item.invoiced {
+  border-left-color: #28a745; /* ใช้สีเขียวสำหรับ Invoiced เพื่อให้สอดคล้องกับ badge */
+}
+
+.order-item.not-invoiced {
+  border-left-color: #ffc107; /* ใช้สีเหลืองสำหรับ Not Invoiced เพื่อให้สอดคล้องกับ badge */
+}
+
+.order-item .order-id {
+  font-size: 16px;
+  font-weight: 700;
+  color: rgb(122, 122, 122);
+}
+
+.order-item .order-date {
+  font-size: 0.9rem;
+  color: #718096;
+}
+
+.order-item .customer-name {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 20px;
+}
+
+.order-item .bookings-count {
+  font-size: 0.9rem;
+  background: rgba(0, 180, 216, 0.15);
+  border-radius: 25px;
+  padding: 5px 14px;
+  color: #00b4d8;
+}
+
+.order-item .invoiced-badge {
+  font-size: 0.85rem;
+}
+
+/* Pagination styling */
+.pagination-container {
+  padding: 15px 0;
+  border-top: 1px solid rgba(0, 180, 216, 0.2);
+  margin-top: 30px;
+}
+
+.pagination-info {
+  color: #718096;
+  font-size: 0.95rem;
+}
+
+.pagination-controls .btn {
+  padding: 6px 16px;
+  background: #f1f5f9;
+  color: #00b4d8;
+  border: 1px solid #00b4d8;
+}
+
+.pagination-controls .btn:hover {
+  background: #00b4d8;
+  color: #fff;
+}
+
+/* Modal styling */
+.modal-content {
+  background: #ffffff;
+  border: 1px solid #00b4d8;
+  border-radius: 14px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(0, 180, 216, 0.1);
+  padding: 15px 20px;
+  color: #00b4d8;
+}
+
+.modal-header .btn-close {
+  opacity: 0.8;
+}
+
+.modal-body {
+  padding: 20px;
+  color: #2d3748;
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(0, 180, 216, 0.1);
+  padding: 15px 20px;
+}
+
+.booking-details-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 4 คอลัมน์เท่า ๆ กัน */
+  gap: 5px; /* ลด gap จาก 10px เป็น 5px เพื่อชิดกัน */
+  padding: 2px 0; /* ลด padding จาก 5px 0 เป็น 2px 0 */
+}
+
+.booking-row {
+  display: contents; /* ทำให้ grid ทำงานกับรายการในแถว */
+}
+
+.booking-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* ช่วยจัดการข้อความยาว */
+  background: rgba(230, 240, 255, 0.1); /* พื้นหลังโปร่งใสเบา ๆ */
+  border-radius: 4px; /* มุมโค้งเล็ก ๆ */
+  padding: 3px; /* ลด padding จาก 5px เป็น 3px */
+}
+
+.booking-label {
+  font-size: 0.8rem; /* ขนาดตัวอักษรตามที่ระบุ */
+  color: #718096;
+  margin-bottom: 1px; /* ลด margin-bottom จาก 2px เป็น 1px */
+  font-weight: 600;
+  white-space: nowrap; /* ป้องกัน label ห่อลงแถว */
+}
+
+.booking-value {
+  font-size: 0.8rem; /* ขนาดตัวอักษรตามที่ระบุ */
+  font-weight: 500;
+  color: #2d3748;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+.booking-details-card {
+  margin-bottom: 5px; /* รักษาความชิดตามคำขอ */
+  border-left: 5px solid #718096;
+}
+
+.booking-details-card.tour {
+  border-left-color: #06d6a0;
+}
+
+.booking-details-card.transfer {
+  border-left-color: #00b4d8;
+}
+
+.card-body {
+  padding: 8px; /* ลด padding จาก 10px เป็น 8px เพื่อชิดกัน */
+}
+
+.booking-details-card .booking-id {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #00b4d8;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .booking-details-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 คอลัมน์ในหน้าจอเล็ก */
+  }
+
+  @media (max-width: 480px) {
+    .booking-details-grid {
+      grid-template-columns: 1fr; /* 1 คอลัมน์ในหน้าจอเล็กมาก */
+    }
+
+    .booking-item {
+      background: transparent; /* ลบพื้นหลังเมื่อเป็น 1 คอลัมน์ */
+    }
+  }
+}
+
+/* Status badges */
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.waiting {
+  background: #edf2f7;
+  color: #4a5568;
+}
+
+.status-badge.booked {
+  background: linear-gradient(90deg, #00b4d8, #0077b6);
+  color: #fff;
+}
+
+.status-badge.in-progress {
+  background: linear-gradient(90deg, #ff6b6b, #ff9f43);
+  color: #fff;
+}
+
+.status-badge.completed {
+  background: linear-gradient(90deg, #06d6a0, #00b4d8);
+  color: #fff;
+}
+
+.status-badge.cancelled {
+  background: #ff6b6b;
+  color: #fff;
+}
+
+/* Loading spinner */
+#loadingSpinner {
+  padding: 40px 0;
+}
+
+/* Available bookings table styling */
+#availableBookingsTable tr {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#availableBookingsTable tr:hover {
+  background: rgba(0, 180, 216, 0.1);
+  color: #00b4d8;
+}
+
+#availableBookingsTable tr.selected {
+  background: rgba(0, 180, 216, 0.25);
+  color: #2d3748;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .order-item {
+    padding: 15px;
+  }
+
+  .order-item .order-actions {
+    margin-top: 15px;
+    justify-content: start !important;
+  }
+
+  .stats-summary .display-4 {
+    font-size: 2.2rem;
+  }
+
+  .pagination-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+/* Animation for new/updated content */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+/* Buttons hover effects */
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00b4d8, #0077b6);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #06d6a0;
+}
+.order-item .bookings-count {
+  color: #ffffff; /* เปลี่ยนตัวอักษรเป็นสีขาว */
+}

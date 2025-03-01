@@ -1,8 +1,5 @@
-import { database } from "/js/firebase-config.js"; // Firebase Configuration
-import {
-  ref,
-  get,
-} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { database } from '/js/firebase-config.js' // Firebase Configuration
+import { ref, get } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
 
 class CalendarHighlight extends HTMLElement {
   connectedCallback() {
@@ -57,119 +54,108 @@ class CalendarHighlight extends HTMLElement {
       <div class="calendar-slider">
         <div id="days-container"></div>
       </div>
-    `;
+    `
 
-    this.initializeSlider();
-    this.listenForDateChange(); // Listen for date change from inlineCalendar
+    this.initializeSlider()
+    this.listenForDateChange() // Listen for date change from inlineCalendar
   }
 
   initializeSlider() {
-    this.daysContainer = this.querySelector("#days-container");
-    this.updateSlider(new Date()); // Initial load for the current month
+    this.daysContainer = this.querySelector('#days-container')
+    this.updateSlider(new Date()) // Initial load for the current month
   }
 
   async updateSlider(selectedDate) {
-    const year = selectedDate.getFullYear();
-    const month = selectedDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const bookedDates = await this.fetchBookingDates(year, month);
+    const year = selectedDate.getFullYear()
+    const month = selectedDate.getMonth()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const bookedDates = await this.fetchBookingDates(year, month)
 
-    this.daysContainer.innerHTML = ""; // Clear current days
+    this.daysContainer.innerHTML = '' // Clear current days
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-        day
-      ).padStart(2, "0")}`;
-      const dayElement = document.createElement("div");
-      dayElement.classList.add("day");
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const dayElement = document.createElement('div')
+      dayElement.classList.add('day')
 
       if (bookedDates.has(dateStr)) {
-        dayElement.classList.add("booked");
+        dayElement.classList.add('booked')
       }
 
       // Highlight the selected day
       if (day === selectedDate.getDate()) {
-        dayElement.classList.add("selected");
+        dayElement.classList.add('selected')
       }
 
-      dayElement.textContent = day;
+      dayElement.textContent = day
 
       // Add click event to day
-      dayElement.addEventListener("click", () => {
+      dayElement.addEventListener('click', () => {
         // Remove previous selected class
-        this.daysContainer.querySelectorAll(".day").forEach((el) => {
-          el.classList.remove("selected");
-        });
+        this.daysContainer.querySelectorAll('.day').forEach(el => {
+          el.classList.remove('selected')
+        })
 
         // Add selected class to clicked day
-        dayElement.classList.add("selected");
+        dayElement.classList.add('selected')
 
         // Dispatch custom event with the selected date
-        const selectedEvent = new CustomEvent("day-selected", {
+        const selectedEvent = new CustomEvent('day-selected', {
           detail: {
             year,
             month,
             day,
           },
-        });
-        window.dispatchEvent(selectedEvent); // ส่งเหตุการณ์ไปยังระบบ
-      });
+        })
+        window.dispatchEvent(selectedEvent) // ส่งเหตุการณ์ไปยังระบบ
+      })
 
-      this.daysContainer.appendChild(dayElement);
+      this.daysContainer.appendChild(dayElement)
     }
   }
 
   listenForDateChange() {
-    window.addEventListener("calendar-date-change", (event) => {
-      const { year, month, day } = event.detail; // รับข้อมูลวันที่ที่เลือก
-      const selectedDate = new Date(year, month, day); // สร้างวันที่ที่เลือก
-      this.updateSlider(selectedDate); // อัปเดต slider พร้อมวันที่ที่เลือก
-    });
+    window.addEventListener('calendar-date-change', event => {
+      const { year, month, day } = event.detail // รับข้อมูลวันที่ที่เลือก
+      const selectedDate = new Date(year, month, day) // สร้างวันที่ที่เลือก
+      this.updateSlider(selectedDate) // อัปเดต slider พร้อมวันที่ที่เลือก
+    })
   }
 
   async fetchBookingDates(year, month) {
-    const tourRef = ref(database, "tourBookings");
-    const transferRef = ref(database, "transferBookings");
+    const tourRef = ref(database, 'tourBookings')
+    const transferRef = ref(database, 'transferBookings')
 
-    const bookedDates = new Set();
+    const bookedDates = new Set()
 
     try {
-      const [tourSnapshot, transferSnapshot] = await Promise.all([
-        get(tourRef),
-        get(transferRef),
-      ]);
+      const [tourSnapshot, transferSnapshot] = await Promise.all([get(tourRef), get(transferRef)])
 
       if (tourSnapshot.exists()) {
-        tourSnapshot.forEach((booking) => {
-          const date = booking.val().tourDate;
-          const bookingDate = new Date(date);
-          if (
-            bookingDate.getFullYear() === year &&
-            bookingDate.getMonth() === month
-          ) {
-            bookedDates.add(date);
+        tourSnapshot.forEach(booking => {
+          const date = booking.val().tourDate
+          const bookingDate = new Date(date)
+          if (bookingDate.getFullYear() === year && bookingDate.getMonth() === month) {
+            bookedDates.add(date)
           }
-        });
+        })
       }
 
       if (transferSnapshot.exists()) {
-        transferSnapshot.forEach((booking) => {
-          const date = booking.val().transferDate;
-          const bookingDate = new Date(date);
-          if (
-            bookingDate.getFullYear() === year &&
-            bookingDate.getMonth() === month
-          ) {
-            bookedDates.add(date);
+        transferSnapshot.forEach(booking => {
+          const date = booking.val().transferDate
+          const bookingDate = new Date(date)
+          if (bookingDate.getFullYear() === year && bookingDate.getMonth() === month) {
+            bookedDates.add(date)
           }
-        });
+        })
       }
     } catch (error) {
-      console.error("Error fetching booking dates:", error);
+      console.error('Error fetching booking dates:', error)
     }
 
-    return bookedDates;
+    return bookedDates
   }
 }
 
-customElements.define("calendar-highlight", CalendarHighlight);
+customElements.define('calendar-highlight', CalendarHighlight)

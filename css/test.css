@@ -1,0 +1,58 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f7fafc;
+}
+
+.flatpickr-day.has-bookings.tour {
+  background: #48bb78; /* สีเขียวสำหรับ Tour */
+  border-radius: 50%;
+  color: white;
+}
+
+.flatpickr-day.has-bookings.transfer {
+  background: #4299e1; /* สีน้ำเงินสำหรับ Transfer */
+  border-radius: 50%;
+  color: white;
+}
+
+.flatpickr-day.selected {
+  background: #2b6cb0 !important; /* สีน้ำเงินเข้มเมื่อเลือก */
+  border-color: #2b6cb0 !important;
+  color: white !important;
+}
+
+.flatpickr-calendar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+#booking-list .booking-item {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+#booking-list .booking-item:hover {
+  transform: translateY(-2px);
+}
+
+#booking-list .booking-item.tour {
+  border-left: 4px solid #48bb78;
+}
+
+#booking-list .booking-item.transfer {
+  border-left: 4px solid #4299e1;
+}
+
+button {
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}

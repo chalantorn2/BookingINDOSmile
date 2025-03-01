@@ -4,17 +4,41 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Payments</title>
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap" rel="stylesheet" />
+
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- (ถ้าต้องใช้ bootstrap-select) -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css"
     />
+
+    <!-- CSS อื่น ๆ ของโปรเจกต์ เช่น order.css -->
     <link rel="stylesheet" href="/css/order.css" />
+
+    <style>
+      body {
+        font-family: 'Prompt', sans-serif;
+      }
+      .numcenter {
+        text-align: center;
+      }
+      .table thead th {
+        vertical-align: middle;
+      }
+      /* สามารถเพิ่มสไตล์เฉพาะเพิ่มเติมได้ตามต้องการ */
+    </style>
   </head>
 
   <body>
+    <!-- component menu (ตามโปรเจกต์เดิม) -->
     <menu-component></menu-component>
 
     <div class="container py-5">
@@ -43,6 +67,7 @@
         </div>
       </div>
 
+      <!-- ส่วนแสดง Booking -->
       <div class="mt-5 d-none" id="bookingContainer">
         <div class="text-center">
           <p id="customerNameDisplay" class="fs-2 fw-bold mt-3" style="color: #b30b00"></p>
@@ -51,33 +76,23 @@
 
         <div class="row" id="bookingList"></div>
 
+        <!-- ตาราง Booking ที่เลือก -->
         <div class="mt-5 d-none" id="selectedBookingsContainer">
           <div class="table-responsive">
             <table class="table table-sm table-striped align-middle" style="min-width: 1300px">
               <thead class="table-warning">
                 <tr>
                   <th style="width: 200px">Booking Info</th>
-
                   <th style="width: 160px">Hotel</th>
-
                   <th style="width: 200px">Details</th>
-
                   <th style="width: 80px">Type</th>
-
                   <th style="width: 80px">Cost</th>
-
                   <th style="width: 60px">Pax</th>
-
                   <th style="width: 80px">T.Cost</th>
-
                   <th style="width: 80px">S.Price</th>
-
                   <th style="width: 80px">T.Price</th>
-
                   <th style="width: 100px">Status</th>
-
                   <th style="width: 180px">Remark</th>
-
                   <th style="width: 80px">Remove</th>
                 </tr>
               </thead>
@@ -90,6 +105,7 @@
           </div>
         </div>
 
+        <!-- สรุปยอดต้นทุนและกำไร -->
         <div class="mt-4 d-none" id="summaryContainer">
           <div class="card shadow-sm">
             <div class="card-body">
@@ -122,769 +138,19 @@
       </div>
     </div>
 
+    <!-- jQuery (ถ้าจำเป็นต้องใช้) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- bootstrap-select (ถ้าใช้) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+    <!-- Import component menu -->
     <script type="module" src="/component/menu.js"></script>
-    <script type="module">
-      import { database } from '/js/firebase-config.js'
-      import { ref, get, set } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
-      let globalFirstName = ''
-      let globalLastName = ''
-      let globalPax = 0
 
-      function formatNumberWithCommas(num) {
-        const intNum = Math.floor(num)
-        return intNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-      }
-
-      document.addEventListener('DOMContentLoaded', async () => {
-        const orderDropdown = document.getElementById('orderDropdown')
-        const bookingContainer = document.getElementById('bookingContainer')
-        const customerNameDisplay = document.getElementById('customerNameDisplay')
-        const idDisplay = document.getElementById('idDisplay')
-        const bookingList = document.getElementById('bookingList')
-        const selectedBookingsContainer = document.getElementById('selectedBookingsContainer')
-        const bookingDetailsTable = document.getElementById('bookingDetailsTable')
-        const summaryContainer = document.getElementById('summaryContainer')
-        const totalCost = document.getElementById('totalCost')
-        const totalSellingPrice = document.getElementById('totalSellingPrice')
-        const totalProfit = document.getElementById('totalProfit')
-        const saveDataBtn = document.getElementById('saveDataBtn')
-
-        if (
-          !orderDropdown ||
-          !bookingContainer ||
-          !customerNameDisplay ||
-          !idDisplay ||
-          !bookingList ||
-          !selectedBookingsContainer ||
-          !bookingDetailsTable ||
-          !summaryContainer ||
-          !totalCost ||
-          !totalSellingPrice ||
-          !totalProfit ||
-          !saveDataBtn
-        ) {
-          console.error('Some elements are missing in the DOM')
-          return
-        }
-
-        const ordersRef = ref(database, 'orders')
-        const ordersSnapshot = await get(ordersRef)
-
-        if (!ordersSnapshot.exists()) {
-          orderDropdown.innerHTML = '<option value="">No orders found</option>'
-          return
-        }
-
-        const orders = ordersSnapshot.val()
-
-        const tourBookingsRef = ref(database, 'tourBookings')
-        const transferBookingsRef = ref(database, 'transferBookings')
-
-        const [tourSnapshot, transferSnapshot] = await Promise.all([get(tourBookingsRef), get(transferBookingsRef)])
-
-        const allTours = tourSnapshot.exists() ? tourSnapshot.val() : {}
-        const allTransfers = transferSnapshot.exists() ? transferSnapshot.val() : {}
-
-        orderDropdown.innerHTML = "<option value=''>Select an Order</option>"
-        let allOrdersList = []
-        Object.keys(orders).forEach(firebaseId => {
-          const order = orders[firebaseId]
-          const orderId = order.id || firebaseId
-          const allBookings = order.bookings || []
-
-          let customerFirstName = '-'
-          let customerLastName = '-'
-
-          if (allBookings.length > 0) {
-            const firstBookingID = allBookings[0]
-            if (allTours[firstBookingID]) {
-              customerFirstName = allTours[firstBookingID].tourFirstName || '-'
-              customerLastName = allTours[firstBookingID].tourLastName || '-'
-            } else if (allTransfers[firstBookingID]) {
-              customerFirstName = allTransfers[firstBookingID].transferFirstName || '-'
-              customerLastName = allTransfers[firstBookingID].transferLastName || '-'
-            }
-          }
-
-          let bookingDates = []
-          allBookings.forEach(bkId => {
-            if (allTours[bkId] && allTours[bkId].tourDate) {
-              bookingDates.push(allTours[bkId].tourDate)
-            } else if (allTransfers[bkId] && allTransfers[bkId].transferDate) {
-              bookingDates.push(allTransfers[bkId].transferDate)
-            }
-          })
-
-          allOrdersList.push({
-            key: firebaseId,
-            orderId: orderId,
-            firstName: customerFirstName,
-            lastName: customerLastName,
-            bookingDates: bookingDates,
-          })
-        })
-
-        orderDropdown.addEventListener('change', async () => {
-          const selectedOrderKey = orderDropdown.value
-          if (selectedOrderKey) {
-            bookingContainer.classList.remove('d-none')
-            await loadBookings(selectedOrderKey)
-          } else {
-            bookingContainer.classList.add('d-none')
-            customerNameDisplay.textContent = ''
-            idDisplay.textContent = ''
-            bookingList.innerHTML = ''
-            bookingDetailsTable.innerHTML = `
-              <tr>
-                <td colspan="10" class="text-center">ยังไม่มีการเลือก Booking</td>
-              </tr>
-            `
-            selectedBookingsContainer.classList.add('d-none')
-            summaryContainer.classList.add('d-none')
-          }
-        })
-        function populateOrderDropdown(filteredOrders) {
-          const orderDropdown = document.getElementById('orderDropdown')
-          orderDropdown.innerHTML = ''
-
-          if (!filteredOrders || filteredOrders.length === 0) {
-            orderDropdown.innerHTML = '<option value="">No matching orders found</option>'
-            return
-          }
-
-          const defaultOption = document.createElement('option')
-          defaultOption.value = ''
-          defaultOption.textContent = 'Select an Order'
-          orderDropdown.appendChild(defaultOption)
-
-          filteredOrders.forEach(ord => {
-            const option = document.createElement('option')
-            option.value = ord.key
-            option.textContent = `${ord.firstName} ${ord.lastName}`
-            orderDropdown.appendChild(option)
-          })
-        }
-        populateOrderDropdown(allOrdersList)
-        function filterOrdersByDate() {
-          const startDateVal = document.getElementById('startDateFilter').value
-          const endDateVal = document.getElementById('endDateFilter').value
-
-          if (!startDateVal && !endDateVal) {
-            populateOrderDropdown(allOrdersList)
-            return
-          }
-
-          const startTs = startDateVal ? new Date(startDateVal).getTime() : 0
-          const endTs = endDateVal ? new Date(endDateVal).getTime() : Number.MAX_SAFE_INTEGER
-
-          const filtered = allOrdersList.filter(ord => {
-            return ord.bookingDates.every(dateStr => {
-              const dTs = new Date(dateStr).getTime()
-              return dTs >= startTs && dTs <= endTs
-            })
-          })
-
-          populateOrderDropdown(filtered)
-        }
-        const btnFilter = document.getElementById('applyDateFilterBtn')
-        btnFilter.addEventListener('click', filterOrdersByDate)
-
-        function updateSummary() {
-          let sumTotalCost = 0
-          let sumCost = 0
-          let sumTPrice = 0
-
-          const rows = bookingDetailsTable.querySelectorAll('tr')
-          rows.forEach(row => {
-            const totalCostCell = row.querySelector('.totalCostCell')
-            const tPriceCell = row.querySelector('.tPriceCell')
-            console.log(tPriceCell.textContent)
-            if (totalCostCell && tPriceCell) {
-              const costValRaw = totalCostCell.textContent.replace(/,/g, '')
-              const tPriceValRaw = tPriceCell.textContent.replace(/,/g, '')
-
-              const costVal = parseFloat(costValRaw) || 0
-              const tPriceVal = parseFloat(tPriceValRaw) || 0
-
-              sumCost += costVal
-              sumTPrice += tPriceVal
-            }
-          })
-          const sumSellingPrice = sumTPrice
-          const sumProfit = sumTPrice - sumCost
-
-          totalCost.textContent = '฿' + formatNumberWithCommas(sumCost)
-          totalSellingPrice.textContent = '฿' + formatNumberWithCommas(sumSellingPrice)
-          totalProfit.textContent = '฿' + formatNumberWithCommas(sumProfit)
-        }
-
-        function formatToDDMMYYYY(isoStr) {
-          if (!isoStr) return ''
-          const parts = isoStr.split('-')
-          if (parts.length !== 3) return isoStr
-          const [y, m, d] = parts
-          return `${d}/${m}/${y}`
-        }
-
-        function createBookingRow(booking, countSpan) {
-          const isTour = booking.type === 'tour'
-          const dateRaw = isTour ? booking.tourDate : booking.transferDate
-          const displayDate = formatToDDMMYYYY(dateRaw || '')
-          const hotelVal = isTour ? booking.tourHotel || '' : booking.transferHotel || ''
-          const detailVal = isTour ? booking.tourDetail || '' : booking.transferDetail || ''
-          const id = isTour ? booking.tourID : booking.transferID
-          const sendTo = isTour ? booking.tourSendTo : booking.transferSendTo
-
-          const bgClass = booking.type === 'tour' ? 'bg-success' : 'bg-primary'
-          let cost = Math.floor(parseFloat(booking.cost) || 0)
-          let quantity = Math.floor(parseFloat(booking.quantity) || 0)
-          let sellingPrice = Math.floor(parseFloat(booking.sellingPrice) || 0)
-
-          const totalCostVal = cost * quantity
-          const tPriceVal = sellingPrice * quantity
-
-          let statusVal = booking.status || 'notPaid'
-
-          let remarkVal = booking.remark || ''
-
-          const row = document.createElement('tr')
-          row.dataset.type = booking.type
-          row.dataset.chosenCount = 1
-
-          row.innerHTML = `
-    <td>
-  <div class="fw-bold rounded-2 text-white text-center ${bgClass}">${id || '-'}</div>
-  <div class="fw-bold  small text-muted">${sendTo || '-'}</div>
-  <div class="text-secondary">${displayDate || '-'}</div>
-</td>
-
-
-        <td>
-      <textarea
-        class="hotelInput form-control"
-        style="min-width: 150px; white-space: pre-wrap;"
-      >${hotelVal}</textarea>
-    </td>
-
-        <td>
-      <textarea
-  class="detailInput form-control form-control-sm"
-  rows="2"
-  style="min-width: 150px; white-space: pre-wrap;"
->
-  ${detailVal}
-</textarea>
-    </td>
-
-    <td>
-      <select class="bookingType form-select">
-        <option value="" ${booking.bookingType === '' ? 'selected' : ''}>--Select--</option>
-        <option value="ADL" ${booking.bookingType === 'ADL' ? 'selected' : ''}>ADL</option>
-        <option value="CHD" ${booking.bookingType === 'CHD' ? 'selected' : ''}>CHD</option>
-      </select>
-    </td>
-
-    <td>
-      <textarea class="numcenter costInput form-control">${cost}</textarea>
-    </td>
-    <td>
-      <textarea class="numcenter quantityInput form-control">${quantity}</textarea>
-    </td>
-
-    <td class="numcenter totalCostCell">${totalCostVal.toLocaleString()}</td>
-
-    <td>
-      <textarea class="numcenter sellingPriceInput form-control"
-      >${sellingPrice}</textarea>
-    </td>
-
-    <td class="numcenter tPriceCell">${tPriceVal.toLocaleString()}</td>
-
-        <td>
-      <select class="statusSelect form-select">
-        <option value="notPaid" ${statusVal === 'notPaid' ? 'selected' : ''}>ยังไม่จ่าย</option>
-        <option value="paid" ${statusVal === 'paid' ? 'selected' : ''}>จ่ายแล้ว</option>
-      </select>
-    </td>
-
-        <td>
-  <textarea
-    class="remarkInput form-control"
-    rows="2"
-    style="min-width: 150px; white-space: pre-wrap;"
-    placeholder="Remark..."
-  >${remarkVal}</textarea>
-</td>
-
-
-    <td>
-      <button class="btn btn-danger btnRemoveBooking">
-        <i class="bi bi-trash"></i>
-      </button>
-    </td>
-  `
-
-          const costInput = row.querySelector('.costInput')
-          const quantityInput = row.querySelector('.quantityInput')
-          const sellingPriceInput = row.querySelector('.sellingPriceInput')
-          const totalCostCell = row.querySelector('.totalCostCell')
-          const tPriceCell = row.querySelector('.tPriceCell')
-
-          const bookingTypeSelect = row.querySelector('.bookingType')
-          const removeBtn = row.querySelector('.btnRemoveBooking')
-
-          const statusSelect = row.querySelector('.statusSelect')
-          const remarkInput = row.querySelector('.remarkInput')
-
-          function updateRow() {
-            const newCost = Math.floor(parseFloat(costInput.value) || 0)
-            const newQuantity = Math.floor(parseFloat(quantityInput.value) || 0)
-            const newSellingPrice = Math.floor(parseFloat(sellingPriceInput.value) || 0)
-
-            costInput.value = newCost
-            quantityInput.value = newQuantity
-            sellingPriceInput.value = newSellingPrice
-
-            const newTotalCost = newCost * newQuantity
-            const newTPrice = newSellingPrice * newQuantity
-
-            totalCostCell.textContent = newTotalCost.toLocaleString()
-            totalSellingPriceCell.textContent = newTPrice.toLocaleString()
-            profitCell.textContent = newProfit.toLocaleString()
-
-            updateStatusColor()
-
-            updateSummary()
-          }
-
-          function updateStatusColor() {
-            if (statusSelect.value === 'paid') {
-              statusSelect.classList.remove('text-danger')
-              statusSelect.classList.add('text-success')
-            } else {
-              statusSelect.classList.remove('text-success')
-              statusSelect.classList.add('text-danger')
-            }
-          }
-
-          updateStatusColor()
-
-          costInput.addEventListener('input', updateRow)
-          quantityInput.addEventListener('input', updateRow)
-          sellingPriceInput.addEventListener('input', updateRow)
-          bookingTypeSelect.addEventListener('change', updateSummary)
-
-          statusSelect.addEventListener('change', updateStatusColor)
-
-          removeBtn.addEventListener('click', () => {
-            row.remove()
-            if (typeof booking._chosenCount === 'number' && booking._chosenCount > 0) {
-              booking._chosenCount--
-              updateChosenCountUI(booking, countSpan)
-            }
-
-            updateSummary()
-          })
-
-          return row
-        }
-
-        function updateChosenCountUI(booking, countSpan) {
-          if (!countSpan) return
-          countSpan.textContent = booking._chosenCount
-          if (booking._chosenCount >= 1) {
-            countSpan.classList.remove('bg-secondary')
-            countSpan.classList.add('bg-primary')
-          } else {
-            countSpan.classList.remove('bg-primary')
-            countSpan.classList.add('bg-secondary')
-          }
-        }
-
-        function addBookingToTable(booking, countSpan) {
-          if (bookingDetailsTable.querySelector("td[colspan='10']")) {
-            bookingDetailsTable.innerHTML = ''
-          }
-
-          const newRow = createBookingRow(booking, countSpan)
-          bookingDetailsTable.appendChild(newRow)
-
-          booking._chosenCount = (booking._chosenCount || 0) + 1
-          updateChosenCountUI(booking, countSpan)
-
-          selectedBookingsContainer.classList.remove('d-none')
-          summaryContainer.classList.remove('d-none')
-          updateSummary()
-        }
-
-        async function loadBookings(orderKey) {
-          const orderObj = orders[orderKey]
-          const orderId = orderObj.id || orderKey
-
-          const paymentKey = 'P_' + orderId
-
-          const tourBookingsRef = ref(database, 'tourBookings')
-          const transferBookingsRef = ref(database, 'transferBookings')
-          const paymentDataRef = ref(database, 'payments/' + paymentKey)
-
-          const [tourSnapshot, transferSnapshot, paymentSnapshot] = await Promise.all([
-            get(tourBookingsRef),
-            get(transferBookingsRef),
-            get(paymentDataRef),
-          ])
-
-          bookingList.innerHTML = ''
-          bookingDetailsTable.innerHTML = `
-            <tr>
-              <td colspan="10" class="text-center">ยังไม่มีการเลือก Booking</td>
-            </tr>
-          `
-          selectedBookingsContainer.classList.add('d-none')
-          summaryContainer.classList.add('d-none')
-          totalCost.textContent = '฿0'
-          totalSellingPrice.textContent = '฿0'
-          totalProfit.textContent = '฿0'
-
-          let allBookings = []
-
-          if (tourSnapshot.exists()) {
-            Object.values(tourSnapshot.val()).forEach(b => {
-              if (b.orderId === orderId) {
-                allBookings.push({ type: 'tour', ...b })
-              }
-            })
-          }
-          if (transferSnapshot.exists()) {
-            Object.values(transferSnapshot.val()).forEach(b => {
-              if (b.orderId === orderId) {
-                allBookings.push({ type: 'transfer', ...b })
-              }
-            })
-          }
-
-          if (allBookings.length > 0) {
-            const firstBooking = allBookings[0]
-            const isTour = firstBooking.type === 'tour'
-            globalFirstName = isTour ? firstBooking.tourFirstName : firstBooking.transferFirstName
-            globalLastName = isTour ? firstBooking.tourLastName : firstBooking.transferLastName
-            globalPax = isTour ? firstBooking.tourPax : firstBooking.transferPax
-
-            customerNameDisplay.textContent = `${globalFirstName} ${globalLastName} / ${globalPax} คน`
-            idDisplay.textContent = `${orderId}`
-          } else {
-            globalFirstName = ''
-            globalLastName = ''
-            globalPax = 0
-            customerNameDisplay.textContent = 'No customer info.'
-            idDisplay.textContent = 'No customer info.'
-          }
-
-          allBookings.sort((a, b) => {
-            const dateA = new Date(
-              a.type === 'tour' ? a.tourDate || '9999-12-31' : a.transferDate || '9999-12-31'
-            ).getTime()
-            const dateB = new Date(
-              b.type === 'tour' ? b.tourDate || '9999-12-31' : b.transferDate || '9999-12-31'
-            ).getTime()
-
-            return dateA - dateB
-          })
-
-          allBookings.forEach((booking, index) => {
-            booking._chosenCount = 0
-            const isTour = booking.type === 'tour'
-            const bookingId = isTour ? booking.tourID : booking.transferID
-            const cardHeader = isTour ? booking.tourSendTo : booking.transferSendTo
-            const cardDetail = isTour ? booking.tourDetail : booking.transferDetail
-
-            const colDiv = document.createElement('div')
-            colDiv.classList.add('col-md-4', 'mb-3')
-
-            colDiv.innerHTML = `
-        <div class="card h-100 shadow-sm" data-type="${booking.type || ''}" data-id="${bookingId}">
-            <div class="card-body">
-                                <h4 class="card-title text-white fw-bold text-center text-truncate rounded-2 py-1 
-                  ${booking.type === 'tour' ? 'bg-success' : 'bg-primary'}">
-                  ${index + 1}. ${cardHeader || '-'}
-                </h4>
-                
-                                <div class="d-flex justify-content-between align-items-center my-2">
-                    <h5 class="card-title text-dark fw-bold text-center text-truncate">
-                      ${formatToDDMMYYYY(
-                        booking.type === 'tour' ? booking.tourDate || '-' : booking.transferDate || '-'
-                      )}
-                    </h5>
-                    <h5 class="card-title text-secondary fw-bold text-truncate">
-                      ID: ${booking.type === 'tour' ? booking.tourID || '-' : booking.transferID || '-'}
-                    </h5>
-                </div>
-                
-                                <p class="card-text fst-italic lh-1">
-                    ${cardDetail || ''}
-                </p>
-                
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <button class="btn btn-secondary btnAddBooking" type="button">
-                        <i class="bi bi-plus-lg"></i> Add
-                    </button>
-                    <span>
-                        <small>Chosen: </small>
-                        <span class="chosenCount badge bg-secondary">0</span>
-                        <small> times</small>
-                    </span>
-                </div>
-            </div>
-        </div>
-    `
-
-            const btnAddBooking = colDiv.querySelector('.btnAddBooking')
-            const chosenCountSpan = colDiv.querySelector('.chosenCount')
-
-            btnAddBooking.addEventListener('click', () => {
-              addBookingToTable(booking, chosenCountSpan)
-            })
-
-            bookingList.appendChild(colDiv)
-          })
-
-          if (paymentSnapshot.exists()) {
-            const savedData = paymentSnapshot.val()
-            const savedBookings = savedData.bookings || []
-
-            if (Array.isArray(savedBookings)) {
-              bookingDetailsTable.innerHTML = ''
-              selectedBookingsContainer.classList.remove('d-none')
-              summaryContainer.classList.remove('d-none')
-
-              const chosenCountMap = {}
-
-              savedBookings.forEach(item => {
-                const dummyBooking = {
-                  type: item.type || '',
-                  tourID: item.id,
-                  transferID: item.id,
-
-                  tourDate: item.tourDate || '',
-                  transferDate: item.transferDate || '',
-                  tourHotel: item.tourHotel || '',
-                  transferHotel: item.transferHotel || '',
-                  tourSendTo: item.sendTo,
-                  transferSendTo: item.sendTo,
-                  tourDetail: item.detail,
-                  transferDetail: item.detail,
-
-                  cost: item.cost,
-                  totalCost: item.totalCost || 0,
-                  quantity: item.quantity,
-                  sellingPrice: item.sellingPrice,
-                  bookingType: item.bookingType || '',
-                  _chosenCount: item.chosenCount || 0,
-                }
-
-                dummyBooking.status = item.status || 'notPaid'
-                dummyBooking.remark = item.remark || ''
-                dummyBooking.profit = item.profit || 0
-
-                const key = `${item.type || ''}|${item.id || ''}`
-                if (!chosenCountMap[key]) chosenCountMap[key] = 0
-                chosenCountMap[key] += item.chosenCount || 0
-
-                const chosenSpan = document.createElement('span')
-                chosenSpan.classList.add('chosenCount', 'badge')
-
-                const row = createBookingRow(dummyBooking, chosenSpan)
-                bookingDetailsTable.appendChild(row)
-              })
-
-              bookingList.querySelectorAll('.card').forEach(cardEl => {
-                const cardType = cardEl.dataset.type || ''
-                const cardId = cardEl.dataset.id || ''
-                const chosenSpan = cardEl.querySelector('.chosenCount')
-                if (!chosenSpan) return
-
-                const key = `${cardType}|${cardId}`
-                const totalChosen = chosenCountMap[key] || 0
-
-                chosenSpan.textContent = totalChosen
-                if (totalChosen >= 1) {
-                  chosenSpan.classList.remove('bg-secondary')
-                  chosenSpan.classList.add('bg-dark')
-                } else {
-                  chosenSpan.classList.remove('bg-dark')
-                  chosenSpan.classList.add('bg-secondary')
-                }
-              })
-
-              updateSummary()
-            }
-          }
-        }
-
-        function generatePaymentID(orderID) {
-          return `P_${orderID}`
-        }
-
-        function parseDDMMYYYY(ddmmyyyy) {
-          if (!ddmmyyyy) return ''
-          const parts = ddmmyyyy.split('/')
-          if (parts.length !== 3) return ddmmyyyy
-          const [d, m, y] = parts
-          return `${y}-${m}-${d}`
-        }
-
-        saveDataBtn.addEventListener('click', async () => {
-          const selectedOrderKey = orderDropdown.value
-          if (!selectedOrderKey) {
-            alert('กรุณาเลือก Order ก่อน')
-            return
-          }
-
-          const orderRef = ref(database, `orders/${selectedOrderKey}`)
-          const orderSnapshot = await get(orderRef)
-
-          if (!orderSnapshot.exists()) {
-            alert('ไม่พบข้อมูล Order')
-            return
-          }
-
-          const orderData = orderSnapshot.val()
-          const orderID = orderData.id
-          if (!orderID) {
-            alert('ไม่พบ Order ID ในข้อมูล Order')
-            return
-          }
-
-          const rows = bookingDetailsTable.querySelectorAll('tr')
-          if (rows.length === 1 && rows[0].querySelector("td[colspan='12']")) {
-            alert('ไม่มีข้อมูล Booking ในตาราง')
-            return
-          }
-
-          const bookingsArray = []
-
-          rows.forEach(row => {
-            const removeBtn = row.querySelector('.btnRemoveBooking')
-            if (!removeBtn) return
-
-            const rowType = row.dataset.type || ''
-            const rowChosenCount = parseInt(row.dataset.chosenCount, 10) || 1
-
-            const hotelInput = row.querySelector('.hotelInput')
-            const detailInput = row.querySelector('.detailInput')
-            const bookingTypeSelect = row.querySelector('.bookingType')
-            const costInput = row.querySelector('.costInput')
-            const quantityInput = row.querySelector('.quantityInput')
-            const sellingPriceInput = row.querySelector('.sellingPriceInput')
-
-            const statusSelect = row.querySelector('.statusSelect')
-            const remarkInput = row.querySelector('.remarkInput')
-
-            const totalCostCell = row.querySelector('.totalCostCell')
-
-            const cells = row.querySelectorAll('td')
-
-            const bookingInfoCell = cells[0]
-
-            const idText = bookingInfoCell.querySelector('div:nth-child(1)')?.textContent.trim() || ''
-            const sendToText = bookingInfoCell.querySelector('div:nth-child(2)')?.textContent.trim() || ''
-            const ddmmStr = bookingInfoCell.querySelector('div:nth-child(3)')?.textContent.trim() || ''
-
-            const isoDate = parseDDMMYYYY(ddmmStr)
-
-            const hotelVal = hotelInput ? hotelInput.value.trim() : ''
-            const detailVal = detailInput ? detailInput.value.trim() : ''
-            const bType = bookingTypeSelect.value
-            const costVal = Math.floor(parseFloat(costInput.value) || 0)
-            const quantityVal = Math.floor(parseFloat(quantityInput.value) || 0)
-            const sellingPriceVal = Math.floor(parseFloat(sellingPriceInput.value) || 0)
-
-            const totalCostVal = totalCostCell
-              ? parseInt(totalCostCell.textContent.replace(/,/g, ''), 10)
-              : costVal * quantityVal
-
-            const statusVal = statusSelect.value
-            const remarkVal = remarkInput.value.trim()
-            const tPriceCell = row.querySelector('.tPriceCell')
-            const tPriceVal = tPriceCell ? parseInt(tPriceCell.textContent.replace(/,/g, ''), 10) : 0
-
-            let bookingObj = {
-              type: rowType,
-              id: idText,
-              sendTo: sendToText,
-              bookingType: bType,
-              cost: costVal,
-              quantity: quantityVal,
-              sellingPrice: sellingPriceVal,
-              chosenCount: rowChosenCount,
-              detail: detailVal,
-
-              totalCostin: totalCostVal,
-
-              tPrice: tPriceVal,
-
-              status: statusVal,
-              remark: remarkVal,
-            }
-
-            if (rowType === 'tour') {
-              bookingObj.tourDate = isoDate
-              bookingObj.tourHotel = hotelVal
-            } else if (rowType === 'transfer') {
-              bookingObj.transferDate = isoDate
-              bookingObj.transferHotel = hotelVal
-            }
-
-            bookingsArray.push(bookingObj)
-          })
-
-          const totalCostVal = parseInt(totalCost.textContent.replace(/[^\d]/g, ''), 10) || 0
-          const totalSellingVal = parseInt(totalSellingPrice.textContent.replace(/[^\d]/g, ''), 10) || 0
-          const totalProfitVal = parseInt(totalProfit.textContent.replace(/[^\d]/g, ''), 10) || 0
-
-          const customerObj = {
-            firstName: globalFirstName || '',
-            lastName: globalLastName || '',
-            pax: globalPax || 0,
-          }
-
-          const paymentID = `P_${orderID}`
-          const finalData = {
-            paymentID: paymentID,
-            orderID: orderID,
-            bookings: bookingsArray,
-            summary: {
-              totalCost: totalCostVal,
-              totalSellingPrice: totalSellingVal,
-              totalProfit: totalProfitVal,
-            },
-            customer: customerObj,
-          }
-
-          try {
-            await set(ref(database, `payments/${paymentID}`), finalData)
-            alert(`บันทึกข้อมูลสำเร็จ! Payment ID: ${paymentID}`)
-          } catch (err) {
-            console.error('Error saving data: ', err)
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล')
-          }
-        })
-      })
-
-      const goToInvoiceBtn = document.getElementById('goToInvoiceBtn')
-
-      goToInvoiceBtn.addEventListener('click', () => {
-        window.location.href = '/frontend/main/invoice.html'
-      })
-
-      function formatDate(dateStr) {
-        if (!dateStr || dateStr === '-') return '-'
-        const [year, month, day] = dateStr.split('-')
-        if (!year || !month || !day) return dateStr
-        return `${day}/${month}/${year}`
-      }
-    </script>
+    <!-- Import ไฟล์ JS หลักของหน้าจ่ายเงิน -->
+    <script type="module" src="/js/payments.js"></script>
   </body>
 </html>

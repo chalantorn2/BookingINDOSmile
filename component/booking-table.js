@@ -234,30 +234,46 @@ class BookingTable extends HTMLElement {
     }
   }
 
-  .pagination-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-
-  .pagination-container button {
-    margin: 0 5px;
-    padding: 5px 10px;
-    border: none;
-    background: #007bff;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-
-  .pagination-container button.active {
-    background: #0056b3;
-    font-weight: bold;
-  }
-
   .pagination-container button:hover {
     background: #0056b3;
   }
+    .pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination-container button {
+  margin: 0 3px;
+  padding: 5px 10px;
+  border: 1px solid #dee2e6;
+  background: white;
+  color: #007bff;
+  border-radius: 5px;
+  cursor: pointer;
+  min-width: 35px;
+}
+
+.pagination-container button.active {
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.pagination-container button:hover:not(.active):not(.disabled) {
+  background: #e9ecef;
+}
+
+.pagination-container button.disabled {
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.pagination-container .ellipsis {
+  margin: 0 5px;
+}
 </style>
 
 <div class="container">
@@ -594,13 +610,75 @@ class BookingTable extends HTMLElement {
     const paginationContainer = this.container.querySelector('#pagination')
     paginationContainer.innerHTML = ''
 
-    for (let i = 1; i <= totalPages; i++) {
+    // Add previous page button
+    const prevButton = document.createElement('button')
+    prevButton.textContent = '«'
+    prevButton.title = 'Previous page'
+    prevButton.className = this.currentPage === 1 ? 'disabled' : ''
+    prevButton.addEventListener('click', () => {
+      if (this.currentPage > 1) this.changePage(this.currentPage - 1)
+    })
+    paginationContainer.appendChild(prevButton)
+
+    // Determine which page buttons to show
+    let startPage = Math.max(1, this.currentPage - 2)
+    let endPage = Math.min(totalPages, startPage + 4)
+
+    // Adjust if we're at the end
+    if (endPage - startPage < 4 && startPage > 1) {
+      startPage = Math.max(1, endPage - 4)
+    }
+
+    // Add first page button if not in range
+    if (startPage > 1) {
+      const firstPageBtn = document.createElement('button')
+      firstPageBtn.textContent = '1'
+      firstPageBtn.addEventListener('click', () => this.changePage(1))
+      paginationContainer.appendChild(firstPageBtn)
+
+      // Add ellipsis if there's a gap
+      if (startPage > 2) {
+        const ellipsis = document.createElement('span')
+        ellipsis.textContent = '...'
+        ellipsis.className = 'ellipsis'
+        paginationContainer.appendChild(ellipsis)
+      }
+    }
+
+    // Add the page buttons
+    for (let i = startPage; i <= endPage; i++) {
       const button = document.createElement('button')
       button.textContent = i
       button.className = i === this.currentPage ? 'active' : ''
       button.addEventListener('click', () => this.changePage(i))
       paginationContainer.appendChild(button)
     }
+
+    // Add last page button if not in range
+    if (endPage < totalPages) {
+      // Add ellipsis if there's a gap
+      if (endPage < totalPages - 1) {
+        const ellipsis = document.createElement('span')
+        ellipsis.textContent = '...'
+        ellipsis.className = 'ellipsis'
+        paginationContainer.appendChild(ellipsis)
+      }
+
+      const lastPageBtn = document.createElement('button')
+      lastPageBtn.textContent = totalPages
+      lastPageBtn.addEventListener('click', () => this.changePage(totalPages))
+      paginationContainer.appendChild(lastPageBtn)
+    }
+
+    // Add next page button
+    const nextButton = document.createElement('button')
+    nextButton.textContent = '»'
+    nextButton.title = 'Next page'
+    nextButton.className = this.currentPage === totalPages ? 'disabled' : ''
+    nextButton.addEventListener('click', () => {
+      if (this.currentPage < totalPages) this.changePage(this.currentPage + 1)
+    })
+    paginationContainer.appendChild(nextButton)
   }
 }
 

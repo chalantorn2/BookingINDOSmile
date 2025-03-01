@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Update Order Dates</title>
+    <script type="module">
+      import { database } from '/js/firebase-config.js'
+      import { getDatabase, ref, get, update } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
+
+      window.updateOrders = async function () {
+        const ordersRef = ref(database, 'orders')
+        const tourBookingsRef = ref(database, 'tourBookings')
+        const transferBookingsRef = ref(database, 'transferBookings')
+        const orderSnapshot = await get(ordersRef)
+
+        if (!orderSnapshot.exists()) {
+          document.getElementById('result').innerHTML = 'ไม่พบข้อมูล Order'
+          return
+        }
+
+        const orders = orderSnapshot.val()
+        let updatedOrders = []
+
+        for (const orderId in orders) {
+          const order = orders[orderId]
+          const bookingIds = order.bookings || []
+          let startDate = null,
+            endDate = null
+
+          for (const bookingId of bookingIds) {
+            const tourSnapshot = await get(ref(database, `tourBookings/${bookingId}`))
+            const transferSnapshot = await get(ref(database, `transferBookings/${bookingId}`))
+
+            const bookingData = tourSnapshot.exists()
+              ? tourSnapshot.val()
+              : transferSnapshot.exists()
+              ? transferSnapshot.val()
+              : null
+            if (!bookingData) continue
+
+            const bookingDate = bookingData.tourDate || bookingData.transferDate
+            if (!bookingDate) continue
+
+            if (!startDate || bookingDate < startDate) startDate = bookingDate
+            if (!endDate || bookingDate > endDate) endDate = bookingDate
+          }
+
+          if (startDate && endDate) {
+            await update(ref(database, `orders/${orderId}`), { startDate, endDate })
+            updatedOrders.push(`<li>${order.id} - Start: ${startDate}, End: ${endDate}</li>`)
+          }
+        }
+
+        document.getElementById('result').innerHTML =
+          updatedOrders.length > 0 ? `<ul>${updatedOrders.join('')}</ul>` : 'ไม่มี Order ใดถูกอัปเดต'
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Update Order Dates</h1>
+    <button onclick="updateOrders()">อัปเดต startDate และ endDate</button>
+    <div id="result"></div>
+  </body>
+</html>

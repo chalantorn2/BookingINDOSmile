@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ตรวจสอบการย้ายข้อมูล</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <div class="container py-5">
+      <h1>เครื่องมือตรวจสอบการย้ายข้อมูล - INDO Smile Booking</h1>
+      <p>เครื่องมือนี้ใช้ตรวจสอบความสมบูรณ์ของฐานข้อมูลหลังการย้ายข้อมูล</p>
+      <div id="verificationApp"></div>
+    </div>
+
+    <!-- นำเข้าไฟล์ JavaScript ที่จำเป็น -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- สคริปต์การตรวจสอบ -->
+    <script type="module">
+      // verification-script.js - Run after migration to verify data integrity
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js'
+      import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js'
+      import { database } from '/js/firebase-config.js'
+
+      async function verifyMigration() {
+        try {
+          console.log('Starting migration verification...')
+          const results = {
+            tours: { total: 0, validIDs: 0, invalidIDs: 0 },
+            transfers: { total: 0, validIDs: 0, invalidIDs: 0 },
+            orders: { total: 0, validReferences: 0, invalidReferences: 0 },
+            integrity: { valid: true, issues: [] },
+          }
+
+          // Step 1: Verify tourBookings structure
+          console.log('Verifying tourBookings...')
+          const tourRef = ref(database, 'tourBookings')
+          const tourSnap = await get(tourRef)
+
+          if (tourSnap.exists()) {
+            const tourData = tourSnap.val()
+            results.tours.total = Object.keys(tourData).length
+
+            Object.entries(tourData).forEach(([key, data]) => {
+              // Check if key matches the tourID field
+              if (data.tourID === key) {
+                results.tours.validIDs++
+              } else {
+                results.tours.invalidIDs++
+                results.integrity.valid = false
+                results.integrity.issues.push(`Tour key "${key}" doesn't match tourID field "${data.tourID}"`)
+              }
+            })
+          }
+
+          // Step 2: Verify transferBookings structure
+          console.log('Verifying transferBookings...')
+          const transferRef = ref(database, 'transferBookings')
+          const transferSnap = await get(transferRef)
+
+          if (transferSnap.exists()) {
+            const transferData = transferSnap.val()
+            results.transfers.total = Object.keys(transferData).length
+
+            Object.entries(transferData).forEach(([key, data]) => {
+              // Check if key matches the transferID field
+              if (data.transferID === key) {
+                results.transfers.validIDs++
+              } else {
+                results.transfers.invalidIDs++
+                results.integrity.valid = false
+                results.integrity.issues.push(
+                  `Transfer key "${key}" doesn't match transferID field "${data.transferID}"`
+                )
+              }
+            })
+          }
+
+          // Step 3: Verify references in orders
+          console.log('Verifying order references...')
+          const ordersRef = ref(database, 'orders')
+          const ordersSnap = await get(ordersRef)
+
+          if (ordersSnap.exists()) {
+            const ordersData = ordersSnap.val()
+            results.orders.total = Object.keys(ordersData).length
+
+            const allBookingIDs = new Set()
+
+            // Collect all booking IDs
+            if (tourSnap.exists()) {
+              Object.keys(tourSnap.val()).forEach(id => allBookingIDs.add(id))
+            }
+
+            if (transferSnap.exists()) {
+              Object.keys(transferSnap.val()).forEach(id => allBookingIDs.add(id))
+            }
+
+            // Check references in orders
+            Object.entries(ordersData).forEach(([orderKey, orderData]) => {
+              if (orderData.bookings && Array.isArray(orderData.bookings)) {
+                orderData.bookings.forEach((bookingKey, index) => {
+                  if (allBookingIDs.has(bookingKey)) {
+                    results.orders.validReferences++
+                  } else {
+                    results.orders.invalidReferences++
+                    results.integrity.valid = false
+                    results.integrity.issues.push(
+                      `Order "${orderKey}" has invalid booking reference "${bookingKey}" at index ${index}`
+                    )
+                  }
+                })
+              }
+            })
+          }
+
+          // Print summary
+          console.log('Verification complete:')
+          console.log(results)
+
+          if (results.integrity.valid) {
+            console.log('✅ Migration appears successful. Data integrity verified.')
+          } else {
+            console.warn('⚠️ Migration has issues. Please review the integrity issues.')
+          }
+
+          return results
+        } catch (error) {
+          console.error('Verification failed:', error)
+          throw error
+        }
+      }
+
+      // Create a simple UI to run the verification
+      document.addEventListener('DOMContentLoaded', () => {
+        const container = document.createElement('div')
+        container.innerHTML = `
+    <h2>Migration Verification Tool</h2>
+    <p>This tool verifies the integrity of your database after migration.</p>
+    
+    <button id="runVerificationBtn" class="btn btn-primary">Run Verification</button>
+    
+    <div id="verificationStatus" class="mt-4"></div>
+  `
+
+        document.body.appendChild(container)
+
+        const runButton = document.getElementById('runVerificationBtn')
+        const statusDiv = document.getElementById('verificationStatus')
+
+        runButton.addEventListener('click', async () => {
+          try {
+            runButton.disabled = true
+            statusDiv.innerHTML = '<div class="alert alert-info">Verification in progress...</div>'
+
+            const results = await verifyMigration()
+
+            let issuesHtml = ''
+            if (results.integrity.issues.length > 0) {
+              issuesHtml = `
+          <h5>Issues (${results.integrity.issues.length}):</h5>
+          <ul>
+            ${results.integrity.issues.map(issue => `<li>${issue}</li>`).join('')}
+          </ul>
+        `
+            }
+
+            statusDiv.innerHTML = `
+        <div class="alert ${results.integrity.valid ? 'alert-success' : 'alert-warning'}">
+          <h4>Verification ${results.integrity.valid ? 'Successful' : 'Found Issues'}</h4>
+          
+          <div class="row">
+            <div class="col-md-4">
+              <h5>Tour Bookings</h5>
+              <ul>
+                <li>Total: ${results.tours.total}</li>
+                <li>Valid IDs: ${results.tours.validIDs}</li>
+                <li>Invalid IDs: ${results.tours.invalidIDs}</li>
+              </ul>
+            </div>
+            
+            <div class="col-md-4">
+              <h5>Transfer Bookings</h5>
+              <ul>
+                <li>Total: ${results.transfers.total}</li>
+                <li>Valid IDs: ${results.transfers.validIDs}</li>
+                <li>Invalid IDs: ${results.transfers.invalidIDs}</li>
+              </ul>
+            </div>
+            
+            <div class="col-md-4">
+              <h5>Order References</h5>
+              <ul>
+                <li>Total Orders: ${results.orders.total}</li>
+                <li>Valid References: ${results.orders.validReferences}</li>
+                <li>Invalid References: ${results.orders.invalidReferences}</li>
+              </ul>
+            </div>
+          </div>
+          
+          ${issuesHtml}
+        </div>
+      `
+
+            runButton.disabled = false
+          } catch (error) {
+            statusDiv.innerHTML = `
+        <div class="alert alert-danger">
+          <h4>Verification failed</h4>
+          <p>${error.message}</p>
+          <pre>${error.stack}</pre>
+        </div>
+      `
+            runButton.disabled = false
+          }
+        })
+      })
+
+      console.log('Verification script loaded. Click "Run Verification" to check your migration results.')
+    </script>
+  </body>
+</html>
