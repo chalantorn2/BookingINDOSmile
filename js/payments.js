@@ -581,7 +581,7 @@ function convertToPaymentItem(bk) {
     sendTo = bk.tourSendTo || ''
     tourDate = bk.tourDate || ''
   } else {
-    hotel = bk.transferHotel || ''
+    hotel = bk.transferHotel || bk.hotel || ''
     detail = bk.transferDetail || ''
     pax = parseInt(bk.transferPax) || 1
     sendTo = bk.transferSendTo || ''
@@ -594,6 +594,8 @@ function convertToPaymentItem(bk) {
     sendTo: sendTo,
     detail: detail,
     hotel: hotel,
+    tourHotel: hotel,
+    transferHotel: hotel,
     cost: 0,
     quantity: pax,
     sellingPrice: 0,
