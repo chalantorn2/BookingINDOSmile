@@ -305,6 +305,67 @@ function showPopup(data, type) {
     return `${day}/${month}/${year} ${hh}:${mm} น.`
   }
 
+  // เพิ่ม CSS สำหรับไฮไลท์ฟิลด์
+  const isTour = type === 'tour'
+  const highlightColor = isTour ? 'rgba(25, 135, 84, 0.15)' : 'rgba(13, 110, 253, 0.15)'
+  const highlightBorder = isTour ? '2px solid #198754' : '2px solid #0d6efd'
+
+  const styleEl = document.createElement('style')
+  styleEl.textContent = `
+    .highlight-field {
+      background-color: ${highlightColor};
+      border: ${highlightBorder};
+      border-radius: 5px;
+      padding: 4px !important;
+      position: relative;
+      margin-bottom: 10px; /* เพิ่มช่องว่างด้านล่างของแต่ละฟิลด์ */
+    }
+    .highlight-field::before {
+      content: "👁️";
+      position: absolute;
+      top: 1px;
+      right: 5px;
+      font-size: 12px;
+    }
+    .highlight-field label {
+      font-weight: bold;
+    }
+    .highlight-info {
+      font-size: 0.85rem;
+      color: ${isTour ? '#198754' : '#0d6efd'};
+      font-weight: bold;
+      margin-top: 3px;
+    }
+      
+`
+  document.head.appendChild(styleEl)
+
+  // กำหนดฟิลด์ที่ต้องไฮไลท์
+  const fieldsToHighlight = []
+  if (isTour) {
+    fieldsToHighlight.push(
+      'tourFirstName',
+      'tourLastName',
+      'tourPax',
+      'tourDate',
+      'tourPickUpTime',
+      'tourDetail',
+      'tourHotel',
+      'tourSendTo'
+    )
+  } else {
+    fieldsToHighlight.push(
+      'transferFirstName',
+      'transferLastName',
+      'transferPax',
+      'transferDate',
+      'transferPickUpTime',
+      'transferPickupFrom',
+      'transferDropTo',
+      'transferSendTo'
+    )
+  }
+
   const fields = fieldOrder[type]
   const popup = document.createElement('div')
   popup.className = 'modal fade'
@@ -321,7 +382,7 @@ function showPopup(data, type) {
           <option value="จองแล้ว">จองแล้ว</option>
           <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
           <option value="เสร็จสมบูรณ์">เสร็จสมบูรณ์</option>
-                          <option value="ยกเลิก">ยกเลิก</option>
+          <option value="ยกเลิก">ยกเลิก</option>
         </select>
       </div>
     </div>
@@ -364,6 +425,10 @@ function showPopup(data, type) {
       const isLockedField =
         fieldName === 'orderId' || fieldName === 'tourID' || fieldName === 'transferID' || fieldName === 'timestamp'
 
+      // เช็คว่าฟิลด์นี้ต้องไฮไลท์หรือไม่
+      const shouldHighlight = fieldsToHighlight.includes(fieldName)
+      const highlightClass = shouldHighlight ? 'highlight-field' : ''
+
       if (fieldName === 'tourDetail' || fieldName === 'transferDetail') {
         inputElement = `
           <textarea
@@ -373,7 +438,9 @@ function showPopup(data, type) {
             ${isLockedField ? 'disabled' : ''}
             style="${isLockedField ? 'background-color: #f8f9fa;' : ''}"
           >${value}</textarea>
+      
         `
+        // ${shouldHighlight ? '<div class="highlight-info">ข้อมูลนี้แสดงบนหน้าหลัก</div>' : ''}
       } else {
         inputElement = `
           <input
@@ -384,11 +451,12 @@ function showPopup(data, type) {
             ${isLockedField ? 'disabled' : ''}
             style="${isLockedField ? 'background-color: #f8f9fa;' : ''}"
           />
+     
         `
       }
-
+      // ${shouldHighlight ? '<div class="highlight-info">ข้อมูลนี้แสดงบนหน้าหลัก</div>' : ''}
       return `
-        <div class="col-md-6">
+        <div class="col-md-6 ${highlightClass}">
           <label for="field-${fieldName}" class="form-label font-weight-bold">${labelMap[fieldName]}</label>
           ${inputElement}
         </div>

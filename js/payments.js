@@ -352,12 +352,17 @@ async function loadBookings(orderKey) {
   const fetchPromises = []
   orderBkKeys.forEach(bkKey => {
     if (allTours[bkKey]) {
+      // ตรวจสอบและบันทึก tourHotel ให้ชัดเจน
+      console.log('Tour hotel data:', bkKey, allTours[bkKey].tourHotel)
+
       combinedBookings.push({
         type: 'tour',
         dbKey: bkKey,
         ...allTours[bkKey],
       })
     } else if (allTransfers[bkKey]) {
+      console.log('Transfer data (no hotel expected):', bkKey)
+
       combinedBookings.push({
         type: 'transfer',
         dbKey: bkKey,
@@ -367,6 +372,8 @@ async function loadBookings(orderKey) {
       const tourPromise = get(ref(database, `tourBookings/${bkKey}`)).then(snap => {
         if (snap.exists()) {
           const data = snap.val()
+          console.log('Fetched tour data, hotel:', data.tourHotel)
+
           combinedBookings.push({
             type: 'tour',
             dbKey: bkKey,
@@ -380,6 +387,8 @@ async function loadBookings(orderKey) {
       const transferPromise = get(ref(database, `transferBookings/${bkKey}`)).then(snap => {
         if (snap.exists()) {
           const data = snap.val()
+          console.log('Fetched transfer data (no hotel)')
+
           combinedBookings.push({
             type: 'transfer',
             dbKey: bkKey,
@@ -443,6 +452,16 @@ async function loadBookings(orderKey) {
         const bookingsArray = Array.isArray(payData.bookings) ? payData.bookings : Object.values(payData.bookings)
 
         bookingsArray.forEach(item => {
+          if (item.type === 'tour' && item.dbKey && (!item.hotel || !item.tourHotel)) {
+            // ค้นหาข้อมูลโรงแรมจาก allTours
+            if (allTours[item.dbKey] && allTours[item.dbKey].tourHotel) {
+              // กำหนดข้อมูลโรงแรมให้กับรายการ
+              item.hotel = allTours[item.dbKey].tourHotel
+              item.tourHotel = allTours[item.dbKey].tourHotel
+              console.log(`Fixed hotel data for ${item.id}, now: ${item.hotel}`)
+            }
+          }
+
           const chosenSpan = document.createElement('span')
           chosenSpan.classList.add('chosenCount', 'badge', 'bg-dark')
 
@@ -493,8 +512,13 @@ function renderBookingList(listData) {
     const bDate = isTour ? bk.tourDate : bk.transferDate
     const bDetail = isTour ? bk.tourDetail : bk.transferDetail
     const bPax = isTour ? bk.tourPax : bk.transferPax
-    const bHotel = isTour ? bk.tourHotel : bk.transferHotel || ''
 
+    // แก้ไขตรงนี้ - ดึงเฉพาะ tourHotel ถ้าเป็น tour
+    let bHotel = ''
+    if (isTour) {
+      bHotel = bk.tourHotel || ''
+      console.log(`Rendering tour ${bID} with hotel: ${bHotel}`)
+    }
     const colDiv = document.createElement('div')
     colDiv.classList.add('col-md-4', 'mb-3')
     colDiv.innerHTML = `
@@ -549,7 +573,14 @@ function addBookingToTable(bk, countSpan) {
     bookingDetailsTable.innerHTML = ''
   }
 
+  console.log('Before conversion - bk.tourHotel:', bk.tourHotel)
+
   const item = convertToPaymentItem(bk)
+  if (bk.type === 'tour' && bk.tourHotel) {
+    item.tourHotel = bk.tourHotel
+    item.hotel = bk.tourHotel
+    console.log('After fixing - item.hotel:', item.hotel)
+  }
   const rowEl = createBookingRow(item, countSpan)
   bookingDetailsTable.appendChild(rowEl)
 
@@ -572,40 +603,43 @@ function convertToPaymentItem(bk) {
   let detail = ''
   let pax = 1
   let sendTo = ''
-  let tourDate = ''
+  let bookingDate = ''
 
   if (bk.type === 'tour') {
     hotel = bk.tourHotel || ''
     detail = bk.tourDetail || ''
     pax = parseInt(bk.tourPax) || 1
     sendTo = bk.tourSendTo || ''
-    tourDate = bk.tourDate || ''
+    bookingDate = bk.date || bk.tourDate || ''
   } else {
-    hotel = bk.transferHotel || bk.hotel || ''
     detail = bk.transferDetail || ''
     pax = parseInt(bk.transferPax) || 1
     sendTo = bk.transferSendTo || ''
-    tourDate = bk.transferDate || ''
+    bookingDate = bk.date || bk.transferDate || ''
   }
 
-  return {
+  const item = {
     type: bk.type,
     id: bID || '',
     sendTo: sendTo,
     detail: detail,
     hotel: hotel,
-    tourHotel: hotel,
-    transferHotel: hotel,
     cost: 0,
     quantity: pax,
     sellingPrice: 0,
     chosenCount: 1,
     status: 'notPaid',
     remark: '',
-    tourDate: tourDate,
-    transferDate: tourDate,
+    date: bookingDate, // Unified date field
     dbKey: bk.dbKey || '',
   }
+
+  // Add tourHotel field only for tour type
+  if (bk.type === 'tour') {
+    item.tourHotel = hotel
+  }
+
+  return item
 }
 
 function formatToDDMMYYYY(isoStr) {
@@ -621,144 +655,163 @@ function createBookingRow(item, countSpan) {
 
   const totalCost = parseFloat(item.cost || 0) * parseInt(item.quantity || 1)
   const totalPrice = parseFloat(item.sellingPrice || 0) * parseInt(item.quantity || 1)
-  const dateRaw = isTour ? item.tourDate : item.transferDate
+  // ใช้ item.date แทน
+  const dateRaw = item.date || ''
   const displayDate = formatToDDMMYYYY(dateRaw || '')
-  const bHotel = isTour ? item.tourHotel : item.transferHotel || ''
+
+  // แก้ไขส่วนนี้ - เจาะจงกับ tourHotel
+  let bHotel = ''
+  if (isTour) {
+    bHotel = item.tourHotel || item.hotel || ''
+  }
+
   const rowBgClass = item.type === 'tour' ? 'bg-light-success' : 'bg-light-primary'
   row.classList.add(rowBgClass, 'align-middle')
   const bgClass = item.type === 'tour' ? 'bg-success' : 'bg-primary'
   row.innerHTML = `
-    <td class="border-start border-4" style="min-width: 140px">
-     <div class="fw-bold rounded-2 text-white text-center ${bgClass}">${item.id || '-'}</div>
-  <div class="fw-bold  small text-muted">${item.sendTo || '-'}</div>
-  <div class="text-secondary">${displayDate || '-'}</div>
-    </td>
-    
-    <td style="min-width: 150px">
-      <textarea class="form-control form-control-sm hotelInput" rows="2">${bHotel || ''}</textarea>
-    </td>
-    
-    <td style="min-width: 180px">
-      <textarea class="form-control form-control-sm detailInput" rows="2">${item.detail || ''}</textarea>
-    </td>
-    
-    <td style="min-width: 90px">
-      <select class="form-select form-select-sm bookingTypeSelect w-100">
-       <option value="" ${item.bookingType === '' ? 'selected' : ''}>--Select--</option>
-        <option value="ADL" ${item.bookingType === 'ADL' ? 'selected' : ''}>ADL</option>
-        <option value="CHD" ${item.bookingType === 'CHD' ? 'selected' : ''}>CHD</option>
-      </select>
-    </td>
-    
-    <td style="min-width: 120px">
-  <input type="number" class="form-control form-control-sm costInput text-end" 
-      value="${item.cost || 0}" style="width: 100%; padding-right: 8px;" />
-</td>
-    
-    <td style="min-width: 80px">
-  <input type="number" class="form-control form-control-sm quantityInput text-center" 
-      value="${item.quantity || 1}" />
-</td>
-    
-    <td class="text-end fw-bold totalCostCell" style="min-width: 120px">
-  ${formatNumberWithCommas(totalCost)}
-</td>
-    
-   <td style="min-width: 120px">
-  <input type="number" class="form-control form-control-sm sellingPriceInput text-end" 
-      value="${item.sellingPrice || 0}" style="width: 100%; padding-right: 8px;" />
-</td>
-    
-    <td class="text-end fw-bold tPriceCell" style="min-width: 120px">
-  ${formatNumberWithCommas(totalPrice)}
-</td>
-    
-  <td style="min-width: 120px">
-  <select class="form-select form-select-sm statusSelect w-100 ${
-    item.status === 'paid' ? 'bg-success text-white' : 'bg-danger text-white'
-  }">
-    <option value="notPaid" class="bg-danger text-white" ${
-      item.status === 'notPaid' ? 'selected' : ''
-    }>ยังไม่จ่าย</option>
-    <option value="paid" class="bg-success text-white" ${item.status === 'paid' ? 'selected' : ''}>จ่ายแล้ว</option>
-  </select>
-</td>
-    
-    <td style="min-width: 150px">
-      <textarea class="form-control form-control-sm remarkInput" rows="1">${item.remark || ''}</textarea>
-    </td>
-    
-    <td class="text-center" style="min-width: 70px">
-      <button class="btn btn-sm btn-danger btnRemoveBooking" title="ลบรายการ">
-        <i class="bi bi-trash"></i>
-      </button>
-    </td>
-  `
+  <td class="border-start border-4 px-2" style="width: 180px">
+    <div class="fw-bold rounded-2 text-white text-center p-1 ${bgClass}">${item.id || '-'}</div>
+    <div class="fw-bold small text-muted mt-1">${item.sendTo || '-'}</div>
+    <div class="text-secondary">${displayDate || '-'}</div>
+  </td>
+  <td class="px-2" style="width: 140px">
+    <textarea class="form-control form-control-sm hotelInput" rows="2">${bHotel}</textarea>
+  </td>  
+  <td class="px-2" style="width: 180px">
+    <textarea class="form-control form-control-sm detailInput" rows="2">${item.detail || ''}</textarea>
+  </td>  
+  <td class="px-2" style="width: 80px">
+    <select class="form-select form-select-sm bookingTypeSelect">
+      <option value="" ${item.bookingType === '' ? 'selected' : ''}>--Select--</option>
+      <option value="ADL" ${item.bookingType === 'ADL' ? 'selected' : ''}>ADL</option>
+      <option value="CHD" ${item.bookingType === 'CHD' ? 'selected' : ''}>CHD</option>
+    </select>
+  </td>  
+  <td class="px-2" style="width: 90px">
+    <input type="number" class="form-control form-control-sm costInput text-end" 
+        value="${item.cost || 0}" />
+  </td>  
+  <td class="px-2 text-center" style="width: 60px">
+    <input type="number" class="form-control form-control-sm quantityInput text-center" 
+        value="${item.quantity || 1}" />
+  </td>  
+  <td class="text-end fw-bold totalCostCell px-2" style="width: 100px">
+    ${formatNumberWithCommas(totalCost)}
+  </td>  
+  <td class="px-2" style="width: 90px">
+    <input type="number" class="form-control form-control-sm sellingPriceInput text-end" 
+        value="${item.sellingPrice || 0}" />
+  </td>  
+  <td class="text-end fw-bold tPriceCell px-2" style="width: 100px">
+    ${formatNumberWithCommas(totalPrice)}
+  </td>  
+  <td class="px-2" style="width: 100px">
+    <select class="form-select form-select-sm statusSelect ${
+      item.status === 'paid' ? 'bg-success text-white' : 'bg-danger text-white'
+    }">
+      <option value="notPaid" class="bg-danger text-white" ${
+        item.status === 'notPaid' ? 'selected' : ''
+      }>ยังไม่จ่าย</option>
+      <option value="paid" class="bg-success text-white" ${item.status === 'paid' ? 'selected' : ''}>จ่ายแล้ว</option>
+    </select>
+  </td>  
+  <td class="px-2" style="width: 140px">
+    <textarea class="form-control form-control-sm remarkInput" rows="1">${item.remark || ''}</textarea>
+  </td>  
+  <td class="text-center px-2" style="width: 60px">
+    <button class="btn btn-sm btn-danger btnRemoveBooking" title="ลบรายการ">
+      <i class="bi bi-trash"></i>
+    </button>
+  </td>
+`
 
   if (!document.getElementById('booking-table-styles')) {
     const styleElement = document.createElement('style')
     styleElement.id = 'booking-table-styles'
     styleElement.textContent = `
-      .bg-light-success {
-        background-color: rgba(25, 135, 84, 0.05);
-      }
-      .bg-light-primary {
-        background-color: rgba(13, 110, 253, 0.05);
-      }
-      .totalCostCell, .tPriceCell {
-        font-size: 1rem;
-      }
-      #bookingDetailsTable tr:hover {
-        background-color: rgba(0, 0, 0, 0.03);
-      }
-      #bookingDetailsTable input[type="number"] {
-        padding-right: 5px;
-      }
-
-  #selectedBookingsContainer .table {
-    table-layout: fixed;
-    min-width: 1500px;
-  }
-      .table-responsive {
-        overflow-x: auto;
-      }
-        #bookingDetailsTable input[type="number"] {
-    min-width: 90px;
-  }
-     .totalCostCell, .tPriceCell {
-    min-width: 120px;
-    font-size: 1rem;
-    white-space: nowrap;
-  }
+    .bg-light-success {
+      background-color: rgba(25, 135, 84, 0.05);
+    }
+    .bg-light-primary {
+      background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    #bookingDetailsTable tr {
+      vertical-align: middle;
+    }
+    
+    #bookingDetailsTable tr:hover {
+      background-color: rgba(0, 0, 0, 0.03);
+    }
+    
+    #selectedBookingsContainer .table {
+      table-layout: fixed;
+      width: 100%;
+    }
+    
+    .table-responsive {
+      overflow-x: auto;
+    }
+    
+    .totalCostCell, .tPriceCell {
+      font-size: 1rem;
+      white-space: nowrap;
+      font-weight: 600;
+      color: #495057;
+    }
+    
     input.costInput, input.sellingPriceInput {
-    text-align: right;
-    padding-right: 20px !important;
-  }
-  
-input[type="number"]::-webkit-inner-spin-button, 
-  input[type="number"]::-webkit-outer-spin-button { 
-    -webkit-appearance: none; 
-    margin: 0; 
-  }
-  
-  input[type="number"] {
-    -moz-appearance: textfield;
-  }
+      text-align: right;
+      padding-right: 10px !important;
+    }
+    
+    #bookingDetailsTable input, 
+    #bookingDetailsTable select,
+    #bookingDetailsTable textarea {
+      border: 1px solid #ced4da;
+      transition: border-color 0.15s ease-in-out;
+    }
+    
+    #bookingDetailsTable input:focus, 
+    #bookingDetailsTable select:focus,
+    #bookingDetailsTable textarea:focus {
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+    }
+    
+    input[type="number"]::-webkit-inner-spin-button, 
+    input[type="number"]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    
     .bg-danger.text-white {
-    background-color: #dc3545 !important;
-    color: white !important;
-  }
+      background-color: #dc3545 !important;
+      color: white !important;
+    }
+    
+    .bg-success.text-white {
+      background-color: #198754 !important;
+      color: white !important;
+    }  
   
-  .bg-success.text-white {
-    background-color: #28a745 !important;
-    color: white !important;
-  }  
-
-  .statusSelect option {
-    color: white;
-    font-weight: 500;
-  }
-    `
+    .statusSelect option {
+      color: white;
+      font-weight: 500;
+    }
+    
+    .btnRemoveBooking {
+      padding: 0.25rem 0.5rem;
+    }
+    
+    .btnRemoveBooking:hover {
+      background-color: #bb2d3b;
+    }
+  `
     document.head.appendChild(styleElement)
   }
   const statusSelect = row.querySelector('.statusSelect')
@@ -914,6 +967,7 @@ async function onSavePayment() {
 
       const idText = idElement ? idElement.textContent.trim() : ''
       const sendToText = sendToElement ? sendToElement.textContent.trim() : ''
+      console.log('Saving hotel value:', hotelVal)
 
       let originalData = {}
       try {
@@ -932,7 +986,7 @@ async function onSavePayment() {
 
       const itemType = originalData.type || 'tour'
 
-      bookingsArray.push({
+      const bookingItem = {
         type: itemType,
         id: idText,
         sendTo: sendToText,
@@ -947,10 +1001,19 @@ async function onSavePayment() {
         hotel: hotelVal,
         detail: detailVal,
         chosenCount: 1,
-        tourDate: originalData.tourDate || '',
-        transferDate: originalData.transferDate || '',
+        date:
+          itemType === 'tour'
+            ? originalData.tourDate || originalData.date || ''
+            : originalData.transferDate || originalData.date || '',
         dbKey: originalData.dbKey || '',
-      })
+      }
+
+      // ถ้าเป็นทัวร์ ให้เพิ่ม tourHotel ด้วย
+      if (itemType === 'tour') {
+        bookingItem.tourHotel = hotelVal
+      }
+
+      bookingsArray.push(bookingItem)
     })
 
     const sumCost = parseFloat(totalCostEl.textContent.replace(/,/g, '')) || 0
@@ -970,6 +1033,46 @@ async function onSavePayment() {
     }
 
     const paxNumber = parseInt(customerPax) || 0
+    let agent = ''
+    // ลองดึงจากข้อมูล order หรือ bookings ที่มีอยู่แล้ว
+    if (orderData.id && orderData.id.includes('-')) {
+      // ถ้า ID มีรูปแบบเช่น "INDO-AGENT-DATE-XXX"
+      const parts = orderData.id.split('-')
+      if (parts.length >= 2) {
+        agent = parts[0] // อาจจะเป็น "INDO"
+        if (parts.length >= 3) {
+          agent = `${parts[0]}/${parts[1]}` // เช่น "INDO/JYOTI"
+        }
+      }
+    }
+    // ถ้ายังไม่ได้ agent จาก order ID ให้ลองหาจาก bookings
+    if (!agent) {
+      for (const bkKey of orderData.bookings || []) {
+        if (allTours[bkKey] && allTours[bkKey].tourAgent) {
+          agent = allTours[bkKey].tourAgent
+          break
+        } else if (allTransfers[bkKey] && allTransfers[bkKey].transferAgent) {
+          agent = allTransfers[bkKey].transferAgent
+          break
+        }
+      }
+    }
+
+    // ถ้ายังไม่ได้ agent ให้ลองหาจาก bookingsArray ที่กำลังจะบันทึก
+    if (!agent) {
+      for (const bk of bookingsArray) {
+        const dbKey = bk.dbKey
+        if (dbKey) {
+          if (allTours[dbKey] && allTours[dbKey].tourAgent) {
+            agent = allTours[dbKey].tourAgent
+            break
+          } else if (allTransfers[dbKey] && allTransfers[dbKey].transferAgent) {
+            agent = allTransfers[dbKey].transferAgent
+            break
+          }
+        }
+      }
+    }
 
     const paymentID = `P_${orderID}`
     const finalData = {
@@ -979,6 +1082,7 @@ async function onSavePayment() {
         firstName: firstName,
         lastName: lastName,
         pax: paxNumber,
+        agent: agent, // เพิ่มบรรทัดนี้
       },
       bookings: bookingsArray,
       summary: {

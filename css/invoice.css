@@ -6,52 +6,188 @@ body {
   font-size: 2rem;
   font-weight: 600;
 }
-/* ซ่อนปุ่มตอนสั่งพิมพ์ */
 @media print {
+  /* ซ่อนองค์ประกอบที่ไม่ต้องการพิมพ์ */
   .no-print {
     display: none !important;
   }
 
-  .yes-print {
-    padding-top: -50px;
-    margin-top: -100px;
-    padding-bottom: -100px;
+  /* กำหนดขนาดและทิศทางหน้ากระดาษ */
+  @page {
+    size: A4 landscape;
+    margin: 0.8cm;
   }
 
-  /* บังคับให้ตารางขยายตามเนื้อหา */
+  /* กำหนดการแสดงผลของ body */
+  body {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+    font-family: 'Prompt', sans-serif !important;
+  }
+
+  /* จัดการตาราง */
   table {
     width: 100% !important;
     border-collapse: collapse !important;
-    table-layout: auto !important; /* ให้ตารางขยายตามเนื้อหา */
+    table-layout: fixed !important; /* กำหนดให้คงที่ */
+  }
+
+  /* จัดการแถวและเซลล์ */
+  tr,
+  th,
+  td {
+    page-break-inside: avoid !important;
+    border: 1px solid black !important;
   }
 
   th,
   td {
-    border: 1px solid black !important;
-    padding: 8px;
-    font-size: 12px;
-    /* text-align: left; */
-    vertical-align: center; /* จัดข้อความให้อยู่ด้านบน */
-    white-space: normal !important; /* อนุญาตให้ข้อความขึ้นบรรทัดใหม่ */
-    word-wrap: break-word !important; /* ป้องกันข้อความล้น */
+    padding: 4px !important;
+    font-size: 9pt !important;
+    vertical-align: middle !important;
+    word-wrap: break-word !important;
   }
 
-  /* ป้องกันการตัดตารางข้ามหน้า */
+  /* กำหนดความกว้างของคอลัมน์ให้สมดุล */
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 4% !important;
+  } /* Item */
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 15% !important;
+  } /* NAME */
+  th:nth-child(3),
+  td:nth-child(3) {
+    width: 4% !important;
+  } /* REF */
+  th:nth-child(4),
+  td:nth-child(4) {
+    width: 10% !important;
+  } /* Hotel */
+  th:nth-child(5),
+  td:nth-child(5) {
+    width: 7% !important;
+  } /* Date */
+  th:nth-child(6),
+  td:nth-child(6) {
+    width: 40% !important;
+  } /* TOUR INCLUDE */
+  th:nth-child(7),
+  td:nth-child(7) {
+    width: 7% !important;
+  } /* PRICE */
+  th:nth-child(8),
+  td:nth-child(8) {
+    width: 4% !important;
+  } /* Fee */
+  th:nth-child(9),
+  td:nth-child(9) {
+    width: 4% !important;
+  } /* Unit */
+  th:nth-child(10),
+  td:nth-child(10) {
+    width: 7% !important;
+  } /* TOTAL */
+
+  /* จัดการการแสดงผลข้อความ */
+  .nameCell,
+  .hotelCell {
+    white-space: normal !important;
+  }
+
+  .tour-include-cell {
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  td:nth-child(1), /* Item */
+  td:nth-child(9), /* Unit */
+  th:nth-child(1),
+  th:nth-child(9) {
+    text-align: center !important;
+    vertical-align: middle !important;
+  }
+
+  /* จัดตำแหน่งราคาและยอดรวมให้ชิดขวา */
+  td:nth-child(7), /* PRICE */
+  td:nth-child(8), /* Fee */
+  td:nth-child(10), /* TOTAL */
+  th:nth-child(7),
+  th:nth-child(8),
+  th:nth-child(10) {
+    text-align: center !important;
+    vertical-align: middle !important;
+  }
+
+  /* จัดการส่วนหัวของเอกสาร */
+  .yes-print {
+    margin-bottom: 1cm !important;
+  }
+
+  #bannerImage {
+    max-width: 700px !important;
+    height: auto !important;
+  }
+
+  /* จัดการเลขหน้า */
+  @page {
+    @bottom-right {
+      content: 'Page ' counter(page) ' of ' counter(pages);
+      font-size: 9pt;
+    }
+  }
+
+  /* จัดการส่วนท้ายของเอกสาร */
+  #grandTotalDisplay {
+    text-align: right !important;
+    font-weight: bold !important;
+    font-size: 12pt !important;
+    margin-top: 10px !important;
+  }
+
+  /* ป้องกันการตัดแยกแถวสรุปยอดรวม */
+  tr:last-child {
+    page-break-inside: avoid !important;
+  }
+
+  /* ขยายพื้นที่แต่ละเซลล์เพื่อให้มีที่ว่างสำหรับข้อความ */
+  th,
+  td {
+    height: auto !important;
+    min-height: 20px !important;
+  }
+
+  /* ลบข้อจำกัดความสูงของแถว */
   tr {
-    page-break-inside: avoid;
+    height: auto !important;
   }
-}
 
-/* style สำหรับ Ref กลายเป็น input เมื่อ double-click */
-.ref-edit-input {
-  width: 80px;
-}
-.banner-image {
-  /* max-width: 950px; */
-  width: 60%;
-  height: auto;
-  /* display: block; */
-}
-.custom-bg {
-  background-color: #031070;
+  /* ลบความกว้างของคอนเทนเนอร์ที่อาจจำกัดความกว้างของตาราง */
+  .container,
+  .table-responsive {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* แสดงรอยต่อระหว่างแถวให้ชัดเจน */
+  tbody tr {
+    border-bottom: 1px solid black !important;
+  }
+
+  /* ปรับแต่ง Total Amount */
+  tr.total-row td {
+    font-weight: bold !important;
+  }
+
+  /* ปรับแต่ง GRAND TOTAL */
+  tr.grand-total-row td {
+    font-weight: bold !important;
+    color: #198754 !important;
+    background-color: #f8f9fa !important;
+  }
 }
