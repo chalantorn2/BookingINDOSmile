@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const exportCsvBtn = document.getElementById('exportCsvBtn')
         if (exportCsvBtn) exportCsvBtn.disabled = false
 
-        showNotification('Invoice loaded successfully', 'success')
+        // showNotification('Invoice loaded successfully', 'success')
       } catch (error) {
         console.error('Error loading invoice:', error)
         showNotification('Error loading invoice: ' + (error.message || 'Unknown error'), 'error')
@@ -473,7 +473,7 @@ async function loadInvoiceForEdit(k) {
     }
 
     buildSelectedPaymentsList()
-    showNotification('Invoice loaded successfully', 'success')
+    // showNotification('Invoice loaded successfully', 'success')
   } catch (error) {
     console.error('Error loading invoice for edit:', error)
     showNotification('Failed to load invoice details', 'error')
