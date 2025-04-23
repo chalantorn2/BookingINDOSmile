@@ -434,6 +434,7 @@ async function processOrder(orderId, order) {
   const bookings = order.bookings || []
   let bookingDetails = []
   let customerName = 'Unknown'
+  let paxx = 'Unknown'
   let isInvoiced = false
 
   try {
@@ -466,12 +467,13 @@ async function processOrder(orderId, order) {
     if (tourSnap.exists()) {
       const bData = tourSnap.val()
       customerName = `${bData.tourFirstName || ''} ${bData.tourLastName || ''}`.trim() || 'Unknown'
-
+      paxx = `${bData.tourPax}` || 'Unknown'
       bookingDetails.push({
         dbKey: bkId,
         date: bData.tourDate || 'Unknown Date',
         time: bData.tourPickUpTime || '00:00',
         type: bData.tourType || '-',
+        type_title: 'Tour',
         sendTo: bData.tourSendTo || '-',
         id: bData.tourID || bkId,
         firstName: bData.tourFirstName || '-',
@@ -494,12 +496,14 @@ async function processOrder(orderId, order) {
       if (transferSnap.exists()) {
         const bData = transferSnap.val()
         customerName = `${bData.transferFirstName || ''} ${bData.transferLastName || ''}`.trim() || 'Unknown'
+        paxx = `${bData.transferPax}` || 'Unknown'
 
         bookingDetails.push({
           dbKey: bkId,
           date: bData.transferDate || 'Unknown Date',
           time: bData.transferPickUpTime || '00:00',
           type: bData.transferType || '-',
+          type_title: 'Transfer',
           sendTo: bData.transferSendTo || '-',
           id: bData.transferID || bkId,
           firstName: bData.transferFirstName || '-',
@@ -548,6 +552,7 @@ async function processOrder(orderId, order) {
     latestDate,
     bookingDetails,
     isInvoiced,
+    paxx,
   }
 }
 
@@ -585,8 +590,8 @@ function createOrderCard(orderData) {
           </span>
           <div class="mt-2">
             <small class="text-muted ">
-              ${bookingDetails.filter(b => b.type === 'Tour').length} Tours,
-              ${bookingDetails.filter(b => b.type === 'Transfer').length} Transfers
+              ${bookingDetails.filter(b => b.type_title === 'Tour').length} Tours,
+              ${bookingDetails.filter(b => b.type_title === 'Transfer').length} Transfers
             </small>
           </div>
         </div>
@@ -621,7 +626,7 @@ function createOrderCard(orderData) {
 }
 
 function showOrderDetails(orderData) {
-  const { orderId, order, customerName, bookingDetails } = orderData
+  const { orderId, order, customerName, bookingDetails, paxx } = orderData
   selectedOrderKey = orderId
 
   const modalTitle = document.getElementById('orderDetailsModalLabel')
@@ -636,6 +641,7 @@ function showOrderDetails(orderData) {
           <h4 class="mb-3">${customerName}</h4>
           <p class="mb-1"><strong>Order ID:</strong> ${order.id}</p>
           <p class="mb-3"><strong>Total Bookings:</strong> ${bookingDetails.length}</p>
+          <p class="mb-3"><strong>Pax:</strong> ${paxx}</p>
         </div>
       </div>
     </div>
